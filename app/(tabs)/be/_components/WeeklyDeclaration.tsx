@@ -1,6 +1,6 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 
-export function WeeklyDeclaration() {
+export default function WeeklyDeclaration() {
   return (
     <ScrollView className="flex-1 px-4">
       {/* 数据统计区域 */}

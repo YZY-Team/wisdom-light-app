@@ -1,7 +1,9 @@
 import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
-
+import { LinearGradient } from 'expo-linear-gradient';
+import { cssInterop } from 'nativewind';
+cssInterop(LinearGradient, { className: 'style' });
 type DeclarationCardProps = {
   title: string;
   time: string;
@@ -58,10 +60,44 @@ const DeclarationCard = ({
   </View>
 );
 
-export function DailyDeclaration() {
+type TimeSlot = {
+  content: string;
+  time: string;
+};
+
+export default function DailyDeclaration() {
+  const [timeSlots, setTimeSlots] = useState<TimeSlotSection[]>([
+    {
+      title: '上午',
+      items: [
+        { content: '完成项目文档初稿', time: '7:00' },
+        { content: '与团队进行晨会讨论', time: '8:00' },
+        { content: '优化用户界面设计', time: '9:00' },
+      ],
+    },
+    {
+      title: '中午',
+      items: [
+        { content: '整理上午工作进度', time: '12:00' },
+        { content: '准备下午会议材料', time: '13:00' },
+      ],
+    },
+    {
+      title: '下午',
+      items: [
+        { content: '进行项目评审会议', time: '14:00' },
+        { content: '处理用户反馈问题', time: '15:00' },
+      ],
+    },
+    {
+      title: '晚上',
+      items: [
+        { content: '总结今日工作完成情况', time: '19:00' },
+        { content: '规划明日工作重点', time: '20:00' },
+      ],
+    },
+  ]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [noonContent, setNoonContent] = useState('');
-  const [noonStatus, setNoonStatus] = useState<'completed' | 'pending'>('pending');
   const [eveningContent, setEveningContent] = useState('');
   const [eveningStatus, setEveningStatus] = useState<'completed' | 'pending'>('pending');
   const [remainingTime, setRemainingTime] = useState('');
@@ -71,12 +107,12 @@ export function DailyDeclaration() {
       const now = new Date();
       const deadline = new Date(now);
       deadline.setHours(21, 0, 0);
-      
+
       if (now > deadline) {
         setRemainingTime('今日晚宣告已截止');
         return;
       }
-      
+
       const diff = deadline.getTime() - now.getTime();
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -100,72 +136,124 @@ export function DailyDeclaration() {
   const week = Math.ceil((currentDate.getDate() - currentDate.getDay()) / 7);
 
   return (
-    <ScrollView className="flex-1 px-4 pt-7">
-      {/* 日期头部 */}
-      <View className="items-center py-4 ">
-        <Text className="text-lg font-semibold">
-          <Text>{currentDate.getFullYear()}</Text>
-          <Text className="text-[#1483FD]">{currentDate.getFullYear()}</Text>
-          <Text>年</Text>
-          <Text className="text-[#1483FD]">{currentDate.getMonth() + 1}</Text>
-          <Text>月</Text>
-          <Text className="text-[#1483FD]">{currentDate.getDate()}</Text>
-          <Text>日</Text>
-        </Text>
-        <Text className="text-sm text-gray-500">
-          <Text>第</Text>
-          <Text className="text-[#1483FD]">{week}</Text>
-          <Text>天 第</Text>
-          <Text className="text-[#1483FD]">{week}</Text>
-          <Text>周 星期</Text>
-          <Text className="text-[#1483FD]">{weekday}</Text>
-        </Text>
-      </View>
+    <ScrollView 
+          className="flex-1 px-4 pt-7"
+          contentContainerStyle={{
+            paddingBottom: 160 // 40 * 4，确保底部内容不被导航栏遮挡
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* 日期头部 */}
+          <View className="items-center py-4 ">
+            <Text className="text-lg font-semibold">
+              <Text>{currentDate.getFullYear()}</Text>
+              <Text>年</Text>
+              <Text>{currentDate.getMonth() + 1}</Text>
+              <Text>月</Text>
+              <Text>{currentDate.getDate()}</Text>
+              <Text>日</Text>
+            </Text>
+            <Text className="text-sm text-gray-500">
+              <Text>第</Text>
+              <Text className="text-[#1483FD]">{week}</Text>
+              <Text>天 第</Text>
+              <Text className="text-[#1483FD]">{week}</Text>
+              <Text>周 星期</Text>
+              <Text className="text-[#1483FD]">{weekday}</Text>
+            </Text>
+          </View>
 
-      <DeclarationCard
-        title="早宣告"
-        time="7:00 AM"
-        status="completed"
-        content="今天我计划完成项目报告的初稿，并与团队讨论下一步计划，我会保持专注和积极的态度面对挑战。"
-      />
+          {/* 早宣告计划部分 */}
+          <View className="mb-4 overflow-hidden  rounded-xl bg-white">
+            <LinearGradient
+              colors={['#20A3FB', '#1483FD']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-col items-start  justify-center rounded-t-xl px-4"
+              style={{
+                boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+              }}>
+              <Text
+                className="text-white"
+                style={{
+                  fontFamily: 'Roboto',
+                  fontSize: 16,
+                  fontWeight: '700',
+                  lineHeight: 20,
+                }}>
+                早宣告
+              </Text>
+            </LinearGradient>
 
-      <DeclarationCard
-        title="中午宣告"
-        time="12:00 PM"
-        status={noonStatus}
-        content={noonStatus === 'completed' ? noonContent : undefined}
-        inputValue={noonContent}
-        onInputChange={setNoonContent}
-        onSubmit={() => {
-          if (!noonContent.trim()) return;
-          setNoonStatus('completed');
-        }}
-      />
+            <View className="p-4">
+              {timeSlots.map((section, sectionIndex) => (
+                <View key={section.title} className="mb-4 flex-row">
+                  <View className="mr-4 h-[80px] flex-row items-center">
+                    <View className="mr-2 h-8 w-1 rounded-full bg-[#1483FD]" />
+                    <Text className="text-sm font-medium text-gray-700">{section.title}</Text>
+                  </View>
+                  <View className="flex flex-1 flex-col gap-2">
+                    {section.items.map((item, itemIndex) => (
+                      <TextInput
+                        key={`${section.title}-${itemIndex}`}
+                        className="h-[80px] rounded-[6px] bg-[#1483fd1a] p-3 text-gray-600"
+                        style={{
+                          backdropFilter: 'blur(10px)',
+                        }}
+                        placeholder={`请输入${section.title}的计划...`}
+                        multiline
+                        value={item.content}
+                        onChangeText={(text) => {
+                          const newTimeSlots = [...timeSlots];
+                          newTimeSlots[sectionIndex].items[itemIndex].content = text;
+                          setTimeSlots(newTimeSlots);
+                        }}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
 
-      <DeclarationCard 
-        title="晚宣告" 
-        time="9:00 PM" 
-        status={eveningStatus}
-        content={eveningStatus === 'completed' ? eveningContent : undefined}
-        inputValue={eveningContent}
-        onInputChange={setEveningContent}
-      />
-      {/* 提交按钮 */}
-      {eveningStatus === 'pending' && (
-        <View className="px-4 py-3">
-          <Pressable 
-            className="items-center rounded-lg bg-blue-500 py-3" 
-            onPress={handleSubmit}
-          >
-            <Text className="font-semibold text-white">提交晚宣告</Text>
-          </Pressable>
-        </View>
-      )}
-      {/* 提醒信息 */}
-      <View className="mb-8 mt-4 flex-row items-center justify-center">
-        <Ionicons name="warning" size={16} color="#ef4444" />
-        <Text className="ml-2 text-sm text-red-500">{remainingTime}</Text>
-      </View>
-    </ScrollView>
+          {/* 晚宣告部分保持不变 */}
+          <DeclarationCard
+            title="晚宣告"
+            time="9:00 PM"
+            status={eveningStatus}
+            content={eveningStatus === 'completed' ? eveningContent : undefined}
+            inputValue={eveningContent}
+            onInputChange={setEveningContent}
+          />
+
+          {/* 提交按钮和提醒信息保持不变 */}
+          {eveningStatus === 'pending' && (
+            <View className="px-4 py-3">
+              <Pressable className="items-center rounded-lg bg-blue-500 py-3" onPress={handleSubmit}>
+                <Text className="font-semibold text-white">提交晚宣告</Text>
+              </Pressable>
+            </View>
+          )}
+
+          <View className="mb-8 mt-4 flex-row items-center justify-center">
+            <Ionicons name="warning" size={16} color="#ef4444" />
+            <Text className="ml-2 text-sm text-red-500">{remainingTime}</Text>
+          </View>
+        </ScrollView>
   );
 }
+
+// 首先在组件外定义类型
+type TimeSlotItem = {
+  content: string;
+  time: string;
+};
+
+type TimeSlotSection = {
+  title: string;
+  items: TimeSlotItem[];
+};
+
+// 在组件内添加状态
+
+// 渲染部分

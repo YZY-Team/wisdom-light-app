@@ -69,7 +69,7 @@ export default function TabLayout() {
         </View>
         <TabList asChild>
           <View
-            className="flex absolute flex-col rounded-[20px] border border-white  items-center justify-end bg-white/10  self-center"
+            className="flex absolute flex-col rounded-[20px] border border-white items-center justify-end bg-white self-center "
             style={{ 
               bottom: insets.bottom + 10,
               width: 356,
