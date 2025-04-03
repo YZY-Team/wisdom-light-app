@@ -22,7 +22,7 @@ const MenuItem = ({ icon, title, href, showBorder = true }: MenuItemProps) => (
 
 export default function WhoIndex() {
   return (
-    <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <ScrollView className="flex-1 ">
       {/* 个人信息卡片 */}
       <View className="mb-6 bg-white p-6 dark:bg-gray-800">
         <View className="mb-4 items-center">
@@ -36,15 +36,10 @@ export default function WhoIndex() {
 
       {/* 功能菜单 */}
       <View className="mx-4 rounded-xl bg-white dark:bg-gray-800">
-        <MenuItem icon="home-outline" title="通用设置" href="/(tabs)/who/general" />
-        <MenuItem icon="chatbubble-outline" title="人工客服" href="/(tabs)/who/support" />
-        <MenuItem icon="card-outline" title="会员充值" href="/(tabs)/who/membership" />
-        <MenuItem
-          icon="person-outline"
-          title="成为导师"
-          href="/(tabs)/who/become-mentor"
-          showBorder={false}
-        />
+        <MenuItem icon="home-outline" title="通用设置" href="/who/general" />
+        <MenuItem icon="chatbubble-outline" title="人工客服" href="/who/support" />
+        <MenuItem icon="card-outline" title="会员充值" href="/who/membership" />
+        <MenuItem icon="person-outline" title="成为导师" href="/who/become-mentor" showBorder={false} />
       </View>
 
       {/* 版本信息 */}

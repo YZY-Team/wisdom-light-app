@@ -18,35 +18,35 @@ import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 cssInterop(Image, { className: 'style' });
 const TABS = [
-  { 
-    name: 'be', 
-    title: 'BE', 
+  {
+    name: 'be',
+    title: 'BE',
     icon: beIcon,
-    activeIcon: beActiveIcon
+    activeIcon: beActiveIcon,
   },
-  { 
-    name: 'do', 
-    title: 'DO', 
+  {
+    name: 'do',
+    title: 'DO',
     icon: doIcon,
-    activeIcon: doActiveIcon
+    activeIcon: doActiveIcon,
   },
-  { 
-    name: 'have', 
-    title: 'HAVE', 
+  {
+    name: 'have',
+    title: 'HAVE',
     icon: haveIcon,
-    activeIcon: haveActiveIcon
+    activeIcon: haveActiveIcon,
   },
-  { 
-    name: 'ai', 
-    title: 'AI', 
+  {
+    name: 'ai',
+    title: 'AI',
     icon: aiIcon,
-    activeIcon: aiActiveIcon
+    activeIcon: aiActiveIcon,
   },
-  { 
-    name: 'who', 
-    title: 'WHO', 
+  {
+    name: 'who',
+    title: 'WHO',
     icon: whoIcon,
-    activeIcon: whoActiveIcon
+    activeIcon: whoActiveIcon,
   },
 ] as const;
 
@@ -55,39 +55,59 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
 
-  return (
-    <Tabs>
-      <View style={{ flex: 1 }}>
-        <TabSlot />
-      </View>
+  // 计算底部内容区域的 padding
+  const bottomPadding = 60 + (insets.bottom + 10) * 2; // tabs高度 + 底部安全区域 + 上下间距
 
-      <TabList
-        className="flex flex-row justify-between    bg-white dark:bg-gray-700"
-        style={{ paddingBottom: insets.bottom }}>
-        {TABS.map((tab) => {
-          const isActive = pathname.includes(`/${tab.name}`);
-          return (
-            <TabTrigger
-              key={tab.name}
-              name={tab.name}
-              href={`/(tabs)/${tab.name}`}
-              className={`flex flex-1 items-center justify-center py-2 ${isActive ? 'bg-primary/10' : ''}`}>
-              <View className="flex flex-1 flex-col items-center justify-center gap-1">
-                {/* 在 TabTrigger 组件中修改 Image 部分 */}
-                <Image 
-                  source={isActive ? tab.activeIcon : tab.icon} 
-                  className="h-6 w-6" 
-                  contentFit="cover" 
-                />
-                <Text
-                  className={`text-xs font-semibold ${isActive ? 'text-primary' : 'text-gray-400'}`}>
-                  {tab.title}
-                </Text>
-              </View>
-            </TabTrigger>
-          );
-        })}
-      </TabList>
+  return (
+    <Tabs asChild>
+      <View className="flex flex-1 relative flex-col bg-[#f5f5f5]">
+        <View style={{ 
+          flex: 1,
+          // paddingBottom: bottomPadding, // 添加底部 padding
+        }}>
+          <TabSlot />
+        </View>
+        <TabList asChild>
+          <View
+            className="flex absolute flex-col rounded-[20px] border border-white  items-center justify-end bg-white/10  self-center"
+            style={{ 
+              bottom: insets.bottom + 10,
+              width: 356,
+              height: 60,
+              paddingHorizontal: 16,
+              gap: 23,
+              boxShadow: '0px 0px 10px 0px rgba(20, 131, 253, 0.25)',
+            }}>
+            {TABS.map((tab) => {
+              const isActive = pathname.includes(`/${tab.name}`);
+              return (
+                <TabTrigger
+                  key={tab.name}
+                  name={tab.name}
+                  href={`/(tabs)/${tab.name}`}
+                  className={`flex flex-1 flex-col  items-center justify-center  ${isActive ? 'bg-primary/10' : ''}`}>
+                  <View className="flex flex-1 flex-col items-center  justify-between gap-1">
+                    {/* 在 TabTrigger 组件中修改 Image 部分 */}
+                    <Image
+                      source={isActive ? tab.activeIcon : tab.icon}
+                      className={`h-6  ${isActive ? "" :"opacity-50"} w-6`}
+                      contentFit="cover"
+                    />
+                    <Text
+                      className={`text-[10px] font-bold ${isActive ? 'text-[#1483FD]' : 'text-gray-400'}`}
+                      style={{
+                        fontFamily: 'Inter',
+                        lineHeight: 10, // normal 一般对应字体大小
+                      }}>
+                      {tab.title}
+                    </Text>
+                  </View>
+                </TabTrigger>
+              );
+            })}
+          </View>
+        </TabList>
+      </View>
     </Tabs>
   );
 }

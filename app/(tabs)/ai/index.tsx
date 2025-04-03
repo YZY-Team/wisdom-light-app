@@ -25,7 +25,7 @@ const Message = ({ isAI, content, time }: { isAI: boolean; content: string; time
 
 export default function AiIndex() {
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1">
       {/* 顶部标题栏 */}
       <View className="flex-row items-center justify-between bg-blue-500 px-4 py-3">
         <View className="flex-row items-center">

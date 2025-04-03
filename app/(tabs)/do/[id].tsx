@@ -1,26 +1,39 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, ScrollView } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
-cssInterop(Image, { className: 'style' });
+import { useEvent } from 'expo';
+import { useVideoPlayer, VideoView } from 'expo-video';
+
+cssInterop(VideoView, { className: 'style' });
 export default function CourseDetail() {
-  // 这里可以根据id获取课程详情数据
   const courseData = {
     title: '成功心态培养',
     teacher: '张导师',
     description: '通过系统化的学习，培养积极正向的成功心态，建立自信心和行动力。',
     rating: 4.8,
-    image:
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
+    video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     content: '课程内容详情...',
     duration: '8课时',
     students: 1234,
   };
 
+  const player = useVideoPlayer(courseData.video, (player) => {
+    player.loop = true;
+  });
+
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
   return (
     <ScrollView className="flex-1 bg-gray-100 dark:bg-gray-900">
-      <Image source={{ uri: courseData.image }} className="h-64 w-full" contentFit="cover" />
+      <View className="relative">
+        <VideoView
+          player={player}
+          className="h-full w-full"
+          allowsFullscreen
+          allowsPictureInPicture
+        />
+      </View>
 
       <View className="p-4">
         <Text className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">

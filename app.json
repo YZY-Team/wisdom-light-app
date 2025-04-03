@@ -3,16 +3,22 @@
     "name": "wisdom-light-app",
     "slug": "wisdom-light-app",
     "version": "1.0.0",
-    "newArchEnabled" : true,
+    "newArchEnabled": true,
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    
     "experiments": {
       "tsconfigPaths": true
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ]
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,17 +28,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.freelove.wisdomlightapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.freelove.wisdomlightapp"
     }
   }
 }

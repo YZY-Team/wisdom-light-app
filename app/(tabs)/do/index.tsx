@@ -104,7 +104,7 @@ export default function DoIndex() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-100 dark:bg-gray-900">
+    <ScrollView className="flex-1 bg-red-500">
       {/* 搜索栏 */}
       <View className="p-4">
         <View className="flex-row items-center rounded-full bg-white px-4 py-2 dark:bg-gray-800">
