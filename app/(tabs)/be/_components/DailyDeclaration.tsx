@@ -24,39 +24,7 @@ const DeclarationCard = ({
   onInputChange,
 }: DeclarationCardProps) => (
   <View className="mb-4 overflow-hidden rounded-xl bg-white">
-    <View className="flex-row items-center justify-between border-b border-gray-100 p-4">
-      <Text className="text-base font-semibold">{title}</Text>
-      <View className="flex-row items-center">
-        <Text className="mr-2 text-xs text-gray-500">{time}</Text>
-        <View
-          className={`flex-row items-center rounded-full px-2 py-1 ${status === 'completed' ? 'bg-green-100' : 'bg-yellow-100'}`}>
-          <Ionicons
-            name={status === 'completed' ? 'checkmark-circle-outline' : 'timer-outline'}
-            size={12}
-            color={status === 'completed' ? '#16a34a' : '#ca8a04'}
-          />
-          <Text
-            className={`ml-1 text-xs ${status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>
-            {status === 'completed' ? '已完成' : '待完成'}
-          </Text>
-        </View>
-      </View>
-    </View>
-    {content ? (
-      <View className="p-4">
-        <Text className="text-gray-600">{content}</Text>
-      </View>
-    ) : (
-      <View className="p-4">
-        <TextInput
-          className="rounded-lg bg-gray-50 p-3 text-gray-600"
-          placeholder="请输入今天的晚宣告内容..."
-          multiline
-          value={inputValue}
-          onChangeText={onInputChange}
-        />
-      </View>
-    )}
+   
   </View>
 );
 
@@ -144,23 +112,18 @@ export default function DailyDeclaration() {
           showsVerticalScrollIndicator={false}
         >
           {/* 日期头部 */}
-          <View className="items-center py-4 ">
-            <Text className="text-lg font-semibold">
-              <Text>{currentDate.getFullYear()}</Text>
-              <Text>年</Text>
-              <Text>{currentDate.getMonth() + 1}</Text>
-              <Text>月</Text>
-              <Text>{currentDate.getDate()}</Text>
-              <Text>日</Text>
-            </Text>
-            <Text className="text-sm text-gray-500">
-              <Text>第</Text>
-              <Text className="text-[#1483FD]">{week}</Text>
-              <Text>天 第</Text>
-              <Text className="text-[#1483FD]">{week}</Text>
-              <Text>周 星期</Text>
-              <Text className="text-[#1483FD]">{weekday}</Text>
-            </Text>
+          <View className="items-center py-4">
+            <View className="flex-row items-center justify-center">
+              <Text className="text-lg font-semibold">{`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日`}</Text>
+            </View>
+            <View className="flex-row items-center justify-center mt-1">
+              <Text className="text-sm text-gray-500">{`第`}</Text>
+              <Text className="text-sm text-[#1483FD]">{week}</Text>
+              <Text className="text-sm text-gray-500">{`天 第`}</Text>
+              <Text className="text-sm text-[#1483FD]">{week}</Text>
+              <Text className="text-sm text-gray-500">{`周 星期`}</Text>
+              <Text className="text-sm text-[#1483FD]">{weekday}</Text>
+            </View>
           </View>
 
           {/* 早宣告计划部分 */}

@@ -1,6 +1,6 @@
 import '../global.css';
 import 'expo-dev-client';
-import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
+// import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
 import { NAV_THEME } from '~/theme';
 import { Stack } from 'expo-router';
@@ -43,8 +43,7 @@ export default function RootLayout() {
   }
 
   return (
-    <NavThemeProvider value={NAV_THEME[colorScheme]}>
-      <Stack
+    <Stack
         initialRouteName="index"
         screenOptions={{
           headerTitleStyle: {
@@ -61,6 +60,5 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-    </NavThemeProvider>
   );
 }
