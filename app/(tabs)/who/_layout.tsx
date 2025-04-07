@@ -5,7 +5,7 @@ export default function Layout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: true,
+          headerShown: false,
           title: '我的',
           headerShadowVisible: false,
           headerStyle: {

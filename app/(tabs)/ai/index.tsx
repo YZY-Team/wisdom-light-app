@@ -1,6 +1,9 @@
 import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import aiLogo from '~/assets/images/ai/logo.png';
 
 const Message = ({ isAI, content, time }: { isAI: boolean; content: string; time: string }) => (
   <View className={`flex-row ${isAI ? '' : 'flex-row-reverse'} mb-4`}>
@@ -23,51 +26,63 @@ const Message = ({ isAI, content, time }: { isAI: boolean; content: string; time
   </View>
 );
 
+// AI助手卡片组件
+const AiCard = ({ title, icon }: { title: string; icon: string }) => (
+  <Link href="/ai/chat" asChild>
+    <Pressable className="mr-4 items-center rounded-xl bg-[#F5F8FF] p-4">
+      <Image source={{ uri: icon }} className="h-16 w-16 rounded-2xl" contentFit="cover" />
+      <Text className="mt-2 text-sm text-[#333]">{title}</Text>
+    </Pressable>
+  </Link>
+);
+
 export default function AiIndex() {
+  const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1">
-      {/* 顶部标题栏 */}
-      <View className="flex-row items-center justify-between bg-blue-500 px-4 py-3">
-        <View className="flex-row items-center">
-          <Ionicons name="chatbubble-outline" size={24} color="#fff" />
-          <Text className="ml-2 text-xl font-semibold text-white">AI助手</Text>
-        </View>
-        <Pressable className="flex-row items-center rounded-full bg-blue-400 px-3 py-1">
-          <Ionicons name="document-text-outline" size={20} color="#fff" />
-          <Text className="ml-1 text-sm text-white">生成报告</Text>
-        </Pressable>
-      </View>
-
-      {/* 聊天消息列表 */}
-      <ScrollView className="flex-1 px-4 py-4">
-        <Message
-          isAI={true}
-          content="你好！我是Wisdom Light的AI助手。今天我能为你提供什么帮助？"
-          time="14:00"
-        />
-        <Message
-          isAI={false}
-          content="我想了解如何更好地管理我的时间"
-          time="14:01"
-        />
-        <Message
-          isAI={true}
-          content="时间管理是提高效率的关键。我推荐你可以尝试以下方法：\n1. 番茄钟工作法：25分钟专注工作，然后休息5分钟\n2. 建立每日优先清单，先完成最要紧且紧急的任务\n3. 减少干扰源，如手机通知等\n4. 定期回顾和调整你的时间分配方式\n\n此外，我有到我们平台有一门高效时间管理的课程，由主导师授课，评分很高，你可能会感兴趣。"
-          time="14:02"
-        />
-      </ScrollView>
-
-      {/* 底部输入框 */}
-      <View className="border-t border-gray-200 bg-white p-4">
-        <View className="flex-row items-center rounded-full bg-gray-100 px-4 py-2">
+    <View className="flex-1 bg-white">
+      <View className="p-4">
+        <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
           <TextInput
-            className="flex-1"
-            placeholder="请输入问题..."
+            className="ml-2 flex-1 text-black/40"
+            placeholder="搜索ai"
             placeholderTextColor="#666"
           />
-          <Pressable className="ml-2">
-            <Ionicons name="send" size={24} color="#3b82f6" />
-          </Pressable>
+          <Ionicons name="search-outline" size={20} color="#666" />
+        </View>
+      </View>
+
+      {/* AI助手列表 */}
+      <View className="px-4">
+        <Text className="mb-4 text-base font-medium">AI助手</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <AiCard
+            title="Open AI"
+            icon="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+          />
+          <AiCard title="Deep Seek" icon="https://example.com/deep-seek-icon.png" />
+          <AiCard title="Deep Seek" icon="https://example.com/deep-seek-icon.png" />
+        </ScrollView>
+      </View>
+
+      {/* AI导师列表 */}
+      <View
+        className="absolute  mt-6  w-full   px-4 "
+        style={{
+          bottom: insets.bottom + 100 || 20,
+        }}>
+        <View className=' bg-[#1483fd]/5 rounded-[6px]'>
+          <Link href="/ai/tutor" asChild>
+            <Pressable className="flex-row items-center rounded-xl  p-4">
+              <Image source={aiLogo} className="h-12 w-12 rounded-full" />
+              <Text className="ml-3 text-base font-medium">AI导师</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#666"
+                style={{ marginLeft: 'auto' }}
+              />
+            </Pressable>
+          </Link>
         </View>
       </View>
     </View>

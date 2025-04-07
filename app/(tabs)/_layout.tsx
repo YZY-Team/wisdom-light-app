@@ -55,9 +55,8 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
 
-  // 计算底部内容区域的 padding
-  const bottomPadding = 60 + (insets.bottom + 10) * 2; // tabs高度 + 底部安全区域 + 上下间距
-
+  const hideTabBarRoutes = ['/have/chat-square'];
+  const shouldHideTabBar = hideTabBarRoutes.some(route => pathname.includes(route));
   return (
     <Tabs asChild>
       <View className="flex flex-1 relative flex-col bg-[#f5f5f5]">
@@ -69,13 +68,14 @@ export default function TabLayout() {
         </View>
         <TabList asChild>
           <View
-            className="flex absolute flex-col rounded-[20px] border border-white items-center justify-end bg-white self-center "
+            className="flex absolute  flex-col rounded-[20px] border border-white items-center justify-end bg-white self-center "
             style={{ 
               bottom: insets.bottom + 10,
               width: 356,
               height: 60,
               paddingHorizontal: 16,
               gap: 23,
+              display: !shouldHideTabBar ?'flex' :"none",
               boxShadow: '0px 0px 10px 0px rgba(20, 131, 253, 0.25)',
             }}>
             {TABS.map((tab) => {
