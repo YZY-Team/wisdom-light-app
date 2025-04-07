@@ -34,7 +34,7 @@ export default function RootLayout() {
   // Only navigate when the layout is ready
   useEffect(() => {
     if (isReady) {
-      router.replace('/(tabs)/do');
+      router.replace('/(tabs)/be');
     }
   }, [isReady, router]);
 

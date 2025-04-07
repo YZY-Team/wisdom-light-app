@@ -51,9 +51,9 @@ export default function BeIndex() {
   };
 
   return (
-    <View className="flex-1 px-4 pt-3">
+    <View className="flex-1 bg-[#F5F5F5] px-4 pt-3">
       {/* 导航栏 */}
-      <View className="flex-row bg-[#1687fd]/10  gap-[36px] p-2 rounded-[8px]">
+      <View className="flex-row gap-[36px]  rounded-[8px] bg-[#1687fd]/10 p-2">
         <Tab
           title="日宣告"
           isActive={activeTab === 'daily'}

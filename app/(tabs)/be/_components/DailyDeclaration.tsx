@@ -3,7 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
+import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
+import timeLogo from "~/assets/images/be/time.png"
 cssInterop(LinearGradient, { className: 'style' });
+cssInterop(Image, { className: 'style' });
+cssInterop(BlurView, { className: 'style' });
 type DeclarationCardProps = {
   title: string;
   time: string;
@@ -12,6 +17,10 @@ type DeclarationCardProps = {
   onSubmit?: (content: string) => void;
   inputValue?: string;
   onInputChange?: (value: string) => void;
+};
+type EveningReportItem = {
+  label: string;
+  value: string;
 };
 
 const DeclarationCard = ({
@@ -22,15 +31,26 @@ const DeclarationCard = ({
   onSubmit,
   inputValue,
   onInputChange,
-}: DeclarationCardProps) => (
-  <View className="mb-4 overflow-hidden rounded-xl bg-white">
-   
-  </View>
-);
+}: DeclarationCardProps) => <View className="mb-4 overflow-hidden rounded-xl bg-white"></View>;
 
 type TimeSlot = {
   content: string;
   time: string;
+};
+
+const getBarColor = (title: string) => {
+  switch (title) {
+    case '上午':
+      return '#7AE1C3';
+    case '中午':
+      return '#FBA720';
+    case '下午':
+      return '#1587FD';
+    case '晚上':
+      return '#440063';
+    default:
+      return '#1483FD';
+  }
 };
 
 export default function DailyDeclaration() {
@@ -69,7 +89,20 @@ export default function DailyDeclaration() {
   const [eveningContent, setEveningContent] = useState('');
   const [eveningStatus, setEveningStatus] = useState<'completed' | 'pending'>('pending');
   const [remainingTime, setRemainingTime] = useState('');
+  const [eveningReport, setEveningReport] = useState<EveningReportItem[]>([
+    { label: '打分', value: '' },
+    { label: '体验', value: '' },
+    { label: '行得通', value: '' },
+    { label: '行不通', value: '' },
+    { label: '学习到', value: '' },
+    { label: '下一步', value: '' },
+  ]);
 
+  const [dailyResult, setDailyResult] = useState({
+    totalGoal: '',
+    weeklyProgress: '10/8',
+    monthlyProgress: '10/8',
+  });
   useEffect(() => {
     const updateRemainingTime = () => {
       const now = new Date();
@@ -104,105 +137,277 @@ export default function DailyDeclaration() {
   const week = Math.ceil((currentDate.getDate() - currentDate.getDay()) / 7);
 
   return (
-    <ScrollView 
-          className="flex-1 px-4 pt-7"
-          contentContainerStyle={{
-            paddingBottom: 160 // 40 * 4，确保底部内容不被导航栏遮挡
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* 日期头部 */}
-          <View className="items-center py-4">
-            <View className="flex-row items-center justify-center">
-              <Text className="text-lg font-semibold">{`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日`}</Text>
+    <ScrollView
+      className="flex-1 px-4 pt-2"
+      contentContainerStyle={{
+        paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
+      }}
+      showsVerticalScrollIndicator={false}>
+      <View className="mb-2 mt-2 flex-row items-center justify-center">
+        <Ionicons name="warning" size={16} color="#ef4444" />
+        <Text className="ml-2 text-sm text-red-500">{remainingTime}</Text>
+      </View>
+      {/* 日期头部 */}
+      <View className="items-center py-4">
+        <View className="flex-row items-center justify-center">
+          <Text className="text-lg font-semibold">{`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日`}</Text>
+        </View>
+        <View className="mt-1 flex-row items-center justify-center">
+          <Text className="text-sm text-gray-500">{`第`}</Text>
+          <Text className="text-sm text-[#1483FD]">{week}</Text>
+          <Text className="text-sm text-gray-500">{`天 第`}</Text>
+          <Text className="text-sm text-[#1483FD]">{week}</Text>
+          <Text className="text-sm text-gray-500">{`周 星期`}</Text>
+          <Text className="text-sm text-[#1483FD]">{weekday}</Text>
+        </View>
+      </View>
+
+      {/* 早宣告计划部分 */}
+      <View className="mb-4 overflow-hidden rounded-xl bg-white">
+        <LinearGradient
+          colors={['#20B4F3', '#5762FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="flex h-[38px] flex-col items-start  justify-center rounded-t-xl px-4"
+          style={{
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}>
+          <Text
+            className="text-white"
+            style={{
+              fontFamily: 'Roboto',
+              fontSize: 16,
+              fontWeight: '700',
+              lineHeight: 20,
+            }}>
+            早宣告
+          </Text>
+        </LinearGradient>
+
+        <View className="p-4">
+          {timeSlots.map((section, sectionIndex) => (
+            <View key={section.title} className="mb-4 flex-row">
+              <View className="mr-4 h-[80px] flex-row items-center">
+                <View
+                  className="mr-2 h-8 w-1 rounded-full"
+                  style={{ backgroundColor: getBarColor(section.title) }}
+                />
+                <Text className="text-sm font-medium text-gray-700">{section.title}:</Text>
+              </View>
+              <View className="flex flex-1 flex-col gap-2">
+                {section.items.map((item, itemIndex) => (
+                  <View
+                    key={`${section.title}-${itemIndex}`}
+                    className="relative h-[80px] overflow-hidden rounded-[6px]">
+                    {/* 光球 */}
+                    <View
+                      className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+                      style={{
+                        backgroundColor: getBarColor(section.title),
+                        filter: 'blur(15px)',
+                      }}
+                    />
+                    <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+                    <TextInput
+                      className="z-10 h-[80px] p-3 text-gray-600"
+                      placeholder={`请输入${section.title}的计划...`}
+                      multiline
+                      value={item.content}
+                      onChangeText={(text) => {
+                        const newTimeSlots = [...timeSlots];
+                        newTimeSlots[sectionIndex].items[itemIndex].content = text;
+                        setTimeSlots(newTimeSlots);
+                      }}
+                    />
+                  </View>
+                ))}
+              </View>
             </View>
-            <View className="flex-row items-center justify-center mt-1">
-              <Text className="text-sm text-gray-500">{`第`}</Text>
-              <Text className="text-sm text-[#1483FD]">{week}</Text>
-              <Text className="text-sm text-gray-500">{`天 第`}</Text>
-              <Text className="text-sm text-[#1483FD]">{week}</Text>
-              <Text className="text-sm text-gray-500">{`周 星期`}</Text>
-              <Text className="text-sm text-[#1483FD]">{weekday}</Text>
+          ))}
+        </View>
+      </View>
+      {/* 晚总结部分 */}
+      <View className="mb-4 overflow-hidden rounded-xl bg-white">
+        <LinearGradient
+          colors={['#20B4F3', '#5762FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="flex h-[38px] flex-row items-center justify-between rounded-t-xl px-4"
+          style={{
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}>
+          <Text
+            className="text-white"
+            style={{
+              fontFamily: 'Roboto',
+              fontSize: 16,
+              fontWeight: '700',
+              lineHeight: 20,
+            }}>
+            晚总结
+          </Text>
+          <View className="flex-row items-center">
+            <Text className=" text-white">9:00AM</Text>
+            <View className="flex-row mx-2 items-center">
+              <Image
+                source={timeLogo}
+                className="h-4 w-4"
+                contentFit="contain"
+              />
+              <Text className="ml-2 text-white">待完成</Text>
             </View>
           </View>
+        </LinearGradient>
 
-          {/* 早宣告计划部分 */}
-          <View className="mb-4 overflow-hidden  rounded-xl bg-white">
+        <View className="p-4">
+          {eveningReport.map((item, index) => (
+            <View key={item.label} className="mb-4 flex flex-row items-start">
+              <View className="mt-3 w-12 flex-row justify-between">
+                {[...item.label].map((char, i) => (
+                  <Text key={i} className="text-[14px] font-medium text-gray-700">
+                    {char}
+                  </Text>
+                ))}
+              </View>
+              <Text className="mt-3 px-1 text-sm font-medium text-gray-700">:</Text>
+              <View className="relative flex-1  overflow-hidden rounded-[6px]">
+                {/* <View
+                  className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+                  style={{
+                    backgroundColor: '#440063',
+                    filter: 'blur(15px)',
+                  }}
+                /> */}
+                <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+                <TextInput
+                  className="z-10 min-h-[54px] p-3 text-gray-600"
+                  placeholder={`请输入${item.label}...`}
+                  multiline
+                  value={item.value}
+                  onChangeText={(text) => {
+                    const newReport = [...eveningReport];
+                    newReport[index].value = text;
+                    setEveningReport(newReport);
+                  }}
+                />
+              </View>
+            </View>
+          ))}
+          {/* 提交按钮和提醒信息保持不变 */}
+          {eveningStatus === 'pending' && (
             <LinearGradient
-              colors={['#20A3FB', '#1483FD']}
+              colors={['#20B4F3', '#5762FF']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              className="flex h-[38px] flex-col items-start  justify-center rounded-t-xl px-4"
+              className="flex h-[40px] flex-col items-center justify-center rounded-[6px] px-4"
               style={{
                 boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
               }}>
-              <Text
-                className="text-white"
-                style={{
-                  fontFamily: 'Roboto',
-                  fontSize: 16,
-                  fontWeight: '700',
-                  lineHeight: 20,
-                }}>
-                早宣告
-              </Text>
+              <Text className="font-semibold text-white">提交</Text>
             </LinearGradient>
-
-            <View className="p-4">
-              {timeSlots.map((section, sectionIndex) => (
-                <View key={section.title} className="mb-4 flex-row">
-                  <View className="mr-4 h-[80px] flex-row items-center">
-                    <View className="mr-2 h-8 w-1 rounded-full bg-[#1483FD]" />
-                    <Text className="text-sm font-medium text-gray-700">{section.title}</Text>
-                  </View>
-                  <View className="flex flex-1 flex-col gap-2">
-                    {section.items.map((item, itemIndex) => (
-                      <TextInput
-                        key={`${section.title}-${itemIndex}`}
-                        className="h-[80px] rounded-[6px] bg-[#1483fd1a] p-3 text-gray-600"
-                        style={{
-                          backdropFilter: 'blur(10px)',
-                        }}
-                        placeholder={`请输入${section.title}的计划...`}
-                        multiline
-                        value={item.content}
-                        onChangeText={(text) => {
-                          const newTimeSlots = [...timeSlots];
-                          newTimeSlots[sectionIndex].items[itemIndex].content = text;
-                          setTimeSlots(newTimeSlots);
-                        }}
-                      />
-                    ))}
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* 晚宣告部分保持不变 */}
-          <DeclarationCard
-            title="晚宣告"
-            time="9:00 PM"
-            status={eveningStatus}
-            content={eveningStatus === 'completed' ? eveningContent : undefined}
-            inputValue={eveningContent}
-            onInputChange={setEveningContent}
-          />
-
-          {/* 提交按钮和提醒信息保持不变 */}
-          {eveningStatus === 'pending' && (
-            <View className="px-4 py-3">
-              <Pressable className="items-center rounded-lg bg-blue-500 py-3" onPress={handleSubmit}>
-                <Text className="font-semibold text-white">提交晚宣告</Text>
-              </Pressable>
-            </View>
           )}
+        </View>
+      </View>
 
-          <View className="mb-8 mt-4 flex-row items-center justify-center">
-            <Ionicons name="warning" size={16} color="#ef4444" />
-            <Text className="ml-2 text-sm text-red-500">{remainingTime}</Text>
+      {/* 今日成果部分 */}
+      <View className="mb-4 overflow-hidden rounded-xl bg-white">
+        <LinearGradient
+          colors={['#20B4F3', '#5762FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="flex h-[38px] flex-col items-start  justify-center rounded-t-xl px-4"
+          style={{
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}>
+          <Text
+            className="text-white"
+            style={{
+              fontFamily: 'Roboto',
+              fontSize: 16,
+              fontWeight: '700',
+              lineHeight: 20,
+            }}>
+            今日成果
+          </Text>
+        </LinearGradient>
+
+        <View className="p-4">
+          <Text
+            style={{
+              fontWeight: '800',
+            }}
+            className="mb-2 text-[16px]   text-black">
+            总目标
+          </Text>
+          <View className="relative mb-4  overflow-hidden rounded-[6px]">
+            {/* <View
+              className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+              style={{
+                backgroundColor: '#440063',
+                filter: 'blur(15px)',
+              }}
+            /> */}
+            <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+            <TextInput
+              className="z-10 min-h-[47px] p-3 text-gray-600"
+              placeholder="请输入总目标..."
+              multiline
+              value={dailyResult.totalGoal}
+              onChangeText={(text) => setDailyResult((prev) => ({ ...prev, totalGoal: text }))}
+            />
           </View>
-        </ScrollView>
+
+          <View className="flex-row justify-between gap-2">
+            <View className="flex-1 items-center">
+              <Text
+                className="mb-2"
+                style={{
+                  color: 'rgba(0, 0, 0, 0.50)',
+                  fontFamily: 'Roboto',
+                  fontSize: 14,
+                  fontWeight: '400',
+                }}>
+                周累计应达成/实际达成
+              </Text>
+              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px] bg-[#1483FD0D]">
+                <Text
+                  style={{
+                    color: '#1483FD',
+                    fontFamily: 'Roboto',
+                    fontSize: 24,
+                    fontWeight: '700',
+                  }}>
+                  {dailyResult.weeklyProgress}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-1 items-center">
+              <Text
+                className="mb-2"
+                style={{
+                  color: 'rgba(0, 0, 0, 0.50)',
+                  fontFamily: 'Roboto',
+                  fontSize: 14,
+                  fontWeight: '400',
+                }}>
+                本周宣告/实际达成
+              </Text>
+              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px] bg-[#1483FD0D]">
+                <Text
+                  style={{
+                    color: '#1483FD',
+                    fontFamily: 'Roboto',
+                    fontSize: 24,
+                    fontWeight: '700',
+                  }}>
+                  {dailyResult.monthlyProgress}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
