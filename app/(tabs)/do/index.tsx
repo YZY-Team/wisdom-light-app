@@ -232,6 +232,10 @@ export default function DoIndex() {
         {(courseData[currentActiveSecondary as keyof typeof courseData] || []).map(
           (course, index) => (
             <CourseCard
+              teacherAvatar=""  // 添加缺失的必需属性
+              teacherRole=""    // 添加缺失的必需属性
+              teacherId=""      // 添加缺失的必需属性
+              platform=""       // 添加缺失的必需属性
               key={index}
               title={course.title}
               teacher={course.teacher}

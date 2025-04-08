@@ -28,7 +28,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.freelove.wisdomlightapp"
@@ -39,6 +41,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.freelove.wisdomlightapp"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8e80af25-2f84-48c4-9c82-9aeba55e5f83"
+      }
     }
   }
 }

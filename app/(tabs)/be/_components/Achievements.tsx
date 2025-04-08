@@ -10,7 +10,7 @@ export default function Achievements() {
     <View className="flex-1  px-4 pt-4">
       {/* 总数据 */}
       <View className="mb-4">
-        <Text className="mb-2 text-base font-[800] text-gray-600">总数据</Text>
+        <Text className="mb-2 text-base font-[800] ">总数据</Text>
         <View className="flex-row flex-wrap justify-between">
           {[
             { value: '89', label: '完成宣告' },
@@ -26,7 +26,9 @@ export default function Achievements() {
             <View
               key={item.label}
               style={{
-                boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.10)',
+                // boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.10)',
+                elevation: 2,
+                zIndex: 1,
               }}
               className={`${
                 index < 2 ? 'mb-4' : ''
@@ -61,10 +63,10 @@ export default function Achievements() {
 
       {/* 成就书列表 */}
       <View>
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="mb-2 text-base font-[800] text-gray-600">成就书</Text>
+        <View className="mb-4 flex flex-row items-center    justify-between">
+          <Text className=" flex items-center justify-center text-base  font-[800] ">成就书</Text>
           <Pressable>
-            <Text className="text-sm text-[#1483FD]">简介</Text>
+            <Text className="text-sm   font-[800] text-[#1483FD] underline">简介</Text>
           </Pressable>
         </View>
         <View className="flex flex-col gap-2 ">
@@ -100,7 +102,7 @@ export default function Achievements() {
           ].map((item) => (
             <Pressable
               key={item.title}
-              className="h-[90px] flex-row  items-center rounded-xl bg-white p-4">
+              className="h-[90px] flex-row gap-4  items-center rounded-xl bg-white p-4">
               <View
                 className="h-10 w-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: `${item.color}20` }}>

@@ -9,7 +9,11 @@ cssInterop(BlurView, { className: 'style' });
 
 export default function WeeklyDeclaration() {
   return (
-    <ScrollView className="flex-1 px-4 pt-4">
+    <ScrollView
+      className="flex-1 px-4 pt-4"
+      contentContainerStyle={{
+        paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
+      }}>
       {/* 标题部分 */}
       <View className="mb-4 flex-col items-center justify-between">
         <View className="flex-row items-center">
@@ -48,8 +52,11 @@ export default function WeeklyDeclaration() {
           colors={['#20B4F3', '#5762FF']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="flex h-[38px] items-center px-4">
-          <Text className="text-lg font-bold  text-white">行动计划</Text>
+          style={{
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}
+          className="flex h-[38px]  justify-center px-4">
+          <Text className="font-bold text-white">行动计划</Text>
         </LinearGradient>
         <View className="p-4">
           {/* 星期选择器 */}
@@ -70,25 +77,29 @@ export default function WeeklyDeclaration() {
           <View className="flex-col">
             {/* 左侧标签 */}
             <View className="mr-4 items-center">
-              <View className="flex h-[320px] flex-row justify-between py-2">
-                <View className="w-[30px] flex-col bg-[#5264FF1A]">
+              <View className="flex flex-row justify-between gap-2 py-2">
+                <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
                   {[...'个人成就计划'].map((char, index) => (
-                    <Text key={index} className="text-base text-gray-600">
+                    <Text key={index} className="text-[16px]   font-bold">
                       {char}
                     </Text>
                   ))}
                 </View>
-                <View className="flex-1">
+                <View className="flex flex-1 flex-col gap-2">
                   {['上午', '中午', '下午', '晚上'].map((time) => (
-                    <View key={time} className="mb-4">
-                      <View className="relative">
+                    <View key={time} className="">
+                      <View className="relative min-h-[50px] rounded-lg bg-[#F5F8FF]">
                         <View className="absolute left-3 top-3 z-10">
-                          <Text className="text-base text-gray-600">{time}：</Text>
+                          <Text className="text-[12px] text-gray-600">{time}：</Text>
                         </View>
                         <TextInput
-                          className="min-h-[60px] rounded-lg bg-[#F5F8FF] pl-16 pr-3 pt-3"
-                          placeholder={`今天上午我计划完成项目报告的初稿，并与团队讨论下一步计划。我会保...`}
+                          className="p-3 pl-[45px] text-[12px]"
+                          placeholderTextColor="#9CA3AF"
+                          placeholder="今天我计划完成项目报告的初稿，并与团队讨论下一步计划。我会保..."
                           multiline
+                          textAlignVertical="top"
+                          defaultValue=""
+                          selection={{ start: 0, end: 0 }}
                         />
                       </View>
                     </View>
@@ -97,15 +108,30 @@ export default function WeeklyDeclaration() {
               </View>
             </View>
 
-            {/* 右侧内容 */}
-            {/* <View className="flex-1">
-              
-              <TextInput
-                className="mt-4 min-h-[100px] rounded-lg bg-[#F5F8FF] p-3"
-                placeholder="请输入..."
-                multiline
-              />
-            </View> */}
+            <View className="mr-4 items-center">
+              <View className="flex flex-row justify-between gap-2 py-2">
+                <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
+                  {[...'完成情况'].map((char, index) => (
+                    <Text key={index} className="text-[16px]   font-bold">
+                      {char}
+                    </Text>
+                  ))}
+                </View>
+                <View className="flex flex-1 flex-col gap-2">
+                  <View className="relative  rounded-lg bg-[#F5F8FF]">
+                    <TextInput
+                      className="min-h-[130px] p-3 pl-[12px] text-[12px]"
+                      placeholderTextColor="#9CA3AF"
+                      placeholder="请输入..."
+                      multiline
+                      textAlignVertical="top"
+                      defaultValue=""
+                      selection={{ start: 0, end: 0 }}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -116,38 +142,95 @@ export default function WeeklyDeclaration() {
           colors={['#20B4F3', '#5762FF']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          className="flex h-[38px] items-center px-4">
-          <Text className="font-bold text-white">第1周总结</Text>
+          style={{
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}
+          className="flex h-[38px]  justify-center px-4">
+          <Text className="font-bold text-white">第一周总结</Text>
         </LinearGradient>
         <View className="p-4">
           {/* 进度条 */}
-          <View className="mb-4">
-            <Text className="mb-2">本周达成：80%</Text>
-            <View className="h-2 w-full rounded-full bg-gray-200">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className=" text-[16px]  font-bold">本周达成:</Text>
+            <View className="ml-2 mr-4 h-2 w-[60%] rounded-full bg-gray-200">
               <View className="h-full w-[80%] rounded-full bg-[#20B4F3]" />
             </View>
+            <Text className="text-[#FF9F21]">80%</Text>
           </View>
-          {/* 总结项目 */}
-          {[
-            '达成成果：',
-            '从本周成果中行动发现发生的改变：',
-            '本周分享：',
-            '本周体验：',
-            '行得通：',
-            '学习到：',
-            '下一步：',
-            '本周挺困扰了7碰到了特别体验的思维事，为什么？',
-            '我的下一步：',
-          ].map((item) => (
-            <View key={item} className="mb-4">
-              <Text className="mb-2 text-sm text-gray-600">{item}</Text>
-              <TextInput
-                className="min-h-[60px] rounded-lg bg-[#F5F8FF] p-3"
-                placeholder="请输入..."
-                multiline
-              />
-            </View>
-          ))}
+          <View className="mb-4 flex-row gap-1">
+            <Text className="mb-2 text-sm ">达成成果:</Text>
+            <TextInput
+              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4  gap-1">
+            <Text className="mb-2    text-[14px] font-bold">从本周成果和行动出发自我总结:</Text>
+            <TextInput
+              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4  gap-1">
+            <Text className="mb-2 text-sm ">
+              123、4+5+6本周我运用了哪些?特别有体验的是哪条,为什么?
+            </Text>
+            <TextInput
+              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4  gap-1">
+            <Text className="mb-2 text-sm ">我的下一步:</Text>
+            <TextInput
+              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4 flex-row items-center gap-1">
+            <Text className="mb-2 w-[60px]  text-sm">本周打分:</Text>
+            <TextInput
+              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4 flex-row items-center gap-1">
+            <Text className="mb-2 w-[60px]  text-sm">本周体验:</Text>
+            <TextInput
+              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4 flex-row items-center gap-1">
+            <Text className="mb-2 w-[60px]  text-sm">行得通:</Text>
+            <TextInput
+              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4 flex-row items-center gap-1">
+            <Text className="mb-2 w-[60px]  text-sm">学习到:</Text>
+            <TextInput
+              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
+          <View className="mb-4 flex-row items-center gap-1">
+            <Text className="mb-2 w-[60px]  text-sm">下一步:</Text>
+            <TextInput
+              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              placeholder="请输入..."
+              multiline
+            />
+          </View>
         </View>
       </View>
     </ScrollView>
