@@ -2,13 +2,14 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 cssInterop(LinearGradient, { className: 'style' });
 
 export default function Achievements() {
   return (
     <ScrollView
-      className="flex-1  px-4 pt-4"
+      className="flex-1   pt-4"
       contentContainerStyle={{
         paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
       }}
@@ -82,6 +83,7 @@ export default function Achievements() {
               title: '个人资料',
               status: '已完成',
               date: '2023/4/15',
+              href: '/profile'
             },
             {
               icon: 'star',
@@ -89,6 +91,7 @@ export default function Achievements() {
               title: '我的约誓',
               status: '已完成',
               date: '2023/4/15',
+              href: '/oath'
             },
             {
               icon: 'book',
@@ -96,6 +99,7 @@ export default function Achievements() {
               title: '我的承诺',
               status: '完成进行课程学习',
               date: '2023/4/15',
+              href: '/promise'
             },
             {
               icon: 'rocket',
@@ -103,26 +107,31 @@ export default function Achievements() {
               title: '创造成果',
               status: '完成进行课程学习',
               date: '2023/4/15',
+              href: '/achievement'
             },
           ].map((item) => (
-            <Pressable
+            <Link
               key={item.title}
-              className="h-[90px] flex-row items-center  gap-4 rounded-xl bg-white p-4">
-              <View
-                className="h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: `${item.color}20` }}>
-                <Ionicons
-                  name={item.icon as keyof typeof Ionicons.glyphMap}
-                  size={20}
-                  color={item.color}
-                />
-              </View>
-              <View className="ml-3 flex flex-1 flex-col gap-1">
-                <Text className="text-base font-medium">{item.title}</Text>
-                <Text className=" text-sm text-gray-400">{item.status}</Text>
-                <Text className="text-xs text-gray-300">创建于 {item.date}</Text>
-              </View>
-            </Pressable>
+              href={`/be/${item.href}`}
+              asChild
+              className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
+              <Pressable className="flex-row items-center gap-4">
+                <View
+                  className="h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: `${item.color}20` }}>
+                  <Ionicons
+                    name={item.icon as keyof typeof Ionicons.glyphMap}
+                    size={20}
+                    color={item.color}
+                  />
+                </View>
+                <View className="flex flex-1 flex-col gap-1">
+                  <Text className="text-base font-medium">{item.title}</Text>
+                  <Text className=" text-sm text-gray-400">{item.status}</Text>
+                  <Text className="text-xs text-gray-300">创建于 {item.date}</Text>
+                </View>
+              </Pressable>
+            </Link>
           ))}
         </View>
       </View>

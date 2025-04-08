@@ -5,10 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import timeLogo from "~/assets/images/be/time.png"
+import timeLogo from '~/assets/images/be/time.png';
 cssInterop(LinearGradient, { className: 'style' });
 cssInterop(Image, { className: 'style' });
 cssInterop(BlurView, { className: 'style' });
+cssInterop(Text, { className: 'style' });
 type DeclarationCardProps = {
   title: string;
   time: string;
@@ -138,7 +139,7 @@ export default function DailyDeclaration() {
 
   return (
     <ScrollView
-      className="flex-1 px-4 pt-2"
+      className="flex-1  pt-2"
       contentContainerStyle={{
         paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
       }}
@@ -153,12 +154,12 @@ export default function DailyDeclaration() {
           <Text className="text-lg font-semibold">{`${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月${currentDate.getDate()}日`}</Text>
         </View>
         <View className="mt-1 flex-row items-center justify-center">
-          <Text className="text-sm text-gray-500">{`第`}</Text>
-          <Text className="text-sm text-[#1483FD]">{week}</Text>
-          <Text className="text-sm text-gray-500">{`天 第`}</Text>
-          <Text className="text-sm text-[#1483FD]">{week}</Text>
-          <Text className="text-sm text-gray-500">{`周 星期`}</Text>
-          <Text className="text-sm text-[#1483FD]">{weekday}</Text>
+          <Text className="text-base text-gray-500">{`第`}</Text>
+          <Text className="text-base text-[#1483FD]">{week}</Text>
+          <Text className="text-base text-gray-500">{`天 第`}</Text>
+          <Text className="text-base text-[#1483FD]">{week}</Text>
+          <Text className="text-base text-gray-500">{`周 星期`}</Text>
+          <Text className="text-base text-[#1483FD]">{weekday}</Text>
         </View>
       </View>
 
@@ -175,9 +176,8 @@ export default function DailyDeclaration() {
           <Text
             className="text-white"
             style={{
-              fontFamily: 'Roboto',
               fontSize: 16,
-              fontWeight: '700',
+              fontWeight: '800',
               lineHeight: 20,
             }}>
             早宣告
@@ -192,7 +192,13 @@ export default function DailyDeclaration() {
                   className="mr-2 h-8 w-1 rounded-full"
                   style={{ backgroundColor: getBarColor(section.title) }}
                 />
-                <Text className="text-sm font-medium text-gray-700">{section.title}:</Text>
+                <Text
+                  style={{
+                    fontFamily: 'Arial',
+                  }}
+                  className="text-[16px]  font-bold text-gray-700">
+                  {section.title} {'\u003A'}
+                </Text>
               </View>
               <View className="flex flex-1 flex-col gap-2">
                 {section.items.map((item, itemIndex) => (
@@ -212,6 +218,7 @@ export default function DailyDeclaration() {
                       className="z-10 h-[80px] p-3 text-gray-600"
                       placeholder={`请输入${section.title}的计划...`}
                       multiline
+                      textAlignVertical="top"
                       value={item.content}
                       onChangeText={(text) => {
                         const newTimeSlots = [...timeSlots];
@@ -239,21 +246,16 @@ export default function DailyDeclaration() {
           <Text
             className="text-white"
             style={{
-              fontFamily: 'Roboto',
               fontSize: 16,
-              fontWeight: '700',
+              fontWeight: '800',
               lineHeight: 20,
             }}>
             晚总结
           </Text>
           <View className="flex-row items-center">
             <Text className=" text-white">9:00AM</Text>
-            <View className="flex-row mx-2 items-center">
-              <Image
-                source={timeLogo}
-                className="h-4 w-4"
-                contentFit="contain"
-              />
+            <View className="mx-2 flex-row items-center">
+              <Image source={timeLogo} className="h-4 w-4" contentFit="contain" />
               <Text className="ml-2 text-white">待完成</Text>
             </View>
           </View>
@@ -283,6 +285,7 @@ export default function DailyDeclaration() {
                   className="z-10 min-h-[54px] p-3 text-gray-600"
                   placeholder={`请输入${item.label}...`}
                   multiline
+                  textAlignVertical="top"
                   value={item.value}
                   onChangeText={(text) => {
                     const newReport = [...eveningReport];
@@ -332,21 +335,8 @@ export default function DailyDeclaration() {
         </LinearGradient>
 
         <View className="p-4">
-          <Text
-            style={{
-              fontWeight: '800',
-            }}
-            className="mb-2 text-[16px]   text-black">
-            总目标
-          </Text>
+          <Text className="mb-2  text-[16px]  font-[800] text-black">总目标</Text>
           <View className="relative mb-4  overflow-hidden rounded-[6px]">
-            {/* <View
-              className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
-              style={{
-                backgroundColor: '#440063',
-                filter: 'blur(15px)',
-              }}
-            /> */}
             <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
             <TextInput
               className="z-10 min-h-[47px] p-3 text-gray-600"
@@ -357,27 +347,36 @@ export default function DailyDeclaration() {
             />
           </View>
 
-          <View className="flex-row justify-between gap-2">
+          <View className="mt-6 flex-row justify-between gap-2">
             <View className="flex-1 items-center">
               <Text
                 className="mb-2"
                 style={{
                   color: 'rgba(0, 0, 0, 0.50)',
-                  fontFamily: 'Roboto',
                   fontSize: 14,
                   fontWeight: '400',
                 }}>
                 周累计应达成/实际达成
               </Text>
-              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px] bg-[#1483FD0D]">
+              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px]">
+                {/* 右上角光球 */}
+                <View
+                  className="absolute left-0 top-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+                  style={{
+                    backgroundColor: '#1483FD',
+                    filter: 'blur(25px)',
+                  }}
+                />
+                <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
                 <Text
                   style={{
                     color: '#1483FD',
                     fontFamily: 'Roboto',
                     fontSize: 24,
                     fontWeight: '700',
+                    zIndex: 1,
                   }}>
-                  {dailyResult.weeklyProgress}
+                  {dailyResult.monthlyProgress}
                 </Text>
               </View>
             </View>
@@ -392,13 +391,22 @@ export default function DailyDeclaration() {
                 }}>
                 本周宣告/实际达成
               </Text>
-              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px] bg-[#1483FD0D]">
+              <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px]">
+                <View
+                  className="absolute left-0 top-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+                  style={{
+                    backgroundColor: '#1483FD',
+                    filter: 'blur(25px)',
+                  }}
+                />
+                <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
                 <Text
                   style={{
                     color: '#1483FD',
                     fontFamily: 'Roboto',
                     fontSize: 24,
                     fontWeight: '700',
+                    zIndex: 1,
                   }}>
                   {dailyResult.monthlyProgress}
                 </Text>

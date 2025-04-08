@@ -10,7 +10,7 @@ cssInterop(BlurView, { className: 'style' });
 export default function WeeklyDeclaration() {
   return (
     <ScrollView
-      className="flex-1 px-4 pt-4"
+      className="flex-1  pt-4"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
@@ -36,7 +36,7 @@ export default function WeeklyDeclaration() {
             boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
           }}
           className="flex h-[38px]  justify-center px-4">
-          <Text className="font-bold text-white">成果宣告</Text>
+          <Text className="font-bold text-[16px] text-white">成果宣告</Text>
         </LinearGradient>
         <View className="">
           <TextInput
@@ -57,7 +57,7 @@ export default function WeeklyDeclaration() {
             boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
           }}
           className="flex h-[38px]  justify-center px-4">
-          <Text className="font-bold text-white">行动计划</Text>
+          <Text className="font-bold text-[16px] text-white">行动计划</Text>
         </LinearGradient>
         <View className="p-4">
           {/* 星期选择器 */}
@@ -147,7 +147,7 @@ export default function WeeklyDeclaration() {
             boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
           }}
           className="flex h-[38px]  justify-center px-4">
-          <Text className="font-bold text-white">第一周总结</Text>
+          <Text className="font-bold text-[16px] text-white">第一周总结</Text>
         </LinearGradient>
         <View className="p-4">
           {/* 进度条 */}
@@ -161,7 +161,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row gap-1">
             <Text className="mb-2 text-sm ">达成成果:</Text>
             <TextInput
-              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -169,7 +169,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4  gap-1">
             <Text className="mb-2    text-[14px] font-bold">从本周成果和行动出发自我总结:</Text>
             <TextInput
-              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -179,7 +179,7 @@ export default function WeeklyDeclaration() {
               123、4+5+6本周我运用了哪些?特别有体验的是哪条,为什么?
             </Text>
             <TextInput
-              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -187,7 +187,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4  gap-1">
             <Text className="mb-2 text-sm ">我的下一步:</Text>
             <TextInput
-              className="min-h-[60px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -195,7 +195,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row items-center gap-1">
             <Text className="mb-2 w-[60px]  text-sm">本周打分:</Text>
             <TextInput
-              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -203,15 +203,15 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row items-center gap-1">
             <Text className="mb-2 w-[60px]  text-sm">本周体验:</Text>
             <TextInput
-              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
           </View>
           <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]  text-sm">行得通:</Text>
+            <Text className="mb-2 w-[60px]   text-sm">行得通:</Text>
             <TextInput
-              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -219,7 +219,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row items-center gap-1">
             <Text className="mb-2 w-[60px]  text-sm">学习到:</Text>
             <TextInput
-              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
@@ -227,7 +227,7 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row items-center gap-1">
             <Text className="mb-2 w-[60px]  text-sm">下一步:</Text>
             <TextInput
-              className="min-h-[36px] flex-1 rounded-lg bg-[#F5F8FF] p-3"
+              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
               placeholder="请输入..."
               multiline
             />
