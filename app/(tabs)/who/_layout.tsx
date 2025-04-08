@@ -1,22 +1,23 @@
 import { Stack } from 'expo-router';
+import Animated, { Easing } from 'react-native-reanimated';
+
 export default function Layout() {
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
+    <Stack 
+      screenOptions={{
+        headerShown: false,
+      }}>
+      <Stack.Screen 
+        name="index" 
         options={{
-          headerShown: false,
+          animation: 'none',
           title: '我的',
-          headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: 'transparent',
-          },
         }}
       />
       <Stack.Screen
         name="general"
         options={{
-          title: '通用设置',
+          title: '通用设置', // 显示导航栏
         }}
       />
       <Stack.Screen

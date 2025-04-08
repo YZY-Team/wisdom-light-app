@@ -55,10 +55,24 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
 
-  const hideTabBarRoutes = ['/have/chat-square'];
+  // 添加 who 子页面到隐藏列表
+  const hideTabBarRoutes = [
+    '/have/chat-square',
+    '/who/general',
+    '/who/support',
+    '/who/membership',
+    '/who/become-mentor'
+  ];
   const shouldHideTabBar = hideTabBarRoutes.some(route => pathname.includes(route));
+
   return (
-    <Tabs asChild>
+    <Tabs 
+      options={{
+        headerShown: false,
+        freezeOnBlur: true,
+      }} 
+      asChild
+    >
       <View className="flex flex-1 relative flex-col bg-[#f5f5f5]">
         <View style={{ 
           flex: 1,

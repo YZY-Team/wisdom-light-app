@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,12 @@ cssInterop(LinearGradient, { className: 'style' });
 
 export default function Achievements() {
   return (
-    <View className="flex-1  px-4 pt-4">
+    <ScrollView
+      className="flex-1  px-4 pt-4"
+      contentContainerStyle={{
+        paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
+      }}
+      showsVerticalScrollIndicator={false}>
       {/* 总数据 */}
       <View className="mb-4">
         <Text className="mb-2 text-base font-[800] ">总数据</Text>
@@ -102,11 +107,15 @@ export default function Achievements() {
           ].map((item) => (
             <Pressable
               key={item.title}
-              className="h-[90px] flex-row gap-4  items-center rounded-xl bg-white p-4">
+              className="h-[90px] flex-row items-center  gap-4 rounded-xl bg-white p-4">
               <View
                 className="h-10 w-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: `${item.color}20` }}>
-                <Ionicons name={item.icon} size={20} color={item.color} />
+                <Ionicons
+                  name={item.icon as keyof typeof Ionicons.glyphMap}
+                  size={20}
+                  color={item.color}
+                />
               </View>
               <View className="ml-3 flex flex-1 flex-col gap-1">
                 <Text className="text-base font-medium">{item.title}</Text>
@@ -117,6 +126,6 @@ export default function Achievements() {
           ))}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }

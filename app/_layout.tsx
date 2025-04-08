@@ -46,6 +46,8 @@ export default function RootLayout() {
     <Stack
         initialRouteName="index"
         screenOptions={{
+          headerShown: false,
+          animation: 'none',
           headerTitleStyle: {
             fontSize: 18,
           },

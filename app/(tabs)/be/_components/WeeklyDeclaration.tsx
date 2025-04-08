@@ -11,6 +11,7 @@ export default function WeeklyDeclaration() {
   return (
     <ScrollView
       className="flex-1 px-4 pt-4"
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
       }}>
