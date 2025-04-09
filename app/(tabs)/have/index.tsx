@@ -3,9 +3,12 @@ import { Ionicons } from '@expo/vector-icons';
 import ChatList from './_components/ChatList';
 import TabBar from './_components/TabBar';
 import { useRouter } from 'expo-router';
+import { useWebSocketStore } from '~/store/websocketStore';
 
 export default function HaveIndex() {
   const router = useRouter();
+  
+  
 
   return (
     <View className="flex-1 px-4  bg-white">

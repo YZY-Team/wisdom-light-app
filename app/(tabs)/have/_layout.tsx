@@ -41,6 +41,14 @@ export default function HaveLayout() {
           ...commonOptions,
         }}
       />
+      {/* 添加私聊页面路由 */}
+      <Stack.Screen
+        name="private-chat/[userId]/index"
+        options={{
+          title: '私聊',
+          ...commonOptions,
+        }}
+      />
       <Stack.Screen
         name="video-meeting/index"
         options={{

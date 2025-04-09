@@ -8,6 +8,7 @@ import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { WebSocketProvider } from '~/contexts/WebSocketContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -43,7 +44,8 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
+    <WebSocketProvider>
+      <Stack
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
@@ -62,5 +64,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
+    </WebSocketProvider>
   );
 }
