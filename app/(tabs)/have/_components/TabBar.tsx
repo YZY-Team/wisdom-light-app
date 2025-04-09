@@ -11,6 +11,7 @@ const tabImages = {
   '聊天广场': require('~/assets/images/have/tabs/聊天广场.png'),
   '视频会议': require('~/assets/images/have/tabs/视频会议.png'),
   '寻找支持': require('~/assets/images/have/tabs/寻找支持.png'),
+  '好友列表': require('~/assets/images/have/tabs/寻找支持.png'),
 };
 
 cssInterop(Image, { className: 'style' });
@@ -40,32 +41,44 @@ export default function TabBar() {
   return (
     <View style={{
       boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.10)',
-    }} className="flex-row mb-7 bg-white gap-[8px] p-2 rounded-[8px]">
-      <Tab
-        title="添加好友"
-        icon="person-add-outline"
-        href="/have/add-friend"
-      />
-      <Tab
-        title="发起群聊"
-        icon="people-outline"
-        href="/have/create-group"
-      />
-      <Tab
-        title="聊天广场"
-        icon="chatbubbles-outline"
-        href="/have/chat-square"
-      />
-      <Tab
-        title="视频会议"
-        icon="videocam-outline"
-        href="/have/video-meeting"
-      />
-      <Tab
-        title="寻找支持"
-        icon="help-circle-outline"
-        href="/have/find-support"
-      />
+    }} className="bg-white  p-2 rounded-[8px]">
+      {/* 第一行 */}
+      <View className="flex-row mb-[8px]">
+        <Tab
+          title="添加好友"
+          icon="person-add-outline"
+          href="/have/add-friend"
+        />
+        <Tab
+          title="发起群聊"
+          icon="people-outline"
+          href="/have/create-group"
+        />
+        <Tab
+          title="聊天广场"
+          icon="chatbubbles-outline"
+          href="/have/chat-square"
+        />
+      </View>
+      
+      {/* 第二行 */}
+      <View className="flex-row">
+        <Tab
+          title="视频会议"
+          icon="videocam-outline"
+          href="/have/video-meeting"
+        />
+        <Tab
+          title="寻找支持"
+          icon="help-circle-outline"
+          href="/have/find-support"
+        />
+        <Tab
+          title="好友列表"
+          icon="help-circle-outline"
+          href="/have/friend-list"
+        />
+      </View>
     </View>
   );
 }

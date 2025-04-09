@@ -1,11 +1,12 @@
-import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { useWebSocketStore } from '~/store/websocketStore';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 type MessageProps = {
   content: string;
@@ -31,16 +32,26 @@ const Message = ({ content, time, user, isSelf }: MessageProps) => (
 );
 
 export default function PrivateChat() {
+  const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
-  const { dialogId, userName } = useLocalSearchParams(); // 从路由获取 dialogId 和 userName
+  const { dialogId, userName } = useLocalSearchParams();
   const [inputMessage, setInputMessage] = useState('');
-    console.log('dialogId', dialogId);
-    
+  
   // 从 Zustand store 获取消息
-  const { messages } = useWebSocketStore();
-  const chatMessages = messages[dialogId as string] || [];
-    console.log('chatMessages', chatMessages);
-    
+  const  messages  = useWebSocketStore(stats=> stats.messages);
+
+  
+  const chatMessages = messages[String(dialogId)] || [];
+  
+  // 添加消息更新时的自动滚动
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [chatMessages]);
+
   // WebSocket 上下文
   const { sendMessage } = useWebSocketContext();
 
@@ -76,7 +87,7 @@ export default function PrivateChat() {
   return (
     <View className="flex-1 bg-[#1483fd]/10">
       {/* 头部 */}
-      <View className="flex-row items-center px-4 py-3">
+      <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
         <Pressable onPress={() => router.back()} className="absolute left-4">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
@@ -85,38 +96,55 @@ export default function PrivateChat() {
 
       {/* 消息区域 */}
       <View className="flex-1">
-        <ScrollView className="flex-1 p-4">
+        <KeyboardAwareScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={{ padding: 16 }}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => {
+            scrollViewRef.current?.scrollToEnd({ animated: true });
+          }}
+        >
           {formattedMessages.map((msg, index) => (
-            <Message key={index} {...msg} />
+            <Message key={`${msg.time}-${index}`} {...msg} />
           ))}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
 
       {/* 底部输入框 */}
-      <View style={{ paddingBottom: insets.bottom + 20 || 20 }} className="p-4">
-        <View className="flex-row items-center">
-          <View
-            style={{
-              boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
-            }}
-            className="flex-1 flex-row items-center rounded-[12px] bg-gray-100 px-6 py-3"
-          >
-            <TextInput
-              className="flex-1"
-              placeholder="请输入消息..."
-              placeholderTextColor="#999"
-              value={inputMessage}
-              onChangeText={setInputMessage}
-              onSubmitEditing={handleSendMessage}
-            />
-            <Pressable onPress={handleSendMessage}>
-              <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
-                <Ionicons name="arrow-up" size={20} color="#fff" />
-              </View>
-            </Pressable>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <View 
+          className="px-4 pb-4" 
+          style={{ paddingBottom: insets.bottom || 20 }}
+        >
+          <View className="flex-row items-center">
+            <View
+              style={{
+                boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
+              }}
+              className="flex-1 flex-row items-center rounded-[12px] bg-gray-100 px-6 py-3"
+            >
+              <TextInput
+                className="flex-1"
+                placeholder="请输入消息..."
+                placeholderTextColor="#999"
+                value={inputMessage}
+                onChangeText={setInputMessage}
+                onSubmitEditing={handleSendMessage}
+                returnKeyType="send"
+                multiline={false}
+              />
+              <Pressable onPress={handleSendMessage}>
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
+                  <Ionicons name="arrow-up" size={20} color="#fff" />
+                </View>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

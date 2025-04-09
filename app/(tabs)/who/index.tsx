@@ -3,6 +3,8 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
+import { userApi } from '~/api/who/user';
 
 type MenuItemProps = {
   icon: string;
@@ -26,6 +28,11 @@ const MenuItem = ({ icon, title, href }: MenuItemProps) => (
 );
 
 export default function WhoIndex() {
+  useEffect(() => {
+    userApi.me().then(res => {
+      console.log(res)
+    })
+  })
   return (
     <View className="flex-1">
       <LinearGradient

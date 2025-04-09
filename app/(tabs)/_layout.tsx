@@ -56,12 +56,19 @@ export default function TabLayout() {
   const pathname = usePathname();
 
   const hideTabBarRoutes = [
+    // have 相关路由
     '/have/chat-square',
+    '/have/add-friend',
+    '/have/create-group',
+    '/have/private-chat',
+    '/have/video-meeting',
+    '/have/find-support',
+    // 其他路由保持不变
     '/who/general',
     '/who/support',
     '/who/membership',
     '/who/become-mentor',
-    '/be/profile',    // 添加 be 相关路由
+    '/be/profile',
     '/be/oath',
     '/be/promise',
     '/be/achievement'

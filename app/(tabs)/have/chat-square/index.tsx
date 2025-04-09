@@ -90,7 +90,7 @@ export default function ChatSquare() {
         console.error('WebSocket 错误:', error);
       },
       onMessage: (event) => {
-        console.log('收到消息:', event.data);
+
         // try {
         //   const data = JSON.parse(event.data);
         //   setMessages((prev) => [...prev, {

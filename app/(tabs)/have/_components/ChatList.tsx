@@ -2,10 +2,12 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useWebSocketStore } from '~/store/websocketStore';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { dialogApi } from '~/api/have/dialog';
+import type { Dialog } from '~/types/have/dialogType';
 
 type ChatItemProps = {
-  id: string;  // 添加 id 属性
+  id: string; // 添加 id 属性
   avatar: string;
   name: string;
   lastMessage: string;
@@ -40,49 +42,61 @@ const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }:
 
 export default function ChatList() {
   const { messages } = useWebSocketStore();
+  const [dialogs, setDialogs] = useState<Dialog[]>([]);
+
+  useEffect(() => {
+    dialogApi.getDialogs().then((res) => {
+      if (res.code === 200 && res.data) {
+        setDialogs(res.data);
+      }
+    });
+  }, []);
 
   const chatList = useMemo(() => {
-    return Object.entries(messages).map(([dialogId, dialogMessages]) => {
-      // 获取最后一条消息
+    return dialogs.map((dialog) => {
+      // 获取对应对话的消息
+      const dialogMessages = messages[dialog.dialogId] || [];
       const lastMessage = dialogMessages[dialogMessages.length - 1];
-      
-      // 格式化时间
-      const time = new Date(lastMessage.timestamp).toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
 
-      // 确定对话对象ID（非自己的用户ID）
-      const partnerId = lastMessage.senderId === '123' ? lastMessage.receiverId : lastMessage.senderId;
+      // 格式化时间
+      const time = lastMessage?.timestamp 
+        ? new Date(lastMessage.timestamp).toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : dialog.lastMessageTime
+          ? new Date(dialog.lastMessageTime).toLocaleTimeString('zh-CN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : '';
 
       return {
-        id: partnerId,
-        dialogId,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${partnerId}`,
-        name: `用户${partnerId}`, // 这里可以替换为真实的用户名
-        lastMessage: lastMessage.textContent,
+        id: dialog.dialogId,
+        dialogId: dialog.dialogId,
+        avatar:
+          dialog.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dialog.dialogId}`,
+        name: dialog.title || `对话 ${dialog.dialogId}`,
+        lastMessage: lastMessage?.textContent || '暂无消息',
         time,
-        // 可以根据需要添加未读消息计数
-        unreadCount: dialogMessages.filter(msg => 
-          msg.status === 'CREATED' && msg.senderId !== '123'
-        ).length
+        unreadCount: dialog.unreadCount || 0,
       };
     });
-  }, [messages]);
+  }, [dialogs, messages]); // 确保依赖项正确
 
   const handleChatPress = (dialogId: string, userName: string) => {
     router.push({
       pathname: `/have/private-chat/${dialogId}`,
-      params: { userName, dialogId}
+      params: { userName, dialogId },
     });
   };
 
   return (
     <ScrollView className="flex-1">
       {chatList.map((chat) => (
-        <ChatItem 
-          key={chat.dialogId} 
-          {...chat} 
+        <ChatItem
+          key={chat.dialogId}
+          {...chat}
           onPress={() => handleChatPress(chat.dialogId, chat.name)}
         />
       ))}

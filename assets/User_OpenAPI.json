@@ -1,0 +1,2426 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API Documentation",
+    "description": "DEXTER-API",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://192.168.1.158:8080/api",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "user-coins",
+      "description": "用户积分控制器"
+    },
+    {
+      "name": "消息接口",
+      "description": "消息相关接口"
+    },
+    {
+      "name": "user-coins-tx",
+      "description": "用户积分交易控制器"
+    },
+    {
+      "name": "user-invite",
+      "description": "用户邀请接口"
+    },
+    {
+      "name": "user",
+      "description": "用户相关接口"
+    },
+    {
+      "name": "sms",
+      "description": "发送短信"
+    },
+    {
+      "name": "对话接口",
+      "description": "提供对话相关的API"
+    },
+    {
+      "name": "好友接口",
+      "description": "提供好友相关的API"
+    }
+  ],
+  "paths": {
+    "/messages/{msgId}/read": {
+      "put": {
+        "tags": [
+          "消息接口"
+        ],
+        "summary": "标记消息已读",
+        "description": "标记指定消息为已读状态",
+        "operationId": "markMessageAsRead",
+        "parameters": [
+          {
+            "name": "msgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/{friendId}": {
+      "get": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "获取好友信息",
+        "description": "获取特定好友的详细信息",
+        "operationId": "getFriendInfo",
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "description": "好友ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseFriendVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "更新好友信息",
+        "description": "更新指定好友的备注和自定义头像",
+        "operationId": "updateFriendInfo",
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "description": "好友ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFriendInfoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "删除好友",
+        "description": "删除指定的好友关系",
+        "operationId": "removeFriend",
+        "parameters": [
+          {
+            "name": "friendId",
+            "in": "path",
+            "description": "好友ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/{requestId}/reject": {
+      "put": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "拒绝好友请求",
+        "description": "拒绝指定的好友请求",
+        "operationId": "rejectFriendRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "description": "请求ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/{requestId}/accept": {
+      "put": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "接受好友请求",
+        "description": "接受指定的好友请求",
+        "operationId": "acceptFriendRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "description": "请求ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/edit": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "编辑信息",
+        "description": "编辑信息",
+        "operationId": "editUserInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sms": {
+      "post": {
+        "tags": [
+          "sms"
+        ],
+        "summary": "发送短信",
+        "description": "发送短信",
+        "operationId": "sendSmsCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invite": {
+      "get": {
+        "tags": [
+          "user-invite"
+        ],
+        "summary": "邀请列表",
+        "description": "当前登录用户可以邀请的用户列表",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "SUCCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InviteUserRecordVo"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user-invite"
+        ],
+        "summary": "处理邀请",
+        "description": "处理邀请",
+        "operationId": "processInvite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests": {
+      "post": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "发送好友请求",
+        "description": "向指定用户发送好友请求",
+        "operationId": "sendFriendRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FriendRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialogs/private": {
+      "post": {
+        "tags": [
+          "对话接口"
+        ],
+        "summary": "创建私聊",
+        "description": "创建新的群聊对话",
+        "operationId": "createPrivateDialog",
+        "parameters": [
+          {
+            "name": "targetUserId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialogs/group": {
+      "post": {
+        "tags": [
+          "对话接口"
+        ],
+        "summary": "创建群聊",
+        "description": "创建新的群聊对话",
+        "operationId": "createGroupDialog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/coins": {
+      "post": {
+        "tags": [
+          "user-coins"
+        ],
+        "summary": "Coins余额",
+        "description": "用户积分余额",
+        "operationId": "getUserCoinsInfo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCoinsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "SUCCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UserCoinsVo"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/coins/tx": {
+      "post": {
+        "tags": [
+          "user-coins-tx"
+        ],
+        "summary": "交易记录",
+        "description": "收益列表",
+        "operationId": "getLeaderboard",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCoinsTransactionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "SUCCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UserCoinsTransactionVo"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/me": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "当前登录用户",
+        "description": "当前登录用户邀请链接等信息",
+        "operationId": "getCurrentUser_1",
+        "responses": {
+          "200": {
+            "description": "SUCCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/dialog/{dialogId}": {
+      "get": {
+        "tags": [
+          "消息接口"
+        ],
+        "summary": "获取对话消息",
+        "description": "获取指定对话的消息列表",
+        "operationId": "getDialogMessages",
+        "parameters": [
+          {
+            "name": "dialogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListMessageVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends": {
+      "get": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "获取好友列表",
+        "description": "获取当前用户的所有好友列表",
+        "operationId": "getUserFriends",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListFriendVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/sent": {
+      "get": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "获取已发送的好友请求",
+        "description": "获取当前用户发送的所有好友请求",
+        "operationId": "getSentRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListFriendRequestVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/pending": {
+      "get": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "获取待处理的好友请求",
+        "description": "获取当前用户收到的所有待处理好友请求",
+        "operationId": "getPendingRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListFriendRequestVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/check/{targetUserId}": {
+      "get": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "检查好友关系",
+        "description": "检查与指定用户是否为好友关系",
+        "operationId": "checkFriendship",
+        "parameters": [
+          {
+            "name": "targetUserId",
+            "in": "path",
+            "description": "目标用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialogs": {
+      "get": {
+        "tags": [
+          "对话接口"
+        ],
+        "summary": "获取用户对话列表",
+        "description": "获取当前用户的所有对话列表",
+        "operationId": "getUserDialogs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListDialogVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialogs/{dialogId}": {
+      "get": {
+        "tags": [
+          "对话接口"
+        ],
+        "summary": "获取对话详情",
+        "description": "获取指定对话的详细信息",
+        "operationId": "getDialogDetails",
+        "parameters": [
+          {
+            "name": "dialogId",
+            "in": "path",
+            "description": "对话ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseDialogVO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{msgId}": {
+      "delete": {
+        "tags": [
+          "消息接口"
+        ],
+        "summary": "删除消息",
+        "description": "删除指定消息",
+        "operationId": "deleteMessage",
+        "parameters": [
+          {
+            "name": "msgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/{requestId}": {
+      "delete": {
+        "tags": [
+          "好友接口"
+        ],
+        "summary": "取消好友请求",
+        "description": "取消已发送的好友请求",
+        "operationId": "cancelFriendRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "description": "请求ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BaseResponse": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "BaseResponseBoolean": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateFriendInfoDTO": {
+        "type": "object",
+        "description": "更新信息",
+        "properties": {
+          "remark": {
+            "type": "string",
+            "title": "好友备注",
+            "refType": null
+          },
+          "customAvatarUrl": {
+            "type": "string",
+            "title": "自定义头像URL",
+            "refType": null
+          }
+        }
+      },
+      "EditUserRequest": {
+        "type": "object",
+        "properties": {
+          "gender": {
+            "type": "string",
+            "title": "性别",
+            "refType": null
+          },
+          "phone": {
+            "type": "string",
+            "title": "手机号",
+            "refType": null
+          },
+          "email": {
+            "type": "string",
+            "title": "email",
+            "refType": null
+          },
+          "username": {
+            "type": "string",
+            "title": "username",
+            "refType": null
+          },
+          "nickname": {
+            "type": "string",
+            "title": "nickname",
+            "refType": null
+          }
+        }
+      },
+      "SendSmsCodeRequest": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "手机号",
+            "refType": null
+          },
+          "countryCode": {
+            "type": "string",
+            "title": "国家代码",
+            "refType": null
+          }
+        }
+      },
+      "ProcessInviteRequest": {
+        "type": "object",
+        "properties": {
+          "platformUserId": {
+            "type": "string",
+            "title": "用户平台ID",
+            "refType": null
+          },
+          "platformName": {
+            "type": "string",
+            "title": "用户平台名称",
+            "refType": null
+          },
+          "inviteCode": {
+            "type": "string",
+            "title": "邀请码",
+            "refType": null
+          }
+        }
+      },
+      "BaseResponseObject": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "FriendRequestDTO": {
+        "type": "object",
+        "description": "好友请求信息",
+        "properties": {
+          "senderId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "发送者ID",
+            "refType": null
+          },
+          "receiverId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "接收者ID",
+            "refType": null
+          },
+          "requestMessage": {
+            "type": "string",
+            "title": "请求消息",
+            "refType": null
+          }
+        },
+        "required": [
+          "receiverId",
+          "senderId"
+        ]
+      },
+      "BaseResponseLong": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CreateGroupRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "群组的名称",
+            "title": "群组名称",
+            "refType": null
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "群组的头像URL",
+            "title": "群组头像",
+            "refType": null
+          },
+          "memberIds": {
+            "type": "array",
+            "description": "初始成员ID列表（不包括创建者）",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "title": "成员ID列表",
+            "refType": "integer"
+          },
+          "description": {
+            "type": "string",
+            "description": "群组的描述信息",
+            "title": "群组描述",
+            "refType": null
+          }
+        },
+        "required": [
+          "memberIds",
+          "title"
+        ]
+      },
+      "UserCoinsRequest": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1,
+            "title": "页码",
+            "refType": null
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "example": 10,
+            "title": "条目数",
+            "refType": null
+          },
+          "sortField": {
+            "type": "string",
+            "example": "createTime",
+            "title": "排序字段",
+            "refType": null
+          },
+          "sortMode": {
+            "type": "boolean",
+            "example": true,
+            "title": "排序字段方式 true 升序 ASC / false 降序 DESC",
+            "refType": null
+          },
+          "coinsType": {
+            "type": "string",
+            "enum": [
+              "DEXTER_COINS",
+              "VIDEO_POINTS",
+              "MEMBERSHIP_POINTS",
+              "INVITE_POINTS",
+              "SIGN_IN_COINS",
+              "JOIN_GROUP_POINTS",
+              "AD_POINTS",
+              "OPEN_APP",
+              "LOTTERY_POINTS",
+              "WATCH_AD",
+              "OPEN_MINI_APP"
+            ],
+            "title": "积分类型",
+            "refType": null
+          }
+        }
+      },
+      "UserCoinsVo": {
+        "type": "object",
+        "properties": {
+          "userCoinsId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "积分记录的唯一标识"
+          },
+          "globalUserId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "用户的ID，关联到用户表中的global_user_id"
+          },
+          "coinsType": {
+            "type": "string",
+            "enum": [
+              "DEXTER_COINS",
+              "VIDEO_POINTS",
+              "MEMBERSHIP_POINTS",
+              "INVITE_POINTS",
+              "SIGN_IN_COINS",
+              "JOIN_GROUP_POINTS",
+              "AD_POINTS",
+              "OPEN_APP",
+              "LOTTERY_POINTS",
+              "WATCH_AD",
+              "OPEN_MINI_APP"
+            ],
+            "title": "积分类型，如普通积分、特殊积分等"
+          },
+          "coinsBalance": {
+            "type": "number",
+            "title": "用户当前的积分余额"
+          },
+          "totalCoinsBalance": {
+            "type": "number",
+            "title": "所有积分类型的总积分"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "积分记录的创建时间"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "积分记录的最近更新时间"
+          }
+        }
+      },
+      "UserCoinsTransactionRequest": {
+        "type": "object",
+        "properties": {
+          "pageNum": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1,
+            "title": "页码",
+            "refType": null
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32",
+            "example": 10,
+            "title": "条目数",
+            "refType": null
+          },
+          "sortField": {
+            "type": "string",
+            "example": "createTime",
+            "title": "排序字段",
+            "refType": null
+          },
+          "sortMode": {
+            "type": "boolean",
+            "example": true,
+            "title": "排序字段方式 true 升序 ASC / false 降序 DESC",
+            "refType": null
+          },
+          "transactionType": {
+            "type": "string",
+            "title": "交易类型",
+            "refType": null
+          }
+        }
+      },
+      "UserCoinsTransactionVo": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "积分交易的唯一标识符"
+          },
+          "globalUserId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "用户ID，关联到用户表中的global_user_id"
+          },
+          "coinsType": {
+            "type": "string",
+            "title": "积分类型，如普通积分、特殊积分等"
+          },
+          "coinsChange": {
+            "type": "number",
+            "title": "积分的变动数，正数表示增加，负数表示减少"
+          },
+          "fee": {
+            "type": "string",
+            "title": "手续费"
+          },
+          "transactionType": {
+            "type": "string",
+            "title": "交易类型，如看短剧、完成任务、消费、竞猜等"
+          },
+          "description": {
+            "type": "string",
+            "title": "交易详情的描述"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "积分交易发生的时间"
+          },
+          "expireTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "积分的过期时间，适用于有过期时间的积分"
+          }
+        }
+      },
+      "CurrentUserDto": {
+        "type": "object",
+        "properties": {
+          "globalUserId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "系统用户id"
+          },
+          "isBuy": {
+            "type": "boolean",
+            "title": "isBuy"
+          },
+          "isInvite": {
+            "type": "boolean",
+            "title": "isInvite"
+          },
+          "gender": {
+            "type": "string",
+            "title": "M-男性, F-女性, N-不指定"
+          },
+          "phone": {
+            "type": "string",
+            "title": "手机号"
+          },
+          "email": {
+            "type": "string",
+            "title": "email"
+          },
+          "platformName": {
+            "type": "string",
+            "title": "平台名称"
+          },
+          "platformUserId": {
+            "type": "string",
+            "title": "平台用户ID"
+          },
+          "platformUsername": {
+            "type": "string",
+            "title": "平台用户账号"
+          },
+          "firstName": {
+            "type": "string",
+            "title": "用户的First Name"
+          },
+          "lastName": {
+            "type": "string",
+            "title": "用户的Last Name"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "title": "头像url"
+          },
+          "webInviteUrl": {
+            "type": "string",
+            "title": "web邀请链接"
+          },
+          "isBlacklist": {
+            "type": "boolean",
+            "title": "是否是黑名单"
+          },
+          "accountRole": {
+            "type": "string",
+            "title": "用户角色"
+          },
+          "status": {
+            "type": "string",
+            "title": "用户状态"
+          },
+          "loginTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "登录时间"
+          }
+        }
+      },
+      "BaseResponseListMessageVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageVO"
+            }
+          }
+        }
+      },
+      "MessageVO": {
+        "type": "object",
+        "properties": {
+          "msgId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "消息ID",
+            "refType": null
+          },
+          "dialogId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "对话ID",
+            "refType": null
+          },
+          "senderId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "发送者ID",
+            "refType": null
+          },
+          "senderName": {
+            "type": "string",
+            "title": "发送者名称",
+            "refType": null
+          },
+          "senderAvatar": {
+            "type": "string",
+            "title": "发送者头像",
+            "refType": null
+          },
+          "messageType": {
+            "type": "string",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8"
+            ],
+            "title": "消息类型",
+            "refType": null
+          },
+          "textContent": {
+            "type": "string",
+            "title": "文本内容",
+            "refType": null
+          },
+          "sendTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "发送时间",
+            "refType": null
+          },
+          "isEdited": {
+            "type": "boolean",
+            "title": "是否已编辑",
+            "refType": null
+          },
+          "isRead": {
+            "type": "boolean",
+            "title": "是否已读",
+            "refType": null
+          },
+          "readTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "已读时间",
+            "refType": null
+          },
+          "replyToMsgId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "回复消息ID",
+            "refType": null
+          },
+          "replyPreview": {
+            "type": "string",
+            "title": "回复消息内容预览",
+            "refType": null
+          },
+          "mentionedUserIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "title": "提及的用户ID列表",
+            "refType": "integer"
+          },
+          "mediaUrl": {
+            "type": "string",
+            "title": "媒体URL",
+            "refType": null
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "title": "媒体缩略图URL",
+            "refType": null
+          },
+          "fileName": {
+            "type": "string",
+            "title": "文件名",
+            "refType": null
+          },
+          "fileSize": {
+            "type": "integer",
+            "format": "int64",
+            "title": "文件大小(字节)",
+            "refType": null
+          }
+        }
+      },
+      "InviteUserRecordVo": {
+        "type": "object",
+        "properties": {
+          "tgUserId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "webInviteCode": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        }
+      },
+      "BaseResponseListFriendVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FriendVO"
+            }
+          }
+        }
+      },
+      "FriendVO": {
+        "type": "object",
+        "description": "好友信息VO",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "用户ID",
+            "refType": null
+          },
+          "username": {
+            "type": "string",
+            "title": "用户名",
+            "refType": null
+          },
+          "nickname": {
+            "type": "string",
+            "title": "昵称",
+            "refType": null
+          },
+          "remark": {
+            "type": "string",
+            "title": "好友备注",
+            "refType": null
+          },
+          "avatarUrl": {
+            "type": "string",
+            "title": "头像URL",
+            "refType": null
+          },
+          "originalAvatarUrl": {
+            "type": "string",
+            "title": "原始头像URL",
+            "refType": null
+          },
+          "customAvatarUrl": {
+            "type": "string",
+            "title": "自定义头像URL",
+            "refType": null
+          },
+          "isFavorite": {
+            "type": "boolean",
+            "title": "是否为星标好友",
+            "refType": null
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "成为好友的时间",
+            "refType": null
+          }
+        }
+      },
+      "BaseResponseFriendVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FriendVO"
+          }
+        }
+      },
+      "BaseResponseListFriendRequestVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FriendRequestVO"
+            }
+          }
+        }
+      },
+      "FriendRequestVO": {
+        "type": "object",
+        "description": "好友请求VO",
+        "properties": {
+          "requestId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "请求ID",
+            "refType": null
+          },
+          "senderId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "发送者ID",
+            "refType": null
+          },
+          "senderName": {
+            "type": "string",
+            "title": "发送者名称",
+            "refType": null
+          },
+          "senderAvatar": {
+            "type": "string",
+            "title": "发送者头像",
+            "refType": null
+          },
+          "requestMessage": {
+            "type": "string",
+            "title": "请求消息",
+            "refType": null
+          },
+          "status": {
+            "type": "string",
+            "title": "状态",
+            "refType": null
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "创建时间",
+            "refType": null
+          }
+        }
+      },
+      "BaseResponseListDialogVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DialogVO"
+            }
+          }
+        }
+      },
+      "DialogVO": {
+        "type": "object",
+        "properties": {
+          "dialogId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "对话ID",
+            "refType": null
+          },
+          "dialogType": {
+            "type": "string",
+            "enum": [
+              "1",
+              "2",
+              "3"
+            ],
+            "title": "对话类型",
+            "refType": null
+          },
+          "title": {
+            "type": "string",
+            "title": "标题",
+            "refType": null
+          },
+          "avatarUrl": {
+            "type": "string",
+            "title": "头像URL",
+            "refType": null
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "创建时间",
+            "refType": null
+          },
+          "lastMessageId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "最后消息ID",
+            "refType": null
+          },
+          "lastMessageContent": {
+            "type": "string",
+            "title": "最后消息内容",
+            "refType": null
+          },
+          "lastMessageSenderId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "最后消息发送者ID",
+            "refType": null
+          },
+          "lastMessageSenderName": {
+            "type": "string",
+            "title": "最后消息发送者名称",
+            "refType": null
+          },
+          "lastMessageTime": {
+            "type": "string",
+            "format": "date-time",
+            "title": "最后消息发送时间",
+            "refType": null
+          },
+          "unreadCount": {
+            "type": "integer",
+            "format": "int32",
+            "title": "未读消息数",
+            "refType": null
+          },
+          "isMuted": {
+            "type": "boolean",
+            "title": "是否静音",
+            "refType": null
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32",
+            "title": "成员数量",
+            "refType": null
+          },
+          "creatorId": {
+            "type": "integer",
+            "format": "int64",
+            "title": "创建者ID",
+            "refType": null
+          }
+        }
+      },
+      "BaseResponseDialogVO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DialogVO"
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Parameter Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

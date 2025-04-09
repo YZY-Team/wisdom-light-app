@@ -3,19 +3,44 @@ import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { loginApi } from '~/api/auth/login';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Checkbox from 'expo-checkbox';
+import { useWebSocketContext } from '~/contexts/WebSocketContext';
+import { userApi } from '~/api/who/user';
+// 删除 SecureStore import
+// import * as SecureStore from 'expo-secure-store';
 
 export default function Login() {
   const insets = useSafeAreaInsets();
   const [username, setUsername] = useState('');
-  const [phone, setPhone] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-
+  const [isChecked, setChecked] = useState(false);
+  const [phone, setPhone] = useState('+8619232040670');
+  const [verificationCode, setVerificationCode] = useState('123456');
+  const wsContext = useWebSocketContext();
   const handleRegister = async () => {
     try {
       console.log('注册信息：', { username, phone, verificationCode });
-      router.replace('/(tabs)/have');
+      const loginRes = await loginApi.login({ phone, code: verificationCode });
+      console.log('登录成功', loginRes);
+      if (loginRes.code === 200) {
+        // 使用 AsyncStorage 存储 token
+        await AsyncStorage.setItem('token', loginRes.data);
+        
+        // 获取用户信息
+        const userRes = await userApi.me();
+        if (userRes.code === 200 && userRes.data) {
+          // 存储用户ID
+          await AsyncStorage.setItem('globalUserId', userRes.data.globalUserId);
+          // 建立WebSocket连接
+          
+          wsContext.connect(userRes.data.globalUserId);
+        }
+        
+        router.replace('/(tabs)/have');
+      }
     } catch (error) {
-      console.error('注册失败：', error);
+      console.error('登录失败：', error);
     }
   };
 
@@ -44,29 +69,6 @@ export default function Login() {
       <View className="flex-1 rounded-t-[40px] bg-white px-4">
         <View className="flex-1 pt-14">
           <View className="flex flex-col gap-6">
-            <View>
-              <Text
-                className="mb-2 text-black"
-                style={{
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  fontWeight: '700',
-                }}>
-                用户名
-              </Text>
-              <TextInput
-                className="h-[48px] rounded-[6px] px-4"
-                style={{
-                  backgroundColor: 'rgba(20, 131, 253, 0.05)',
-                }}
-                placeholder="请输入用户名"
-                placeholderTextColor="#999999"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
-            </View>
-
             <View>
               <Text
                 className="mb-2 text-black"
@@ -140,9 +142,17 @@ export default function Login() {
             paddingBottom: insets.bottom + 33 || 33,
           }}>
           <View className="flex-row items-center">
-            <View className="mr-2 h-4 w-4 rounded border border-gray-300" />
+            <Checkbox
+              className="mr-2 h-4 w-4 rounded   border-none bg-[#D9D9D9]"
+              value={isChecked}
+              onValueChange={setChecked}
+            />
+
             <Text className="text-sm text-gray-500">
-              我已阅读并同意<Text className="text-[#1687FD]">《用户服务协议》</Text>
+              <Text className="text-[#1687FD]">《隐私政策》</Text>
+              <Text className="text-gray-500">与</Text>
+              <Text className="text-[#1687FD]">《服务协议》</Text>
+              同意选项
             </Text>
           </View>
 
@@ -166,7 +176,7 @@ export default function Login() {
                     fontFamily: 'Inter',
                     fontWeight: '700',
                   }}>
-                  立即注册
+                  登录
                 </Text>
               </Pressable>
             </LinearGradient>

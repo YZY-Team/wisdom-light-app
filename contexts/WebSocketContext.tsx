@@ -14,29 +14,26 @@ const WebSocketContext = createContext<WebSocketContextType | null>(null);
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const { addMessage } = useWebSocketStore();
-  const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
-    socketUrl || 'ws://192.168.1.158:8108/ws/message?userId=123',
-    {
-      onOpen: () => {
-        console.log('WebSocket 连接已建立');
-      },
-      onClose: () => {
-        console.log('WebSocket 连接已关闭');
-      },
-      onError: (error) => {
-        console.error('WebSocket 错误:', error);
-      },
-      onMessage: (event) => {
-        console.log('收到消息:', event.data);
-        const messageData = JSON.parse(event.data);
-        addMessage(messageData);
-      },
-      shouldReconnect: (closeEvent) => true,
-      reconnectInterval: 30000,
-      retryOnError: true,
-      share: true,
-    }
-  );
+  const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
+    onOpen: () => {
+      console.log('WebSocket 连接已建立');
+    },
+    onClose: () => {
+      console.log('WebSocket 连接已关闭');
+    },
+    onError: (error) => {
+      console.error('WebSocket 错误:', error);
+    },
+    onMessage: async (event) => {
+      console.log('收到消息:', event.data);
+      // 等待消息添加完成
+      await addMessage(event.data);
+    },
+    shouldReconnect: (closeEvent) => true,
+    reconnectInterval: 30000,
+    retryOnError: true,
+    share: true,
+  });
 
   const connect = useCallback((userId: string) => {
     setSocketUrl(`ws://192.168.1.158:8108/ws/message?userId=${userId}`);

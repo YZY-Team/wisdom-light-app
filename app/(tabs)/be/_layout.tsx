@@ -3,10 +3,12 @@ import { View } from 'react-native';
 
 export default function BeLayout() {
   const commonOptions = {
-    headerShown: true,
+    headerShown: false,
     headerShadowVisible: false,
     headerStyle: {
+      
       backgroundColor: '#fff',
+      
     },
   };
 
