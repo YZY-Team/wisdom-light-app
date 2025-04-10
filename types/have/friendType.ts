@@ -9,6 +9,12 @@ export interface Friend {
   updatedAt: string;
 }
 
+export interface FindFriend {
+  globalUserId: string;
+  username: string;
+  nickname: string;
+  avatarUrl: string;
+}
 // 好友请求信息
 export interface FriendRequest {
   requestId: string;

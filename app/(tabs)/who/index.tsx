@@ -11,6 +11,7 @@ import { Modal, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fileApi } from '~/api/who/file';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 type MenuItemProps = {
   icon: string;
@@ -22,11 +23,7 @@ type MenuItemProps = {
 const MenuItem = ({ icon, title, href }: MenuItemProps) => (
   <Link href={href} asChild>
     <Pressable className="flex-row items-center px-4 py-4">
-      <Image
-        source={icon}
-        className="h-5 w-5"
-        contentFit="contain"
-      />
+      <Image source={icon} className="h-5 w-5" contentFit="contain" />
       <Text className="ml-4 flex-1 text-[#333]">{title}</Text>
       <Ionicons name="chevron-forward" size={20} color="rgba(0, 0, 0, 0.3)" />
     </Pressable>
@@ -42,13 +39,13 @@ export default function WhoIndex() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    userApi.me().then(res => {
+    userApi.me().then((res) => {
       if (res.code === 200 && res.data) {
         console.log('用户信息', res.data);
         setUserInfo(res.data);
       }
     });
-  },[]);
+  }, []);
 
   const handleEdit = (type: 'nickname' | 'username') => {
     setEditType(type);
@@ -59,21 +56,20 @@ export default function WhoIndex() {
   const handleSave = async () => {
     try {
       if (!editType || !editValue.trim()) return;
-      
+
       const res = await userApi.updateProfile({
-        [editType]: editValue.trim()
+        [editType]: editValue.trim(),
       });
-      
+
       if (res.code === 200 && res.data) {
         const newUserInfo = {
           ...userInfo,
-          [editType]: editValue.trim()
+          [editType]: editValue.trim(),
         };
-        // @ts-expect-error 
+        // @ts-expect-error
         setUserInfo(newUserInfo);
         setIsEditing(false);
         console.log('更新成功:', res.data);
-        
       }
     } catch (error) {
       console.error('更新失败:', error);
@@ -122,8 +118,8 @@ export default function WhoIndex() {
             body: formData,
             headers: {
               'Content-Type': 'multipart/form-data',
-              'Accept': 'application/json',
-              'Authorization': token ? `Bearer ${token}` : '',
+              Accept: 'application/json',
+              Authorization: token ? `Bearer ${token}` : '',
             },
           });
 
@@ -141,6 +137,7 @@ export default function WhoIndex() {
                 ...userInfo,
                 avatarUrl: uploadRes.data.url,
               };
+              // @ts-expect-error
               setUserInfo(newUserInfo);
             }
           }
@@ -157,6 +154,21 @@ export default function WhoIndex() {
     }
   };
 
+  // 添加退出登录处理函数
+  const handleLogout = async () => {
+    try {
+      
+      await AsyncStorage.removeItem('token');
+      // 清除用户信息
+      setUserInfo(null);
+      // 跳转到登录页
+      router.replace('/login');
+    } catch (error) {
+      console.error('退出登录失败:', error);
+      alert('退出登录失败，请重试');
+    }
+  };
+
   return (
     <View className="flex-1">
       <LinearGradient
@@ -164,7 +176,7 @@ export default function WhoIndex() {
         className="absolute w-full"
         style={{
           top: '22%',
-          height: '78%'
+          height: '78%',
         }}
       />
       <Image
@@ -175,10 +187,9 @@ export default function WhoIndex() {
       <ScrollView className="flex-1">
         {/* 个人信息卡片 */}
         <View className="items-center pt-20">
-          <Pressable 
+          <Pressable
             onPress={handleAvatarPress}
-            className="mb-3 h-24 w-24 items-center justify-center rounded-full bg-white overflow-hidden"
-          >
+            className="mb-3 h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white">
             {userInfo?.avatarUrl ? (
               <Image
                 source={{ uri: userInfo.avatarUrl }}
@@ -203,7 +214,9 @@ export default function WhoIndex() {
               </Text>
               <Ionicons name="create-outline" size={20} color="#1483FD" className="ml-1" />
             </Pressable>
-            <Pressable onPress={() => handleEdit('username')} className="flex-row items-center mt-1">
+            <Pressable
+              onPress={() => handleEdit('username')}
+              className="mt-1 flex-row items-center">
               <Text className="text-sm text-black">ID: {userInfo?.username || '设置ID'}</Text>
               <Ionicons name="create-outline" size={16} color="#1483FD" className="ml-1" />
             </Pressable>
@@ -211,35 +224,40 @@ export default function WhoIndex() {
         </View>
 
         {/* 功能菜单 */}
-        <View style={{
-            boxShadow:"0px 4px 30px 0px rgba(20, 131, 253, 0.25)"
-          }} className="mx-4 mt-8 overflow-hidden rounded-xl bg-white">
-          <MenuItem 
-            icon={require('~/assets/images/who/settings.png')} 
-            title="通用设置" 
-            href="/who/general" 
+        <View
+          style={{
+            boxShadow: '0px 4px 30px 0px rgba(20, 131, 253, 0.25)',
+          }}
+          className="mx-4 mt-8 overflow-hidden rounded-xl bg-white">
+          <MenuItem
+            icon={require('~/assets/images/who/settings.png')}
+            title="通用设置"
+            href="/who/general"
           />
-          <MenuItem 
-            icon={require('~/assets/images/who/customer-service.png')} 
-            title="人工客服" 
-            href="/who/support" 
+          <MenuItem
+            icon={require('~/assets/images/who/customer-service.png')}
+            title="人工客服"
+            href="/who/support"
           />
-          <MenuItem 
-            icon={require('~/assets/images/who/vip.png')} 
-            title="会员充值" 
-            href="/who/membership" 
+          <MenuItem
+            icon={require('~/assets/images/who/vip.png')}
+            title="会员充值"
+            href="/who/membership"
           />
-          <MenuItem 
-            icon={require('~/assets/images/who/join.png')} 
-            title="申请入驻" 
-            href="/who/become-mentor" 
+          <MenuItem
+            icon={require('~/assets/images/who/join.png')}
+            title="申请入驻"
+            href="/who/become-mentor"
           />
         </View>
 
         {/* 版本信息 */}
-        <Text className="mb-4 mt-[220px] text-center text-xs text-[#999]">
+        <Text className="mb-4 mt-[220px]  text-center text-xs text-[#999]">
           Wisdom Light v1.0.0
         </Text>
+        <Pressable onPress={handleLogout} className="bg justify-center flex-row items-center px-4 py-4">
+          <Text className="ml-4 flex-1 text-[#FF4D4F]">退出登录</Text>
+        </Pressable>
       </ScrollView>
 
       {/* 编辑弹窗 */}
@@ -247,13 +265,11 @@ export default function WhoIndex() {
         visible={isEditing}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsEditing(false)}
-      >
-        <Pressable 
+        onRequestClose={() => setIsEditing(false)}>
+        <Pressable
           className="flex-1 justify-center bg-black/50 px-4"
-          onPress={() => setIsEditing(false)}
-        >
-          <Pressable onPress={e => e.stopPropagation()}>
+          onPress={() => setIsEditing(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
             <View className="rounded-lg bg-white p-4">
               <Text className="mb-2 text-base text-gray-600">
                 {editType === 'nickname' ? '编辑昵称' : '编辑用户名'}
@@ -267,16 +283,12 @@ export default function WhoIndex() {
                 autoFocus
               />
               <View className="mt-4 flex-row justify-end space-x-2">
-                <Pressable 
+                <Pressable
                   onPress={() => setIsEditing(false)}
-                  className="rounded-lg border border-gray-200 px-4 py-2"
-                >
+                  className="rounded-lg border border-gray-200 px-4 py-2">
                   <Text>取消</Text>
                 </Pressable>
-                <Pressable
-                  onPress={handleSave}
-                  className="rounded-lg bg-blue-500 px-4 py-2"
-                >
+                <Pressable onPress={handleSave} className="rounded-lg bg-blue-500 px-4 py-2">
                   <Text className="text-white">保存</Text>
                 </Pressable>
               </View>
@@ -284,6 +296,7 @@ export default function WhoIndex() {
           </Pressable>
         </Pressable>
       </Modal>
+      <View className="h-[1px] bg-gray-100" />
     </View>
   );
 }

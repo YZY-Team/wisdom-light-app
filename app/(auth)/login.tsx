@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { userApi } from '~/api/who/user';
+import { useUserStore } from '~/store/userStore';
 // 删除 SecureStore import
 // import * as SecureStore from 'expo-secure-store';
 
@@ -18,6 +19,7 @@ export default function Login() {
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
   const wsContext = useWebSocketContext();
+  const setUserInfo=useUserStore((state)=>state.setUserInfo);
   const handleRegister = async () => {
     try {
       console.log('注册信息：', { username, phone, verificationCode });
@@ -33,7 +35,7 @@ export default function Login() {
           // 存储用户ID
           await AsyncStorage.setItem('globalUserId', userRes.data.globalUserId);
           // 建立WebSocket连接
-          
+          setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
         }
         

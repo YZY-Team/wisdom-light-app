@@ -1,3 +1,4 @@
+
 import { Friend, FriendRequest } from '~/types/have/friendType';
 import { request } from '~/utils/request';
 
@@ -39,13 +40,20 @@ export const friendApi = {
   },
 
   // 发送好友请求
-  sendRequest: (data: { senderId: number; receiverId: number; requestMessage?: string }) => {
+  sendRequest: (data: { senderId: string; receiverId: string; requestMessage?: string }) => {
     return request.post('/friends/requests', data);
   },
 
   // 接受好友请求
-  acceptRequest: (requestId: string) => {
-    return request.put(`/friends/requests/${requestId}/accept`);
+  acceptRequest: (data: { requestId: string; nickname: string }) => {
+    const params = new URLSearchParams();
+    params.append('nickname', data.nickname);
+
+    return request.put(`/friends/requests/${data.requestId}/accept`, params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
   },
 
   // 拒绝好友请求

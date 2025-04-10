@@ -6,24 +6,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { friendApi } from '~/api/have/friend';
-import { Friend, FriendRequest } from '~/types/have/friendType';
+import { FindFriend, Friend, FriendRequest } from '~/types/have/friendType';
 import { useCallback } from 'react';
 import { useMemo } from 'react';
 import { memo } from 'react';
+import { useUserStore } from '~/store/userStore';
 
 export default function AddFriend() {
   const insets = useSafeAreaInsets();
   const [isSearching, setIsSearching] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const searchText=useRef('');
-  const [searchResults, setSearchResults] = useState<Friend[]>([]);
+  const [searchResults, setSearchResults] = useState<FindFriend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  const userInfo=useUserStore((state)=>state.userInfo);
   // 获取待处理的好友请求
   useEffect(() => {
     const fetchPendingRequests = async () => {
       try {
         const response = await friendApi.getPendingRequests();
+        console.log("response",response);
         setPendingRequests(response.data);
       } catch (error) {
         console.error('获取待处理好友请求失败:', error);
@@ -33,10 +35,10 @@ export default function AddFriend() {
   }, []);
 
   // 处理添加好友
-  const handleAddFriend = async (receiverId: number) => {
+  const handleAddFriend = async (receiverId: string) => {
     try {
       await friendApi.sendRequest({
-        senderId: 1909907988085252097, // 这里应该是当前用户的ID
+        senderId: userInfo?.globalUserId, // 这里应该是当前用户的ID
         receiverId,
         requestMessage: '请求添加好友',
       });
@@ -49,8 +51,9 @@ export default function AddFriend() {
 
   // 处理同意好友请求
   const handleAcceptRequest = async (requestId: string) => {
+    console.log("requestId",requestId);
     try {
-      await friendApi.acceptRequest(requestId);
+      await friendApi.acceptRequest({requestId,nickname:"不知道"});
       setPendingRequests((prev) => prev.filter((req) => req.requestId !== requestId));
       alert('已同意好友请求');
     } catch (error) {
@@ -159,7 +162,7 @@ export default function AddFriend() {
               }}>
               <Pressable
                 className="h-[30px] items-center justify-center"
-                onPress={() => handleAddFriend(Number(user.globalUserId))}>
+                onPress={() => handleAddFriend(user.globalUserId)}>
                 <Text className="text-center text-[16px] font-semibold text-white">添加</Text>
               </Pressable>
             </LinearGradient>
@@ -223,6 +226,7 @@ export default function AddFriend() {
                 <View className="ml-3 flex-1">
                   <Text className="text-base font-medium">{request.senderName}</Text>
                   <Text className="mt-1 text-sm text-gray-500">
+                    
                     {request.requestMessage || '请求添加好友'}
                   </Text>
                   <Text className="mt-1 text-xs text-gray-400">
