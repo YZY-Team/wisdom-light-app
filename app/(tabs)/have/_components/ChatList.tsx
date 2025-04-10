@@ -2,12 +2,13 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useWebSocketStore } from '~/store/websocketStore';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { friendApi } from '~/api/have/friend';
+import type { Friend } from '~/types/have/friendType';
 import { dialogApi } from '~/api/have/dialog';
-import type { Dialog } from '~/types/have/dialogType';
 
 type ChatItemProps = {
-  id: string; // 添加 id 属性
+  id: string;
   avatar: string;
   name: string;
   lastMessage: string;
@@ -16,6 +17,7 @@ type ChatItemProps = {
   onPress: () => void;
 };
 
+// ChatItem 组件保持不变
 const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }: ChatItemProps) => (
   <Pressable onPress={onPress}>
     <View className="mb-4 flex-row items-center px-4 py-2">
@@ -42,62 +44,106 @@ const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }:
 
 export default function ChatList() {
   const { messages } = useWebSocketStore();
-  const [dialogs, setDialogs] = useState<Dialog[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
 
-  useEffect(() => {
-    dialogApi.getDialogs().then((res) => {
-      if (res.code === 200 && res.data) {
-        setDialogs(res.data);
-      }
-    });
+  // 获取好友列表
+  const getFriendsList = useCallback(async () => {
+    const res = await friendApi.getFriends();
+    if (res.code === 200 && res.data) {
+      setFriends(res.data);
+    }
   }, []);
 
-  const chatList = useMemo(() => {
-    return dialogs.map((dialog) => {
-      // 获取对应对话的消息
-      const dialogMessages = messages[dialog.dialogId] || [];
-      const lastMessage = dialogMessages[dialogMessages.length - 1];
+  // 初始加载和消息更新时都重新获取好友列表
+  useEffect(() => {
+    getFriendsList();
+  }, [getFriendsList, messages]); // 添加 messages 作为依赖
 
-      // 格式化时间
-      const time = lastMessage?.timestamp 
-        ? new Date(lastMessage.timestamp).toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : dialog.lastMessageTime
-          ? new Date(dialog.lastMessageTime).toLocaleTimeString('zh-CN', {
+  const chatList = friends.map((friend) => {
+    // 找到所有与该好友相关的消息
+    const dialogMessages = Object.entries(messages)
+      .filter(([dialogId]) => dialogId !== 'undefined') // 过滤掉错误消息
+      .flatMap(([_, msgs]) => 
+        msgs.filter(msg => 
+          msg.senderId === friend.userId || msg.receiverId === friend.userId
+        )
+      )
+      .sort((a, b) => b.timestamp - a.timestamp); // 按时间排序
+
+      
+    const lastMessage = dialogMessages.at(0); // 获取最新消息
+
+    const time = lastMessage?.timestamp 
+      ? (() => {
+          try {
+            // 确保时间戳是数字
+            const timestamp = Number(lastMessage.timestamp);
+            if (isNaN(timestamp)) {
+              console.warn('无效的时间戳:', lastMessage.timestamp);
+              return '';
+            }
+            return new Date(timestamp).toLocaleTimeString('zh-CN', {
               hour: '2-digit',
               minute: '2-digit',
-            })
-          : '';
+            });
+          } catch (error) {
+            console.warn('时间格式化错误:', error);
+            return '';
+          }
+        })()
+      : '';
 
-      return {
-        id: dialog.dialogId,
-        dialogId: dialog.dialogId,
-        avatar:
-          dialog.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${dialog.dialogId}`,
-        name: dialog.title || `对话 ${dialog.dialogId}`,
-        lastMessage: lastMessage?.textContent || '暂无消息',
-        time,
-        unreadCount: dialog.unreadCount || 0,
-      };
-    });
-  }, [dialogs, messages]); // 确保依赖项正确
+    return {
+      id: friend.userId,
+      dialogId: lastMessage?.dialogId || '',
+      avatar: friend.avatarUrl || friend.originalAvatarUrl || friend.customAvatarUrl || 
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.userId}`,
+      name: friend.remark || friend.nickname || friend.username,
+      lastMessage: lastMessage?.textContent || '暂无消息',
+      time,
+      unreadCount: dialogMessages.filter(msg => 
+        msg.senderId !== friend.userId && !msg.isRead
+      ).length, // 只统计接收到的未读消息
+    };
+  });
 
-  const handleChatPress = (dialogId: string, userName: string) => {
-    router.push({
-      pathname: `/have/private-chat/${dialogId}`,
-      params: { userName, dialogId },
-    });
+  const handleChatPress = async (dialogId: string, userName: string, targetUserId: string) => {
+    const startTime = performance.now();
+    try {
+      let finalDialogId = dialogId;
+      if (!dialogId) {
+        const createStart = performance.now();
+        const res = await dialogApi.createDialog(targetUserId);
+        console.log('创建对话耗时:', performance.now() - createStart, 'ms');
+        
+        if (res.code === 200 && res.data) {
+          finalDialogId = res.data;
+        } else {
+          console.error('创建对话失败');
+          return;
+        }
+      }
+      
+      const routeStart = performance.now();
+      await router.push({
+        pathname: `/have/private-chat/${finalDialogId}`,
+        params: { userName, dialogId: finalDialogId, targetUserId },
+      });
+      console.log('路由跳转耗时:', performance.now() - routeStart, 'ms');
+      
+      console.log('总耗时:', performance.now() - startTime, 'ms');
+    } catch (error) {
+      console.error('处理对话出错:', error);
+    }
   };
-
+  
   return (
     <ScrollView className="flex-1">
       {chatList.map((chat) => (
         <ChatItem
-          key={chat.dialogId}
+          key={chat.id}
           {...chat}
-          onPress={() => handleChatPress(chat.dialogId, chat.name)}
+          onPress={() => handleChatPress(chat.dialogId, chat.name, chat.id)}
         />
       ))}
     </ScrollView>

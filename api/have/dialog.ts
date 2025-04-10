@@ -12,9 +12,15 @@ export const dialogApi = {
     return request.get<Dialog>(`/api/dialogs/${id}`);
   },
 
-  // 创建新对话
-  createDialog: (title: string) => {
-    return request.post('/api/dialogs', { title });
+  // 创建私聊
+  createDialog: (targetUserId: string) => {
+    const formData = new URLSearchParams();
+    formData.append('targetUserId', targetUserId);
+    return request.post('/dialogs/private', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
   },
 
   // 删除对话

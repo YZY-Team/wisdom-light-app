@@ -8,12 +8,18 @@ export default function HaveLayout() {
     headerStyle: {
       backgroundColor: '#fff',
     },
+    onTransitionStart: () => {
+      console.time('页面切换动画耗时');
+    },
+    onTransitionEnd: () => {
+      console.timeEnd('页面切换动画耗时');
+    },
   };
 
   return (
-    <Stack screenOptions={
-        {headerShown: false}
-    }>
+    <Stack screenOptions={{
+      headerShown: false,// 动画时长设为 0
+    }}>
       <Stack.Screen
         name="index"
         options={{
