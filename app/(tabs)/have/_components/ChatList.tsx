@@ -6,6 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import type { Friend } from '~/types/have/friendType';
 import { dialogApi } from '~/api/have/dialog';
+import { cssInterop } from 'nativewind';
+import defaultAvatar from '~/assets/default-avatar.png';
+cssInterop(Image, { className:'style' });
 
 type ChatItemProps = {
   id: string;
@@ -21,7 +24,7 @@ type ChatItemProps = {
 const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }: ChatItemProps) => (
   <Pressable onPress={onPress}>
     <View className="mb-4 flex-row items-center px-4 py-2">
-      <Image source={{ uri: avatar }} className="h-12 w-12 rounded-full" />
+      <Image source={avatar} className="h-12 w-12 rounded-full" />
       <View className="ml-3 flex-1">
         <View className="flex-row items-center justify-between">
           <Text className="text-base font-medium text-gray-900 dark:text-white">{name}</Text>
@@ -93,11 +96,22 @@ export default function ChatList() {
         })()
       : '';
 
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     return {
       id: friend.userId,
       dialogId: lastMessage?.dialogId || '',
-      avatar: friend.avatarUrl || friend.originalAvatarUrl || friend.customAvatarUrl || 
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.userId}`,
+      avatar: isValidUrl(friend.avatarUrl || '') ? { uri: friend.avatarUrl } :
+        isValidUrl(friend.originalAvatarUrl || '') ? { uri: friend.originalAvatarUrl } :
+        isValidUrl(friend.customAvatarUrl || '') ? { uri: friend.customAvatarUrl } :
+        defaultAvatar,
       name: friend.remark || friend.nickname || friend.username,
       lastMessage: lastMessage?.textContent || '暂无消息',
       time,
@@ -138,7 +152,7 @@ export default function ChatList() {
   };
   
   return (
-    <ScrollView className="flex-1">
+    <ScrollView className="flex-1 py-4 mt-4" style={{ backgroundColor: 'rgba(20, 131, 253, 0.05)' }}>
       {chatList.map((chat) => (
         <ChatItem
           key={chat.id}

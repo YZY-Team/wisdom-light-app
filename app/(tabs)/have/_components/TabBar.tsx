@@ -76,7 +76,7 @@ export default function TabBar() {
 
   return (
     <View style={{
-      boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.10)',
+      // boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.10)',
     }} className="bg-white p-2 rounded-[8px]">
       {/* 第一行 */}
       <View className="flex-row mb-[8px]">
