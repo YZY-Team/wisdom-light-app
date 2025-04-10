@@ -188,7 +188,7 @@ export default function PrivateChat() {
       receiverId: targetUserId,
       dialogId: dialogId,
       textContent: inputMessage,
-      // status: 'SENT' as const,
+      status: 'READ',
       timestamp: String(Date.now()),
     };
     console.log('发送消息', newMessage);

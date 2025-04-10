@@ -25,7 +25,7 @@ export type UserInfo = {
 
 type UserState = {
   userInfo: UserInfo | null;
-  setUserInfo: (info: UserInfo) => void;
+  setUserInfo: (info: UserInfo | null) => void;
   clearUserInfo: () => void;
 };
 

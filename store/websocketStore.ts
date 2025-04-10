@@ -17,6 +17,7 @@ type WebSocketState = {
   messages: Record<string, Message[]>; // 按 dialogId 存储消息
   addMessage: (message: Message) => void;
   clearMessages: (dialogId: string) => void;
+  markMessagesAsRead: (dialogId: string, userId: string) => void; // 新增方法
 };
 
 const MESSAGES_STORAGE_KEY = '@messages';
@@ -83,6 +84,29 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
         console.error('清除消息失败:', error);
       }
       
+      return { messages: newMessages };
+    }),
+  // 添加标记消息为已读的方法
+  markMessagesAsRead: (dialogId: string, userId: string) =>
+    set((state) => {
+      const dialogMessages = state.messages[dialogId];
+      if (!dialogMessages) return state;
+
+      const updatedMessages = dialogMessages.map(msg => 
+        msg.receiverId === userId && msg.status !== 'READ'
+          ? { ...msg, status: 'READ' as const }
+          : msg
+      );
+
+      const newMessages = {
+        ...state.messages,
+        [dialogId]: updatedMessages,
+      };
+
+      // 持久化更新
+      AsyncStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(newMessages))
+        .catch(error => console.error('更新消息状态失败:', error));
+
       return { messages: newMessages };
     }),
 }));

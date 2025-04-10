@@ -46,7 +46,7 @@ const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }:
 );
 
 export default function ChatList() {
-  const { messages } = useWebSocketStore();
+  const { messages, markMessagesAsRead } = useWebSocketStore();
   const [friends, setFriends] = useState<Friend[]>([]);
 
   // 获取好友列表
@@ -104,7 +104,7 @@ export default function ChatList() {
         return false;
       }
     };
-
+    console.log("dialogMessages",dialogMessages);
     return {
       id: friend.userId,
       dialogId: lastMessage?.dialogId || '',
@@ -116,11 +116,12 @@ export default function ChatList() {
       lastMessage: lastMessage?.textContent || '暂无消息',
       time,
       unreadCount: dialogMessages.filter(msg => 
-        msg.senderId !== friend.userId && !msg.isRead
+        msg.senderId !== friend.userId && msg.status !== 'READ'
       ).length, // 只统计接收到的未读消息
     };
   });
-
+ 
+  
   const handleChatPress = async (dialogId: string, userName: string, targetUserId: string) => {
     const startTime = performance.now();
     try {
@@ -137,6 +138,9 @@ export default function ChatList() {
           return;
         }
       }
+
+      // 标记该对话的消息为已读
+      markMessagesAsRead(finalDialogId, targetUserId);
       
       const routeStart = performance.now();
       await router.push({

@@ -1,12 +1,14 @@
 // 好友信息
 export interface Friend {
-  id: number;
-  userId: number;
-  friendId: number;
-  remark?: string;
-  customAvatarUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  userId: string;
+  username: string;
+  nickname: string;
+  remark: string | null;
+  avatarUrl: string | null;
+  originalAvatarUrl: string | null;
+  customAvatarUrl: string | null;
+  isFavorite: boolean;
+  createTime: string;
 }
 
 export interface FindFriend {

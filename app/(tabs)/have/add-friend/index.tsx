@@ -38,7 +38,7 @@ export default function AddFriend() {
   const handleAddFriend = async (receiverId: string) => {
     try {
       await friendApi.sendRequest({
-        senderId: userInfo?.globalUserId, // 这里应该是当前用户的ID
+        senderId: userInfo!.globalUserId, // 这里应该是当前用户的ID
         receiverId,
         requestMessage: '请求添加好友',
       });
@@ -76,6 +76,7 @@ export default function AddFriend() {
       if (res.code === 200) {
         // 如果返回的是单个对象，将其转换为数组
         const results = Array.isArray(res.data) ? res.data : [res.data];
+        // @ts-expect-error
         setSearchResults(results.filter(Boolean) || []);
       }
     } catch (error) {
@@ -89,18 +90,26 @@ export default function AddFriend() {
   // - searchFriends
   // - debouncedSearch
   // - handleTextChange
-  const handSearch=(text)=>{
+  const handSearch=(text:string)=>{
     console.log("text",text);
     searchText.current=text;
   }
 
-  const SearchView = memo(({ 
-    searchText, 
-    handleSubmitSearch, 
-    isLoading, 
-    setIsSearching, 
-    setSearchResults 
-  }) => (
+  interface SearchViewProps {
+      searchText: React.MutableRefObject<string>;
+      handleSubmitSearch: () => Promise<void>;
+      isLoading: boolean;
+      setIsSearching: (value: boolean) => void;
+      setSearchResults: React.Dispatch<React.SetStateAction<FindFriend[]>>;
+    }
+  
+    const SearchView = memo(({ 
+      searchText, 
+      handleSubmitSearch, 
+      isLoading, 
+      setIsSearching, 
+      setSearchResults 
+    }: SearchViewProps) => (
     <>
       <View className="flex-row items-center px-4 py-4">
         <View className="flex-1 flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
