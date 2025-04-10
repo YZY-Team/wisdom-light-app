@@ -6,6 +6,12 @@ export const friendApi = {
   getFriends: () => {
     return request.get<Friend[]>('/friends');
   },
+  // 获取好友请求列表
+
+  // 查找好友
+  findFriends: (username: string) => {
+    return request.get<Friend[]>('/friends/find', { params: { username } });
+  },
 
   // 获取单个好友信息
   getFriend: (id: string) => {

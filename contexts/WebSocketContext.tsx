@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useWebSocketStore } from '~/store/websocketStore';
+import { useFriendRequestStore } from '~/store/friendRequestStore';
 type WebSocketContextType = {
   sendMessage: (message: string) => void;
   lastMessage: MessageEvent | null;
@@ -13,7 +14,9 @@ const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
+  const { setShouldRefresh } = useFriendRequestStore();
   const { addMessage } = useWebSocketStore();
+  
   const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
     onOpen: () => {
       console.log('WebSocket 连接已建立');
@@ -26,7 +29,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     },
     onMessage: async (event) => {
       console.log('收到消息:', event.data);
-      // 等待消息添加完成
+      const data = JSON.parse(event.data);
+      
+      // 处理好友请求相关的系统消息
+      if (data.type === 'SYSTEM' && data.title === '添加好友') {
+        setShouldRefresh(true);
+      }
+      
       await addMessage(event.data);
     },
     shouldReconnect: (closeEvent) => true,

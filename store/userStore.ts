@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type UserInfo = {
+export type UserInfo = {
   globalUserId: string;
   isBuy: boolean;
   isInvite: boolean | null;
@@ -13,6 +13,8 @@ type UserInfo = {
   platformUsername: string;
   firstName: string | null;
   lastName: string | null;
+  nickname: string | null;
+  username: string | null;
   avatarUrl: string | null;
   webInviteUrl: string | null;
   isBlacklist: boolean;

@@ -1,5 +1,5 @@
 import { Href, Link, useFocusEffect } from 'expo-router';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,9 @@ import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
 import { useState } from 'react';
 import { Modal, TextInput } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { fileApi } from '~/api/who/file';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type MenuItemProps = {
   icon: string;
@@ -36,15 +39,16 @@ export default function WhoIndex() {
   const [isEditing, setIsEditing] = useState(false);
   const [editType, setEditType] = useState<'nickname' | 'username' | null>(null);
   const [editValue, setEditValue] = useState('');
-  
-  useFocusEffect(() => {
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
     userApi.me().then(res => {
       if (res.code === 200 && res.data) {
         console.log('用户信息', res.data);
         setUserInfo(res.data);
       }
     });
-  });
+  },[]);
 
   const handleEdit = (type: 'nickname' | 'username') => {
     setEditType(type);
@@ -65,6 +69,7 @@ export default function WhoIndex() {
           ...userInfo,
           [editType]: editValue.trim()
         };
+        // @ts-expect-error 
         setUserInfo(newUserInfo);
         setIsEditing(false);
         console.log('更新成功:', res.data);
@@ -72,6 +77,83 @@ export default function WhoIndex() {
       }
     } catch (error) {
       console.error('更新失败:', error);
+    }
+  };
+
+  // 处理头像选择和上传
+  const handleAvatarPress = async () => {
+    try {
+      // 请求权限
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert('需要访问相册权限才能选择图片');
+        return;
+      }
+
+      // 选择图片
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploading(true);
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const uri = result.assets[0].uri;
+          const filename = uri.split('/').pop() || 'image.jpg';
+
+          const formData = new FormData();
+          formData.append('file', {
+            uri,
+            name: filename,
+            type: 'image/jpeg',
+          } as any);
+          formData.append('source', 'IMAGE_URL');
+          const randomId = Date.now().toString();
+          formData.append('relatedId', randomId);
+          formData.append('bucketName', 'image');
+
+          // 直接使用 fetch
+          const response = await fetch('http://192.168.1.158:8080/api/system/file/upload', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Accept': 'application/json',
+              'Authorization': token ? `Bearer ${token}` : '',
+            },
+          });
+
+          const uploadRes = await response.json();
+          console.log('上传结果:', uploadRes);
+
+          if (uploadRes.code === 200 && uploadRes.data) {
+            // 更新用户信息
+            const updateRes = await userApi.updateProfile({
+              avatarUrl: uploadRes.data.url,
+            });
+
+            if (updateRes.code === 200) {
+              const newUserInfo = {
+                ...userInfo,
+                avatarUrl: uploadRes.data.url,
+              };
+              setUserInfo(newUserInfo);
+            }
+          }
+        } catch (error) {
+          console.error('上传失败:', error);
+          alert('上传失败，请重试');
+        } finally {
+          setUploading(false);
+        }
+      }
+    } catch (error) {
+      console.error('选择图片失败:', error);
+      alert('选择图片失败，请重试');
     }
   };
 
@@ -93,9 +175,27 @@ export default function WhoIndex() {
       <ScrollView className="flex-1">
         {/* 个人信息卡片 */}
         <View className="items-center pt-20">
-          <View className="mb-3 h-24 w-24 items-center justify-center rounded-full bg-white">
-            <Ionicons name="camera" size={24} color="#1483FD" />
-          </View>
+          <Pressable 
+            onPress={handleAvatarPress}
+            className="mb-3 h-24 w-24 items-center justify-center rounded-full bg-white overflow-hidden"
+          >
+            {userInfo?.avatarUrl ? (
+              <Image
+                source={{ uri: userInfo.avatarUrl }}
+                className="h-24 w-24"
+                contentFit="cover"
+              />
+            ) : (
+              <>
+                <Ionicons name="camera" size={24} color="#1483FD" />
+                {uploading && (
+                  <View className="absolute inset-0 items-center justify-center bg-black/30">
+                    <ActivityIndicator color="#fff" />
+                  </View>
+                )}
+              </>
+            )}
+          </Pressable>
           <View className="items-center">
             <Pressable onPress={() => handleEdit('nickname')} className="flex-row items-center">
               <Text className="text-xl font-medium text-black">
@@ -104,7 +204,7 @@ export default function WhoIndex() {
               <Ionicons name="create-outline" size={20} color="#1483FD" className="ml-1" />
             </Pressable>
             <Pressable onPress={() => handleEdit('username')} className="flex-row items-center mt-1">
-              <Text className="text-sm text-black">ID: {userInfo?.username || '设置用户名'}</Text>
+              <Text className="text-sm text-black">ID: {userInfo?.username || '设置ID'}</Text>
               <Ionicons name="create-outline" size={16} color="#1483FD" className="ml-1" />
             </Pressable>
           </View>
