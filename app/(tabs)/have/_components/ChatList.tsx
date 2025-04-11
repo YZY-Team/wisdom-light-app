@@ -72,7 +72,11 @@ export default function ChatList() {
           msg.senderId === friend.userId || msg.receiverId === friend.userId
         )
       )
-      .sort((a, b) => b.timestamp - a.timestamp); // 按时间排序
+      .sort((a, b) => {
+        const timestampA = BigInt(a.timestamp);
+        const timestampB = BigInt(b.timestamp);
+        return timestampB > timestampA ? 1 : timestampB < timestampA ? -1 : 0;
+      }); // 按时间排序
 
       
     const lastMessage = dialogMessages.at(0); // 获取最新消息
@@ -158,6 +162,7 @@ export default function ChatList() {
   return (
     <ScrollView className="flex-1 py-4 mt-4" style={{ backgroundColor: 'rgba(20, 131, 253, 0.05)' }}>
       {chatList.map((chat) => (
+        // @ts-expect-error
         <ChatItem
           key={chat.id}
           {...chat}

@@ -3,14 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from './userStore';
 
 // 定义消息类型
-type Message = {
-  type: 'PRIVATE_CHAT';
-  dialogId: string | number; // 支持字符串或数字类型
-  receiverId: string | number;
-  senderId: string | number;
+export type Message = {
+  type: string;
+  dialogId: string; // 支持字符串或数字类型
+  receiverId: string;
+  senderId: string;
   textContent: string;
-  status: 'CREATED' | 'SENT' | 'DELIVERED' | 'READ'; // 根据需要扩展状态
-  timestamp: number;
+  status ?: 'CREATED' | 'SENT' | 'DELIVERED' | 'READ'; // 根据需要扩展状态
+  timestamp: string;
 };
 
 // Store 的状态和方法

@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
-import { useWebSocketStore } from '~/store/websocketStore';
+import { Message, useWebSocketStore } from '~/store/websocketStore';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useUserStore } from '~/store/userStore';
 import { usePathname } from 'expo-router';
@@ -113,29 +113,30 @@ export default function PrivateChat() {
   // 将时间格式化函数提取出来
   // 优化消息格式化逻辑
   // 优化时间格式化函数
-  const formatTime = useCallback((timestamp: string) => {
+  // 修改 formatTime 的参数类型，接受 string 或 number
+  const formatTime = useCallback((timestamp: string | number) => {
     try {
-      // 检查时间戳是否为数字字符串
-      const ts = Number(timestamp);
-      if (isNaN(ts)) {
-        console.warn('无效的时间戳:', timestamp);
-        return '';
-      }
-      
-      const date = new Date(ts);
-      if (date.toString() === 'Invalid Date') {
-        console.warn('无效的日期:', timestamp);
-        return '';
-      }
-      
-      return date.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch (error) {
-      console.error('时间格式化错误:', error);
+    // 检查时间戳是否为数字字符串或数字
+    const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
+    if (isNaN(ts)) {
+      console.warn('无效的时间戳:', timestamp);
       return '';
     }
+    
+    const date = new Date(ts);
+    if (date.toString() === 'Invalid Date') {
+      console.warn('无效的日期:', timestamp);
+      return '';
+    }
+    
+    return date.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (error) {
+    console.error('时间格式化错误:', error);
+    return '';
+  }
   }, []);
 
   // 将头像URL缓存到 Map 中
@@ -182,11 +183,11 @@ export default function PrivateChat() {
   const handleSendMessage = useCallback(() => {
     if (!inputMessage.trim()) return;
 
-    const newMessage = {
+    const newMessage:Message= {
       type: 'PRIVATE_CHAT',
-      senderId: userInfo?.globalUserId,
-      receiverId: targetUserId,
-      dialogId: dialogId,
+      senderId: userInfo!.globalUserId,
+      receiverId: targetUserId as string,
+      dialogId: dialogId as string,
       textContent: inputMessage,
       timestamp: String(Date.now()),
     };
