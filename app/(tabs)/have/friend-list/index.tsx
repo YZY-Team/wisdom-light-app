@@ -69,6 +69,11 @@ export default function FriendList() {
     return () => cancelAnimationFrame(frameId);
   }, []);
 
+  // 添加 getItemType 以优化异构列表性能
+  const getItemType = useCallback((item: Friend) => {
+    return item.isFavorite ? 'favorite' : 'normal';
+  }, []);
+
   return (
     <View className="flex-1 bg-white">
       {/* 显示FPS */}
@@ -89,6 +94,15 @@ export default function FriendList() {
           data={generateMockFriends(100)}
           renderItem={FriendItem}
           estimatedItemSize={73}
+          getItemType={getItemType}
+          // 增加缓冲区大小以提升性能
+          overrideItemLayout={(layout, item) => {
+            layout.size = 73;
+          }}
+          // 优化批量渲染参数
+          initialNumToRender={15}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           contentContainerStyle={{ paddingBottom: 20 }}
           // 优化性能配置
           removeClippedSubviews={true}

@@ -16,7 +16,7 @@ type MessageProps = {
   isSelf?: boolean;
 };
 
-const Message = ({ content, time, user, isSelf }: MessageProps) => (
+const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
   <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
     <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
     <View className={`${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
@@ -153,7 +153,7 @@ export default function ChatSquare() {
         </Text>
         <ScrollView className="flex-1 p-4">
           {messages.map((msg, index) => (
-            <Message key={index} {...msg} />
+            <MessageItem key={index} {...msg} />
           ))}
         </ScrollView>
       </View>

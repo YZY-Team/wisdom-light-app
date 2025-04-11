@@ -92,9 +92,9 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
     set((state) => {
       const dialogMessages = state.messages[dialogId];
       if (!dialogMessages) return state;
-
+      console.log('dialogMessages', dialogMessages);
       const updatedMessages = dialogMessages.map((msg) =>
-        msg.receiverId === userId && msg.status !== 'READ'
+        msg.senderId === userId && msg.status !== 'READ'
           ? { ...msg, status: 'READ' as const }
           : msg
       );

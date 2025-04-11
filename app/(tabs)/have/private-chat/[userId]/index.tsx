@@ -29,7 +29,7 @@ type MessageProps = {
   isSelf?: boolean;
 };
 
-const Message = ({ content, time, user, isSelf }: MessageProps) => (
+const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
   <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
     <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
     <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
@@ -223,7 +223,7 @@ export default function PrivateChat() {
             scrollViewRef.current?.scrollToEnd({ animated: true });
           }}>
           {formattedMessages.map((msg, index) => (
-            <Message key={`${msg.time}-${index}`} {...msg} />
+            <MessageItem key={`${msg.time}-${index}`} {...msg} />
           ))}
         </ScrollView>
       </View>
