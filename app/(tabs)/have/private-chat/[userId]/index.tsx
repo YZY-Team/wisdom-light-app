@@ -188,7 +188,6 @@ export default function PrivateChat() {
       receiverId: targetUserId,
       dialogId: dialogId,
       textContent: inputMessage,
-      
       timestamp: String(Date.now()),
     };
     console.log('发送消息', newMessage);

@@ -14,30 +14,29 @@ import { useUserStore } from '~/store/userStore';
 
 export default function Login() {
   const insets = useSafeAreaInsets();
-  const [username, setUsername] = useState('');
   const [isChecked, setChecked] = useState(false);
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
-  const [showError, setShowError] = useState(false);  // 添加错误状态
+  const [showError, setShowError] = useState(false); // 添加错误状态
   const wsContext = useWebSocketContext();
-  const setUserInfo=useUserStore((state)=>state.setUserInfo);
+  const setUserInfo = useUserStore((state) => state.setUserInfo);
 
   const handleRegister = async () => {
     console.log('注册');
-    
+
     if (!isChecked) {
       setShowError(true);
       return;
     }
     setShowError(false);
     try {
-      console.log('注册信息：', { username, phone, verificationCode });
+      console.log('注册信息：', { phone, verificationCode });
       const loginRes = await loginApi.login({ phone, code: verificationCode });
       console.log('登录成功', loginRes);
       if (loginRes.code === 200) {
         // 使用 AsyncStorage 存储 token
         await AsyncStorage.setItem('token', loginRes.data);
-        
+
         // 获取用户信息
         const userRes = await userApi.me();
         if (userRes.code === 200 && userRes.data) {
@@ -47,7 +46,7 @@ export default function Login() {
           setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
         }
-        
+
         router.replace('/(tabs)/have');
       }
     } catch (error) {
@@ -168,27 +167,29 @@ export default function Login() {
               同意选项
             </Text>
           </View>
-          
-          <Text 
-            className="text-sm text-red-500 h-5" 
-            style={{ 
-              opacity: showError ? 1 : 0 
+
+          <Text
+            className="h-5 text-sm text-red-500"
+            style={{
+              opacity: showError ? 1 : 0,
             }}>
             请勾选隐私政策与服务协议
           </Text>
 
           <View className="items-center">
             <LinearGradient
-              colors={isChecked 
-                ? ['#20B4F3', '#5762FF']
-                : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']}
+              colors={
+                isChecked
+                  ? ['#20B4F3', '#5762FF']
+                  : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               className="w-[358px] rounded-[6px]"
               style={{
                 boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
               }}>
-              <Pressable  onPress={handleRegister} className="h-[44px] items-center justify-center">
+              <Pressable onPress={handleRegister} className="h-[44px] items-center justify-center">
                 <Text
                   className="text-center text-[5.128vw] text-white"
                   style={{

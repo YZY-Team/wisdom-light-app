@@ -16,7 +16,7 @@ export const dialogApi = {
   createDialog: (targetUserId: string) => {
     const formData = new URLSearchParams();
     formData.append('targetUserId', targetUserId);
-    return request.post('/dialogs/private', formData, {
+    return request.post<string>('/dialogs/private', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

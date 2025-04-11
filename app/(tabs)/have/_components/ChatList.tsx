@@ -105,7 +105,6 @@ export default function ChatList() {
         return false;
       }
     };
-
     return {
       id: friend.userId,
       dialogId: lastMessage?.dialogId || '',
@@ -117,13 +116,13 @@ export default function ChatList() {
       lastMessage: lastMessage?.textContent || '暂无消息',
       time,
       unreadCount: dialogMessages.filter(msg => 
-        msg.senderId !== friend.userId && msg.status !== 'READ'
-      ).length, // 只统计接收到的未读消息
+        msg.senderId === friend.userId && msg.status !== 'READ'
+      ).length, // 只统计对方发来的未读消息
     };
   });
  
   
-  const handleChatPress = async (dialogId: string, userName: string, targetUserId: string) => {
+  const handleChatPress = async ( userName: string, targetUserId: string) => {
     const startTime = performance.now();
     try {
       // 总是尝试创建对话
@@ -162,7 +161,7 @@ export default function ChatList() {
         <ChatItem
           key={chat.id}
           {...chat}
-          onPress={() => handleChatPress(chat.dialogId, chat.name, chat.id)}
+          onPress={() => handleChatPress( chat.name, chat.id)}
         />
       ))}
     </ScrollView>
