@@ -5,7 +5,7 @@ import {
   Pressable,
   Platform,
   KeyboardAvoidingView,
-  ScrollView,
+  FlatList,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Image } from 'expo-image';
@@ -18,7 +18,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useUserStore } from '~/store/userStore';
 import { usePathname } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-
+import { useHeaderHeight } from '@react-navigation/elements';
 type MessageProps = {
   content: string;
   time: string;
@@ -90,6 +90,7 @@ export default function PrivateChat() {
   const userInfo = useUserStore((state) => state.userInfo);
   const { dialogId, userName, targetUserId } = useLocalSearchParams();
   const [inputMessage, setInputMessage] = useState('');
+  const headerHeight = useHeaderHeight();
   console.log('对方id', targetUserId);
 
   // 从 Zustand store 获取消息
@@ -116,65 +117,40 @@ export default function PrivateChat() {
   // 修改 formatTime 的参数类型，接受 string 或 number
   const formatTime = useCallback((timestamp: string | number) => {
     try {
-    // 检查时间戳是否为数字字符串或数字
-    const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
-    if (isNaN(ts)) {
-      console.warn('无效的时间戳:', timestamp);
+      // 检查时间戳是否为数字字符串或数字
+      const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
+      if (isNaN(ts)) {
+        console.warn('无效的时间戳:', timestamp);
+        return '';
+      }
+
+      const date = new Date(ts);
+      if (date.toString() === 'Invalid Date') {
+        console.warn('无效的日期:', timestamp);
+        return '';
+      }
+
+      return date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      console.error('时间格式化错误:', error);
       return '';
     }
-    
-    const date = new Date(ts);
-    if (date.toString() === 'Invalid Date') {
-      console.warn('无效的日期:', timestamp);
-      return '';
-    }
-    
-    return date.toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch (error) {
-    console.error('时间格式化错误:', error);
-    return '';
-  }
   }, []);
 
   // 将头像URL缓存到 Map 中
   const avatarCache = useRef(new Map<string, string>());
   const getAvatarUrl = useCallback((senderId: string) => {
     if (!avatarCache.current.has(senderId)) {
-      avatarCache.current.set(senderId, `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`);
+      avatarCache.current.set(
+        senderId,
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`
+      );
     }
     return avatarCache.current.get(senderId)!;
   }, []);
-
-  // 优化消息格式化逻辑
-  const formattedMessages = useMemo(() => {
-    if (!chatMessages.length) return [];
-    
-    const startTime = performance.now();
-    const result = chatMessages.map((msg) => {
-      const isSelf = msg.senderId === userInfo?.globalUserId;
-      
-      // 避免在循环中多次调用 formatTime
-      const time = formatTime(msg.timestamp);
-      const avatar = getAvatarUrl(msg.senderId);
-      
-      return {
-        content: msg.textContent,
-        time,
-        user: {
-          name: isSelf ? '我' : (userName as string),
-          avatar,
-        },
-        isSelf,
-      };
-    });
-    
-    const endTime = performance.now();
-    console.log(`消息格式化耗时: ${endTime - startTime} 毫秒`);
-    return result;
-  }, [chatMessages, userInfo?.globalUserId, userName, formatTime, getAvatarUrl]);
 
   // 移除其他重复的性能统计代码
   // 发送消息
@@ -183,7 +159,7 @@ export default function PrivateChat() {
   const handleSendMessage = useCallback(() => {
     if (!inputMessage.trim()) return;
 
-    const newMessage:Message= {
+    const newMessage: Message = {
       type: 'PRIVATE_CHAT',
       senderId: userInfo!.globalUserId,
       receiverId: targetUserId as string,
@@ -196,42 +172,112 @@ export default function PrivateChat() {
     // 发送消息
     sendMessage(JSON.stringify(newMessage));
     // 存储消息
-    addMessage({...newMessage,status: 'READ'});
+    addMessage({ ...newMessage, status: 'READ' });
     setInputMessage('');
   }, [inputMessage, sendMessage, dialogId, addMessage, userInfo, targetUserId]);
 
+  // 添加分页状态
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const PAGE_SIZE = 20;
+
+  // 优化消息获取逻辑
+  const visibleMessages = useMemo(() => {
+    if (!chatMessages.length) return [];
+    const start = Math.max(0, chatMessages.length - page * PAGE_SIZE);
+    return chatMessages.slice(start);
+  }, [chatMessages, page]);
+  const formattedMessages = useMemo(() => {
+    const timeCache = new Map<string, string>();
+
+    return visibleMessages.map((msg) => {
+      const isSelf = msg.senderId === userInfo?.globalUserId;
+
+      // 使用缓存的时间格式化结果
+      let time = timeCache.get(msg.timestamp);
+      if (!time) {
+        time = formatTime(msg.timestamp);
+        timeCache.set(msg.timestamp, time);
+      }
+
+      return {
+        content: msg.textContent,
+        time,
+        user: {
+          name: isSelf ? '我' : (userName as string),
+          avatar: getAvatarUrl(msg.senderId),
+        },
+        isSelf,
+      };
+    });
+  }, [visibleMessages, userInfo?.globalUserId, userName]);
+  // 处理加载更多
+  const handleLoadMore = useCallback(() => {
+    if (loading) return;
+    setLoading(true);
+    setPage((prev) => prev + 1);
+    setLoading(false);
+  }, [loading]);
+
+  // 添加一个标记是否是首次加载的 ref
+  const isFirstLoad = useRef(true);
+  // 添加一个记录之前消息数量的 ref
+  const prevMessagesCount = useRef(0);
+
+  // 监听消息变化，判断是否需要滚动
+  useEffect(() => {
+    if (!scrollViewRef.current) return;
+
+    // 首次加载或有新消息时才滚动
+    if (isFirstLoad.current || formattedMessages.length > prevMessagesCount.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+
+    isFirstLoad.current = false;
+    prevMessagesCount.current = formattedMessages.length;
+  }, [formattedMessages]);
+
+  const renderItem = useCallback(({ item: msg }) => (
+    <MessageItem {...msg} />
+  ), []);
+
+  const keyExtractor = useCallback((item: any, index: number) => 
+    `${item.time}-${index}`, []);
+
   return (
-    <View className="flex-1 bg-[#1483fd]/10">
-      {/* 头部 */}
-      <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
-        <Pressable 
-          onPress={() => router.back()} 
-          className="z-10 h-10 w-10  items-center justify-center"
-          style={{ position: 'absolute', left: 16 }}
-        >
-          <Ionicons name="chevron-back" size={24} color="#666" />
-        </Pressable>
-        <Text className="flex-1 text-center text-lg font-medium">{userName}</Text>
-      </View>
-
-      {/* 消息区域 */}
-      <View className="flex-1">
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={{ padding: 16 }}
-          onContentSizeChange={() => {
-            scrollViewRef.current?.scrollToEnd({ animated: true });
-          }}>
-          {formattedMessages.map((msg, index) => (
-            <MessageItem key={`${msg.time}-${index}`} {...msg} />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* 底部输入框 */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+    <KeyboardAvoidingView className="flex-1"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={headerHeight}
+    >
+      <View className="flex-1 py-3 bg-[#1483fd]/10">
+        {/* 头部 */}
+        <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
+          <Pressable
+            onPress={() => router.back()}
+            className="z-10 h-10 w-10  items-center justify-center"
+            style={{ position: 'absolute', left: 16 }}>
+            <Ionicons name="chevron-back" size={24} color="#666" />
+          </Pressable>
+          <Text className="flex-1 text-center text-lg font-medium">{userName}</Text>
+        </View>
+    
+        {/* 消息区域 */}
+        <View className="flex-1">
+          <FlatList
+            data={[...formattedMessages].reverse()}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            contentContainerStyle={{ padding: 16 }}
+            inverted
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+          />
+        </View>
+    
+        {/* 底部输入框 */}
         <View className="px-4 pb-4" style={{ paddingBottom: insets.bottom + 20 || 20 }}>
           <View className="flex-row items-center">
             <View
@@ -257,7 +303,7 @@ export default function PrivateChat() {
             </View>
           </View>
         </View>
-      </KeyboardAvoidingView>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }

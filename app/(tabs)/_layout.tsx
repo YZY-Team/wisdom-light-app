@@ -71,35 +71,30 @@ export default function TabLayout() {
     '/be/profile',
     '/be/oath',
     '/be/promise',
-    '/be/achievement'
+    '/be/achievement',
   ];
-  const shouldHideTabBar = hideTabBarRoutes.some(route => pathname.includes(route));
+  const shouldHideTabBar = hideTabBarRoutes.some((route) => pathname.includes(route));
 
   return (
-    <Tabs 
-      options={{
-        headerShown: false,
-        freezeOnBlur: true,
-      }} 
-      asChild
-    >
-      <View className="flex flex-1 relative flex-col bg-[#f5f5f5]">
-        <View style={{ 
-          flex: 1,
-          // paddingBottom: bottomPadding, // 添加底部 padding
-        }}>
+    <Tabs asChild>
+      <View className="relative flex flex-1 flex-col bg-[#f5f5f5]">
+        <View
+          style={{
+            flex: 1,
+            // paddingBottom: bottomPadding, // 添加底部 padding
+          }}>
           <TabSlot />
         </View>
         <TabList asChild>
           <View
-            className="flex absolute  flex-col rounded-[20px] border border-white items-center justify-end bg-white self-center "
-            style={{ 
+            className="absolute flex  flex-col items-center justify-end self-center rounded-[20px] border border-white bg-white "
+            style={{
               bottom: insets.bottom + 10,
               width: 356,
               height: 60,
               paddingHorizontal: 16,
               gap: 23,
-              display: !shouldHideTabBar ?'flex' :"none",
+              display: !shouldHideTabBar ? 'flex' : 'none',
               boxShadow: '0px 0px 10px 0px rgba(20, 131, 253, 0.25)',
             }}>
             {TABS.map((tab) => {
@@ -114,7 +109,7 @@ export default function TabLayout() {
                     {/* 在 TabTrigger 组件中修改 Image 部分 */}
                     <Image
                       source={isActive ? tab.activeIcon : tab.icon}
-                      className={`h-6  ${isActive ? "" :"opacity-50"} w-6`}
+                      className={`h-6  ${isActive ? '' : 'opacity-50'} w-6`}
                       contentFit="cover"
                     />
                     <Text

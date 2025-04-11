@@ -72,7 +72,7 @@ export default function RootLayout() {
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
-          animation: 'none',
+          // animation: 'none',
           headerTitleStyle: {
             fontSize: 18,
           },
