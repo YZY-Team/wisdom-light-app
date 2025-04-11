@@ -148,7 +148,7 @@ export default function ChatList() {
       
       const routeStart = performance.now();
       await router.push({
-        pathname: `/private-chat/${finalDialogId}`,
+        pathname: `/have/private-chat/${finalDialogId}`,
         params: { userName, dialogId: finalDialogId, targetUserId },
       });
       console.log('路由跳转耗时:', performance.now() - routeStart, 'ms');

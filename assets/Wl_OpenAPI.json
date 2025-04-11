@@ -1,0 +1,2943 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API Documentation",
+    "description": "DEXTER-API",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://192.168.1.158:8080/api",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "目标记录管理",
+      "description": "目标记录相关接口"
+    },
+    {
+      "name": "日宣告管理",
+      "description": "日宣告相关接口"
+    },
+    {
+      "name": "成就书管理",
+      "description": "成就书相关接口"
+    },
+    {
+      "name": "目标管理",
+      "description": "目标相关接口"
+    },
+    {
+      "name": "周宣告管理",
+      "description": "周宣告相关接口"
+    }
+  ],
+  "paths": {
+    "/wl/weekly-declaration/{id}": {
+      "get": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "获取周宣告详情",
+        "description": "根据ID获取周宣告详细信息，需要验证用户权限",
+        "operationId": "getWeeklyDeclarationDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWeeklyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "更新周宣告",
+        "description": "更新指定ID的周宣告信息，需要验证用户权限",
+        "operationId": "updateWeeklyDeclaration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyDeclarationDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "删除周宣告",
+        "description": "删除指定ID的周宣告，需要验证用户权限",
+        "operationId": "deleteWeeklyDeclaration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal/{id}": {
+      "get": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "获取目标详情",
+        "description": "根据目标ID获取详细信息，需要验证用户权限",
+        "operationId": "getGoalDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseGoalDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "更新目标",
+        "description": "更新指定ID的目标信息，需要验证用户权限",
+        "operationId": "updateGoal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "删除目标",
+        "description": "删除指定ID的目标，需要验证用户权限",
+        "operationId": "deleteGoal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/{id}": {
+      "put": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "更新目标记录",
+        "description": "更新指定ID的目标记录完成数量，需要验证用户权限",
+        "operationId": "updateGoalRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "completedQuantity",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "删除目标记录",
+        "description": "删除指定ID的目标记录，需要验证用户权限",
+        "operationId": "deleteGoalRecord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration/{id}": {
+      "get": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "获取日宣告详情",
+        "description": "根据ID获取日宣告详细信息，需要验证用户权限",
+        "operationId": "getDailyDeclarationDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseDailyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "更新日宣告",
+        "description": "更新指定ID的日宣告信息，需要验证用户权限",
+        "operationId": "updateDailyDeclaration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DailyDeclarationDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "删除日宣告",
+        "description": "删除指定ID的日宣告，需要验证用户权限",
+        "operationId": "deleteDailyDeclaration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/achievement-book/{id}": {
+      "get": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "获取成就书详情",
+        "description": "根据ID获取成就书详细信息，需要验证用户权限",
+        "operationId": "getBookDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseAchievementBookDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "更新成就书",
+        "description": "更新指定ID的成就书信息，需要验证用户权限",
+        "operationId": "updateBook",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AchievementBookDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/weekly-declaration": {
+      "post": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "创建周宣告",
+        "description": "创建新的周宣告，需要验证用户权限",
+        "operationId": "createWeeklyDeclaration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeeklyDeclarationDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal": {
+      "post": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "创建目标",
+        "description": "创建新的目标，需要验证用户权限",
+        "operationId": "createGoal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/record": {
+      "post": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "记录目标完成情况",
+        "description": "记录指定目标在指定日期的完成情况，需要验证用户权限",
+        "operationId": "recordGoalCompletion",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "completedQuantity",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "recordDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration": {
+      "post": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "创建日宣告",
+        "description": "创建新的日宣告，需要验证用户权限",
+        "operationId": "createDailyDeclaration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DailyDeclarationDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/achievement-book": {
+      "post": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "创建成就书",
+        "description": "创建新的成就书",
+        "operationId": "createBook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AchievementBookDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/achievement-book/{id}/coaches": {
+      "post": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "绑定教练",
+        "description": "为指定ID的成就书绑定教练，需要验证用户权限",
+        "operationId": "bindCoaches",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBoolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/weekly-declaration/week": {
+      "get": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "获取指定周次的周宣告",
+        "description": "获取指定成就书指定周次的周宣告，需要验证用户权限",
+        "operationId": "getWeeklyDeclarationByWeek",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "weekNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWeeklyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/weekly-declaration/list": {
+      "get": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "获取指定成就书的所有周宣告",
+        "description": "获取指定成就书的所有周宣告，需要验证用户权限",
+        "operationId": "getWeeklyDeclarationList",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListWeeklyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/weekly-declaration/date": {
+      "get": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "获取指定日期所在周的周宣告",
+        "description": "获取指定成就书在指定日期所在周的周宣告，需要验证用户权限",
+        "operationId": "getWeeklyDeclarationByDate",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWeeklyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/weekly-declaration/current": {
+      "get": {
+        "tags": [
+          "周宣告管理"
+        ],
+        "summary": "获取当前周的周宣告",
+        "description": "获取指定成就书当前周的周宣告，需要验证用户权限",
+        "operationId": "getCurrentWeeklyDeclaration",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWeeklyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal/{id}/completion-rate": {
+      "get": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "获取目标完成率",
+        "description": "获取指定ID目标的完成率（百分比），需要验证用户权限",
+        "operationId": "getCompletionRate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBigDecimal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal/list": {
+      "get": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "获取成就书的所有目标",
+        "description": "根据成就书ID获取所有目标列表，需要验证用户权限",
+        "operationId": "getGoalList",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListGoalDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal/average-completion-rate": {
+      "get": {
+        "tags": [
+          "目标管理"
+        ],
+        "summary": "获取成就书的所有目标平均完成率",
+        "description": "获取指定成就书所有目标的平均完成率（百分比），需要验证用户权限",
+        "operationId": "getAverageCompletionRate",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseBigDecimal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/weekly": {
+      "get": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "获取目标在指定周的完成记录",
+        "description": "获取指定目标在指定周的所有完成记录，需要验证用户权限",
+        "operationId": "getWeeklyGoalRecords",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "weekStartDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListGoalRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/date-range": {
+      "get": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "获取目标在指定日期范围内的完成记录",
+        "description": "获取指定目标在指定日期范围内的所有完成记录，需要验证用户权限",
+        "operationId": "getGoalRecordsByDateRange",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListGoalRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/daily": {
+      "get": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "获取目标在指定日期的完成记录",
+        "description": "获取指定目标在指定日期的完成记录，需要验证用户权限",
+        "operationId": "getDailyGoalRecord",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "recordDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseGoalRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/goal-record/all": {
+      "get": {
+        "tags": [
+          "目标记录管理"
+        ],
+        "summary": "获取目标的所有完成记录",
+        "description": "获取指定目标的所有完成记录，需要验证用户权限",
+        "operationId": "getAllGoalRecords",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListGoalRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration/today": {
+      "get": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "获取今天的日宣告",
+        "description": "获取指定成就书今天的日宣告，需要验证用户权限",
+        "operationId": "getTodayDailyDeclaration",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseDailyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration/list/weekly": {
+      "get": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "获取指定周宣告的所有日宣告",
+        "description": "获取指定周宣告的所有日宣告",
+        "operationId": "getDailyDeclarationsByWeekly",
+        "parameters": [
+          {
+            "name": "weeklyDeclarationId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SUCCESS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponse"
+                    },
+                    {}
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration/list/book": {
+      "get": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "获取指定成就书的所有日宣告",
+        "description": "获取指定成就书的所有日宣告，需要验证用户权限",
+        "operationId": "getDailyDeclarationsByBook",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListDailyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/daily-declaration/date": {
+      "get": {
+        "tags": [
+          "日宣告管理"
+        ],
+        "summary": "获取指定日期的日宣告",
+        "description": "获取指定成就书在指定日期的日宣告，需要验证用户权限",
+        "operationId": "getDailyDeclarationByDate",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseDailyDeclarationDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/achievement-book/list": {
+      "get": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "获取用户的所有成就书",
+        "description": "获取当前登录用户的所有成就书",
+        "operationId": "getBookList",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseListAchievementBookDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wl/achievement-book/active": {
+      "get": {
+        "tags": [
+          "成就书管理"
+        ],
+        "summary": "获取用户当前激活的成就书",
+        "description": "获取当前登录用户当前激活的成就书信息",
+        "operationId": "getActiveBook",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseAchievementBookDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BaseResponse": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "WeeklyDeclarationDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bookId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "weekNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "declarationContent": {
+            "type": "string"
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "achievement": {
+            "type": "string"
+          },
+          "selfSummary": {
+            "type": "string"
+          },
+          "summary123456": {
+            "type": "string"
+          },
+          "nextStep": {
+            "type": "string"
+          },
+          "weekScore": {
+            "type": "string"
+          },
+          "weekExperience": {
+            "type": "string"
+          },
+          "whatWorked": {
+            "type": "string"
+          },
+          "whatDidntWork": {
+            "type": "string"
+          },
+          "whatLearned": {
+            "type": "string"
+          },
+          "whatNext": {
+            "type": "string"
+          },
+          "weeklyGoals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeeklyGoalDTO"
+            }
+          },
+          "averageCompletionRate": {
+            "type": "number"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WeeklyGoalDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "goalId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "targetQuantity": {
+            "type": "number"
+          },
+          "completedQuantity": {
+            "type": "number"
+          },
+          "completionRate": {
+            "type": "number"
+          }
+        }
+      },
+      "BaseResponseBoolean": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GoalDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bookId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "commitment": {
+            "type": "string"
+          },
+          "targetQuantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "attitude": {
+            "type": "string"
+          },
+          "actionPlan": {
+            "type": "string"
+          },
+          "expectedResult": {
+            "type": "string"
+          },
+          "completedQuantity": {
+            "type": "number"
+          },
+          "completionRate": {
+            "type": "number"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DailyDeclarationDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "bookId": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "weeklyDeclarationId": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "dayNumber": {
+            "type": "integer",
+            "format": "int32",
+            "refType": null
+          },
+          "declarationDate": {
+            "type": "string",
+            "format": "date",
+            "refType": null
+          },
+          "morningPlan": {
+            "type": "string",
+            "refType": null
+          },
+          "noonPlan": {
+            "type": "string",
+            "refType": null
+          },
+          "afternoonPlan": {
+            "type": "string",
+            "refType": null
+          },
+          "eveningPlan": {
+            "type": "string",
+            "refType": null
+          },
+          "dayScore": {
+            "type": "string",
+            "refType": null
+          },
+          "dayExperience": {
+            "type": "string",
+            "refType": null
+          },
+          "whatWorked": {
+            "type": "string",
+            "refType": null
+          },
+          "whatDidntWork": {
+            "type": "string",
+            "refType": null
+          },
+          "whatLearned": {
+            "type": "string",
+            "refType": null
+          },
+          "whatNext": {
+            "type": "string",
+            "refType": null
+          },
+          "dailyGoals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyGoalDTO"
+            },
+            "refType": "DailyGoalDTO"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time",
+            "refType": null
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time",
+            "refType": null
+          }
+        }
+      },
+      "DailyGoalDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "goalId": {
+            "type": "integer",
+            "format": "int64",
+            "refType": null
+          },
+          "title": {
+            "type": "string",
+            "refType": null
+          },
+          "unit": {
+            "type": "string",
+            "refType": null
+          },
+          "completedQuantity": {
+            "type": "number",
+            "refType": null
+          },
+          "weeklyTargetQuantity": {
+            "type": "number",
+            "refType": null
+          },
+          "weeklyCompletedQuantity": {
+            "type": "number",
+            "refType": null
+          },
+          "totalTargetQuantity": {
+            "type": "number",
+            "refType": null
+          },
+          "totalCompletedQuantity": {
+            "type": "number",
+            "refType": null
+          },
+          "weeklyCompletionRate": {
+            "type": "number",
+            "refType": null
+          },
+          "totalCompletionRate": {
+            "type": "number",
+            "refType": null
+          }
+        }
+      },
+      "AchievementBookDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maritalStatus": {
+            "type": "string"
+          },
+          "childrenStatus": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "companySize": {
+            "type": "string"
+          },
+          "annualIncome": {
+            "type": "string"
+          },
+          "companyAddress": {
+            "type": "string"
+          },
+          "emergencyContact": {
+            "type": "string"
+          },
+          "homeAddress": {
+            "type": "string"
+          },
+          "oath": {
+            "type": "string"
+          },
+          "promise": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "membershipStartDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "membershipEndDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coachIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BaseResponseLong": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BaseResponseWeeklyDeclarationDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WeeklyDeclarationDTO"
+          }
+        }
+      },
+      "BaseResponseListWeeklyDeclarationDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeeklyDeclarationDTO"
+            }
+          }
+        }
+      },
+      "BaseResponseGoalDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GoalDTO"
+          }
+        }
+      },
+      "BaseResponseBigDecimal": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "number"
+          }
+        }
+      },
+      "BaseResponseListGoalDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalDTO"
+            }
+          }
+        }
+      },
+      "BaseResponseListGoalRecord": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalRecord"
+            }
+          }
+        }
+      },
+      "GoalRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "declarationId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "goalId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recordType": {
+            "type": "string"
+          },
+          "targetQuantity": {
+            "type": "number"
+          },
+          "completedQuantity": {
+            "type": "number"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BaseResponseGoalRecord": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/GoalRecord"
+          }
+        }
+      },
+      "BaseResponseDailyDeclarationDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DailyDeclarationDTO"
+          }
+        }
+      },
+      "BaseResponseListDailyDeclarationDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyDeclarationDTO"
+            }
+          }
+        }
+      },
+      "BaseResponseAchievementBookDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AchievementBookDTO"
+          }
+        }
+      },
+      "BaseResponseListAchievementBookDTO": {
+        "type": "object",
+        "description": "通用响应对象",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "响应码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "响应信息",
+            "example": "ok!"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AchievementBookDTO"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Parameter Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BaseResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

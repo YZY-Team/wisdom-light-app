@@ -1,18 +1,19 @@
 import { View, Text, Pressable, InteractionManager } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import { router } from 'expo-router';
-import { FlashList } from '@shopify/flash-list';
+import { FlatList } from 'react-native';
 import type { Friend } from '~/types/have/friendType';
 
 // 生成模拟数据
 const generateMockFriends = (count: number): Friend[] => {
+  const letters = ['a', 'b', 'c', 'd'];
   return Array.from({ length: count }, (_, i) => ({
     userId: `user_${i + 1}`,
-    username: `用户${i + 1}`,
-    nickname: `昵称${i + 1}`,
+    username: `${letters[i % letters.length]}用户${i + 1}`,
+    nickname: `${letters[i % letters.length]}昵称${i + 1}`,
     remark: i % 3 === 0 ? `备注${i + 1}` : null,
     avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}`,
     originalAvatarUrl: null,
@@ -24,7 +25,7 @@ const generateMockFriends = (count: number): Friend[] => {
 
 // 将 FriendItem 组件使用 memo 包裹以避免不必要的重渲染
 const FriendItem = memo(({ item }: { item: Friend }) => (
-  <Pressable className="flex-row items-center border-b border-gray-100 px-4 py-3">
+  <Pressable className="flex-row items-center bg-[#1483FD0D] border-b border-gray-100 px-4 py-3">
     <Image
       source={{ uri: item.avatarUrl }}
       className="h-12 w-12 rounded-full"
@@ -35,13 +36,28 @@ const FriendItem = memo(({ item }: { item: Friend }) => (
       <Text className="text-base font-medium">
         {item.remark || item.nickname || item.username}
       </Text>
-      <Text className="mt-1 text-sm text-gray-500">好友</Text>
     </View>
-    <Text className="text-sm text-gray-400">
-      {new Date(item.createTime).toLocaleDateString()}
-    </Text>
   </Pressable>
 ));
+
+// 添加字母索引组件
+const AlphabetIndex = ({ onPressLetter }: { onPressLetter: (letter: string) => void }) => {
+  const letters = ['A', 'B', 'C', 'D'];
+
+  return (
+    <View className="absolute right-2 top-1/2 -translate-y-1/2">
+      {letters.map((letter) => (
+        <Pressable
+          key={letter}
+          onPress={() => onPressLetter(letter)}
+          className="py-1"
+        >
+          <Text className="text-sm text-gray-500">{letter}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+};
 
 export default function FriendList() {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -74,6 +90,17 @@ export default function FriendList() {
     return item.isFavorite ? 'favorite' : 'normal';
   }, []);
 
+  const flatListRef = useRef<FlatList>(null);
+
+  const scrollToLetter = (letter: string) => {
+    const index = friends.findIndex(friend => 
+      friend.username.toLowerCase().startsWith(letter.toLowerCase())
+    );
+    if (index !== -1) {
+      flatListRef.current?.scrollToIndex({ index, animated: true });
+    }
+  };
+
   return (
     <View className="flex-1 bg-white">
       {/* 显示FPS */}
@@ -85,47 +112,46 @@ export default function FriendList() {
         <Pressable onPress={() => router.back()} className="absolute left-4">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
-        <Text className="flex-1 text-center text-lg font-medium">好友列表</Text>
+        <Text className="flex-1 text-center  text-lg font-medium">好友列表</Text>
+        <Pressable onPress={() => router.push('/have/friend-list/add-friend')}>
+          <Ionicons name="add" size={24} color="#666" />
+        </Pressable>
+
       </View>
 
-      {/* 添加一个固定高度的容器 */}
-      <View style={{ height: '100%' }}>
-        <FlashList
-          data={generateMockFriends(100)}
-          renderItem={FriendItem}
-          estimatedItemSize={73}
-          getItemType={getItemType}
-          // 增加缓冲区大小以提升性能
-          overrideItemLayout={(layout, item) => {
-            layout.size = 73;
-          }}
-          // 优化批量渲染参数
-          initialNumToRender={15}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          // 优化性能配置
-          removeClippedSubviews={true}
-          initialNumToRender={10}
-          maxToRenderPerBatch={5}
-          windowSize={3}
-          overrideItemLayout={(layout, item) => {
-            layout.size = 73; // 固定每项高度
-          }}
-          keyExtractor={item => item.userId}
-          // 减少滚动时的回调频率
-          scrollEventThrottle={16}
-          onScroll={useCallback(() => {
-            console.log('Scroll Performance:', performance.now());
-          }, [])}
-          onMomentumScrollBegin={useCallback(() => {
-            console.log('Scroll Start:', performance.now());
-          }, [])}
-          onMomentumScrollEnd={useCallback(() => {
-            console.log('Scroll End:', performance.now());
-          }, [])}
-        />
-      </View>
+      {/* 使用 FlatList 替换 FlashList */}
+      <FlatList
+        data={generateMockFriends(100)}
+        renderItem={({ item }) => <FriendItem item={item} />}
+        keyExtractor={item => item.userId}
+        // 性能优化配置
+        ItemSeparatorComponent={() => <View style={{ height: 4 }} />}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={3}
+        removeClippedSubviews={true}
+        // 滚动事件
+        scrollEventThrottle={16}
+        onScroll={useCallback(() => {
+          console.log('Scroll Performance:', performance.now());
+        }, [])}
+        onMomentumScrollBegin={useCallback(() => {
+          console.log('Scroll Start:', performance.now());
+        }, [])}
+        onMomentumScrollEnd={useCallback(() => {
+          console.log('Scroll End:', performance.now());
+        }, [])}
+        // 样式
+        contentContainerStyle={{ paddingBottom: 20 }}
+        // 高度设置
+        style={{ height: '100%',
+          paddingLeft: 16,
+          paddingRight: 16,
+         }}
+      />
+      {/* 添加字母索引 */}
+      <AlphabetIndex onPressLetter={scrollToLetter} />
+
     </View>
   );
 }
