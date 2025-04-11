@@ -252,7 +252,7 @@ export default function WhoIndex() {
         </View>
 
         {/* 版本信息 */}
-        <Text className="mb-4 mt-[220px]  text-center text-xs text-[#999]">
+        <Text className="mb-4 mt-[120px]  text-center text-xs text-[#999]">
           Wisdom Light v1.0.0
         </Text>
         <Pressable onPress={handleLogout} className="bg justify-center flex-row items-center px-4 py-4">

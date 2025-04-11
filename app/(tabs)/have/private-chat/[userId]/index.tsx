@@ -188,7 +188,7 @@ export default function PrivateChat() {
       receiverId: targetUserId,
       dialogId: dialogId,
       textContent: inputMessage,
-      status: 'READ',
+      
       timestamp: String(Date.now()),
     };
     console.log('发送消息', newMessage);
@@ -196,7 +196,7 @@ export default function PrivateChat() {
     // 发送消息
     sendMessage(JSON.stringify(newMessage));
     // 存储消息
-    addMessage(newMessage);
+    addMessage({...newMessage,status: 'READ'});
     setInputMessage('');
   }, [inputMessage, sendMessage, dialogId, addMessage, userInfo, targetUserId]);
 
@@ -204,7 +204,11 @@ export default function PrivateChat() {
     <View className="flex-1 bg-[#1483fd]/10">
       {/* 头部 */}
       <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
-        <Pressable onPress={() => router.back()} className="absolute left-4">
+        <Pressable 
+          onPress={() => router.back()} 
+          className="z-10 h-10 w-10  items-center justify-center"
+          style={{ position: 'absolute', left: 16 }}
+        >
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
         <Text className="flex-1 text-center text-lg font-medium">{userName}</Text>

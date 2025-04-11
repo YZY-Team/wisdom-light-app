@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, Pressable } from 'react-native';
-import { SecondaryCategory } from './SecondaryCategory';
-import { CourseCard } from './CourseCard';
+import  SecondaryCategory  from './SecondaryCategory';
+import  CourseCard  from './CourseCard';
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
@@ -29,10 +29,10 @@ type RelatedCourseCategoryProps = {
   onSecondaryCategoryPress: (index: number) => void;
 };
 
-export const RelatedCourseCategory = ({
+export default function RelatedCourseCategory({
   activeSecondaryIndex,
   onSecondaryCategoryPress,
-}: RelatedCourseCategoryProps) => {
+}: RelatedCourseCategoryProps) {
   const [activeTab, setActiveTab] = useState<TabType>(TabType.ORIGIN);
   const secondaryCategories = Object.values(SecondaryCategoryType);
 

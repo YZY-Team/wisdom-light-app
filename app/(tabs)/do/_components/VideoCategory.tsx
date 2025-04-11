@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
-import { SecondaryCategory } from './SecondaryCategory';
-import { CourseCard } from './CourseCard';
+import  SecondaryCategory  from './SecondaryCategory';
+import  CourseCard  from './CourseCard';
 
 type VideoCategoryProps = {
   activeSecondaryIndex: number;
@@ -8,12 +8,20 @@ type VideoCategoryProps = {
   courses: any[];
 };
 
-export const VideoCategory = ({
+export default function VideoCategory({
   activeSecondaryIndex,
   onSecondaryCategoryPress,
-}: VideoCategoryProps) => {
+}: VideoCategoryProps) {
   const secondaryCategories = ['成功学', '内在成长', '情绪处理', '团队管理', '道的部分'];
-  const courseData = {
+  const courseData:{
+    [key: string]: {
+      title: string;
+      teacher: string;
+      description: string;
+      rating: number;
+      image: string;
+    }[];
+  } = {
     成功学: [
       {
         title: '成功心态培养',

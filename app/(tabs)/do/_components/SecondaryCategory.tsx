@@ -10,10 +10,11 @@ type SecondaryCategoryProps = {
   onPress: () => void;
 };
 
-export const SecondaryCategory = ({ title, isActive, onPress }: SecondaryCategoryProps) => (
-  <Pressable
-    onPress={onPress}
-    className={`mr-4 flex items-center rounded-[6px]`}>
+export default function SecondaryCategory({ title, isActive, onPress }: SecondaryCategoryProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`mr-4 flex items-center rounded-[6px]`}>
     {isActive ? (
       <LinearGradient
         colors={['#20B4F3', '#5762FF']}
@@ -30,3 +31,4 @@ export const SecondaryCategory = ({ title, isActive, onPress }: SecondaryCategor
     )}
   </Pressable>
 );
+}

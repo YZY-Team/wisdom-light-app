@@ -49,6 +49,7 @@ export default function ChatList() {
   const { messages, markMessagesAsRead } = useWebSocketStore();
   const [friends, setFriends] = useState<Friend[]>([]);
 
+  
   // 获取好友列表
   const getFriendsList = useCallback(async () => {
     const res = await friendApi.getFriends();
@@ -104,7 +105,7 @@ export default function ChatList() {
         return false;
       }
     };
-    console.log("dialogMessages",dialogMessages);
+
     return {
       id: friend.userId,
       dialogId: lastMessage?.dialogId || '',
@@ -125,21 +126,21 @@ export default function ChatList() {
   const handleChatPress = async (dialogId: string, userName: string, targetUserId: string) => {
     const startTime = performance.now();
     try {
-      let finalDialogId = dialogId;
-      if (!dialogId) {
-        const createStart = performance.now();
-        const res = await dialogApi.createDialog(targetUserId);
-        console.log('创建对话耗时:', performance.now() - createStart, 'ms');
-        
-        if (res.code === 200 && res.data) {
-          finalDialogId = res.data;
-        } else {
-          console.error('创建对话失败');
-          return;
-        }
+      // 总是尝试创建对话
+      const createStart = performance.now();
+      const res = await dialogApi.createDialog(targetUserId);
+      console.log('创建对话耗时:', performance.now() - createStart, 'ms');
+      
+      let finalDialogId: string;
+      if (res.code === 200 && res.data) {
+        finalDialogId = res.data;
+      } else {
+        console.error('创建对话失败');
+        return;
       }
 
       // 标记该对话的消息为已读
+      console.log('标记消息为已读开始', finalDialogId, targetUserId);
       markMessagesAsRead(finalDialogId, targetUserId);
       
       const routeStart = performance.now();

@@ -1,6 +1,6 @@
 import { ScrollView, View } from 'react-native';
-import { SecondaryCategory } from './SecondaryCategory';
-import { CourseCard } from './CourseCard';
+import  SecondaryCategory  from './SecondaryCategory';
+import  CourseCard  from './CourseCard';
 
 type OnlineCourseCategoryProps = {
   activeSecondaryIndex: number;
@@ -8,14 +8,24 @@ type OnlineCourseCategoryProps = {
   courses: any[];
 };
 
-export const OnlineCourseCategory = ({
+export default function OnlineCourseCategory({
   activeSecondaryIndex,
   onSecondaryCategoryPress,
   courses,
-}: OnlineCourseCategoryProps) => {
+}: OnlineCourseCategoryProps) {
   const secondaryCategories = ['课程预告', '已预约'];
   
-  const courseData = {
+  const courseData:{
+    [key: string]: [
+      {
+        title: string;
+        teacher: string;
+        description: string;
+        rating: number;
+        image: string;
+      }
+    ]
+  } = {
     课程预告: [
       // ... add course data here ...
     ],

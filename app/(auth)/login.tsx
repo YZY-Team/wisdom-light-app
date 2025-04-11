@@ -18,9 +18,18 @@ export default function Login() {
   const [isChecked, setChecked] = useState(false);
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
+  const [showError, setShowError] = useState(false);  // 添加错误状态
   const wsContext = useWebSocketContext();
   const setUserInfo=useUserStore((state)=>state.setUserInfo);
+
   const handleRegister = async () => {
+    console.log('注册');
+    
+    if (!isChecked) {
+      setShowError(true);
+      return;
+    }
+    setShowError(false);
     try {
       console.log('注册信息：', { username, phone, verificationCode });
       const loginRes = await loginApi.login({ phone, code: verificationCode });
@@ -57,7 +66,7 @@ export default function Login() {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       className="flex-1">
-      <View className="flex h-[144px] items-center justify-center px-4">
+      <View className="flex h-[50%] items-center justify-center px-4">
         <Text
           className="text-[8.205vw] text-white"
           style={{
@@ -133,21 +142,23 @@ export default function Login() {
                   </LinearGradient>
                 </View>
               </View>
-              <Text className="mt-1 text-[12px] text-[#1687FD] underline">忘记密码</Text>
             </View>
           </View>
         </View>
 
         <View
-          className="flex flex-col items-center gap-4 "
+          className="flex flex-col items-center gap-1 "
           style={{
             paddingBottom: insets.bottom + 33 || 33,
           }}>
           <View className="flex-row items-center">
             <Checkbox
-              className="mr-2 h-4 w-4 rounded   border-none bg-[#D9D9D9]"
+              className="mr-2 h-4 w-4 rounded border-none bg-[#D9D9D9]"
               value={isChecked}
-              onValueChange={setChecked}
+              onValueChange={(value) => {
+                setChecked(value);
+                setShowError(false);
+              }}
             />
 
             <Text className="text-sm text-gray-500">
@@ -157,25 +168,30 @@ export default function Login() {
               同意选项
             </Text>
           </View>
+          
+          <Text 
+            className="text-sm text-red-500 h-5" 
+            style={{ 
+              opacity: showError ? 1 : 0 
+            }}>
+            请勾选隐私政策与服务协议
+          </Text>
 
           <View className="items-center">
             <LinearGradient
-              colors={['#20B4F3', '#5762FF']}
+              colors={isChecked 
+                ? ['#20B4F3', '#5762FF']
+                : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               className="w-[358px] rounded-[6px]"
               style={{
-                shadowColor: 'rgba(20, 131, 253, 0.40)',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 1,
-                shadowRadius: 10,
-                elevation: 5,
+                boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
               }}>
-              <Pressable onPress={handleRegister} className="h-[44px] items-center justify-center">
+              <Pressable  onPress={handleRegister} className="h-[44px] items-center justify-center">
                 <Text
                   className="text-center text-[5.128vw] text-white"
                   style={{
-                    fontFamily: 'Inter',
                     fontWeight: '700',
                   }}>
                   登录

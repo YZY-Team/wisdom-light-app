@@ -5,10 +5,10 @@ import { cssInterop } from 'nativewind';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
-import { PrimaryCategory } from './_components/PrimaryCategory';
-import { VideoCategory } from './_components/VideoCategory';
-import { OnlineCourseCategory } from './_components/OnlineCourseCategory';
-import { RelatedCourseCategory } from './_components/RelatedCourseCategory';
+import  PrimaryCategory  from './_components/PrimaryCategory';
+import  VideoCategory from './_components/VideoCategory';
+import  OnlineCourseCategory  from './_components/OnlineCourseCategory';
+import  RelatedCourseCategory  from './_components/RelatedCourseCategory';
 import cardImage from '~/assets/splash.png';
 // 需要在文件顶部添加 LinearGradient 导入
 import { LinearGradient } from 'expo-linear-gradient';
