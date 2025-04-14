@@ -1,15 +1,16 @@
 import '../global.css';
 import 'expo-dev-client';
-import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
-import { NAV_THEME } from '~/theme';
-import { Stack, Slot } from 'expo-router';
+import { useInitialAndroidBarSync } from '~/lib/useColorScheme';
+
+import { Slot, useRouter } from 'expo-router';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+
 import { WebSocketProvider } from '~/contexts/WebSocketContext';
 import { loginApi } from '~/api/auth/login';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View } from 'react-native';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -37,11 +38,11 @@ export default function RootLayout() {
             await AsyncStorage.removeItem('token');
           }
         }
-        setInitialRoute('/(tabs)/be');
+        setInitialRoute('/(auth)/login');
         setIsReady(true);
       } catch (error) {
         console.error(error);
-        setInitialRoute('/(tabs)/be');
+        setInitialRoute('/(auth)/login');
         setIsReady(true);
       }
     }
@@ -61,7 +62,12 @@ export default function RootLayout() {
 
   return (
     <WebSocketProvider>
-      <Slot />
+      <View style={{
+        flex: 1,
+        paddingTop: insets.top,
+      }}>
+        <Slot />
+      </View>
     </WebSocketProvider>
   );
 }
