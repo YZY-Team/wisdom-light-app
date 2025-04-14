@@ -8,6 +8,8 @@ import DailyResult from './DailyResult';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
+import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -123,16 +125,16 @@ const DailyDeclarationItem = ({ item }: { item: DailyData }) => {
       {/* 早宣告模块 - 收起时只显示标题栏 */}
       <View className={`${expanded ? "mb-4" : ""} overflow-hidden rounded-xl bg-white`}>
         {/* 头部渐变标题栏 */}
-        <Pressable 
-          onPress={toggleExpand} 
-          android_ripple={{color: 'rgba(255,255,255,0.2)'}}
-          style={({pressed}) => [
-            {opacity: pressed ? 0.9 : 1}
+        <Pressable
+          onPress={toggleExpand}
+          android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.9 : 1 }
           ]}>
           <LinearGradient
             colors={['#20B4F3', '#5762FF']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }} 
+            end={{ x: 1, y: 0 }}
             className="flex h-[38px] flex-row items-center justify-between rounded-t-xl px-4"
             style={{
               boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
@@ -257,94 +259,134 @@ const DailyDeclarationItem = ({ item }: { item: DailyData }) => {
 export default function DailyDeclaration() {
   // 剩余时间状态
   const [remainingTime, setRemainingTime] = useState('');
+  // 今日宣告数据状态
+  const [todayDeclaration, setTodayDeclaration] = useState<NewDailyDeclarationDTO | null>(null);
+  // 加载状态
+  const [isLoading, setIsLoading] = useState(true);
+  // 历史日宣告列表
+  const [historicalDeclarations, setHistoricalDeclarations] = useState<NewDailyDeclarationDTO[]>([]);
 
-  // 使用useMemo生成过去7天的数据
-  const dailyData = useMemo(() => {
-    const data: DailyData[] = [];
-    const today = new Date();
+  // 获取今日宣告和历史宣告
+  useEffect(() => {
+    const fetchDeclarations = async () => {
+      try {
+        setIsLoading(true);
 
-    // 生成过去6天的数据（不包括今天）
-    for (let i = 1; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
+        // 获取成就书的所有日宣告
+        const bookId = "1911671090439000066"; // 这里需要从上下文获取实际的bookId
 
-      // 构建每日数据
-      data.push({
-        date,
-        timeSlots: [
-          {
-            title: '上午',
-            items: [
-              {
-                content: `${date.getMonth() + 1}月${date.getDate()}日 完成项目文档初稿`,
-                time: '7:00',
-              },
-            ],
-          },
-          {
-            title: '中午',
-            items: [
-              {
-                content: `${date.getMonth() + 1}月${date.getDate()}日 整理上午工作进度`,
-                time: '12:00',
-              },
-            ],
-          },
-          {
-            title: '下午',
-            items: [
-              {
-                content: `${date.getMonth() + 1}月${date.getDate()}日 进行项目评审会议`,
-                time: '14:00',
-              },
-            ],
-          },
-          {
-            title: '晚上',
-            items: [
-              {
-                content: `${date.getMonth() + 1}月${date.getDate()}日 总结今日工作完成情况`,
-                time: '19:00',
-              },
-            ],
-          },
-        ],
-        eveningContent: i > 0 ? `${date.getMonth() + 1}月${date.getDate()}日晚总结内容` : '',
-        eveningStatus: i > 0 ? 'completed' : 'pending',
-        eveningReport: [
-          { label: '打分', value: i > 0 ? '8分' : '' },
-          { label: '体验', value: i > 0 ? '今天工作效率很高' : '' },
-          { label: '行得通', value: i > 0 ? '团队协作流程顺畅' : '' },
-          { label: '行不通', value: i > 0 ? '部分功能实现遇到技术难题' : '' },
-          { label: '学习到', value: i > 0 ? '新的状态管理方法' : '' },
-          { label: '下一步', value: i > 0 ? '优化性能问题' : '' },
-        ],
-        dailyResult: {
-          goals:
-            i > 0
-              ? [
-                {
-                  content: `${date.getMonth() + 1}月${date.getDate()}日目标1：完成项目核心功能`,
-                  unit: '个',
-                },
-                {
-                  content: `${date.getMonth() + 1}月${date.getDate()}日目标2：完成团队会议`,
-                  unit: '次',
-                },
-                {
-                  content: `${date.getMonth() + 1}月${date.getDate()}日目标3：完成文档编写`,
-                  unit: '份',
-                },
-              ]
-              : [],
-          weeklyProgress: '10/8',
-          monthlyProgress: '10/8',
-        },
-      });
-    }
 
-    return data;
+        // 先获取今日宣告
+        const todayResponse = await dailyDeclarationApi.getTodayDailyDeclaration(bookId);
+
+        if (todayResponse.code === 404) {
+          const newDeclaration: NewDailyDeclarationDTO = {
+            bookId: bookId,
+            weeklyDeclarationId: 1, // 这里需要从上下文获取
+            dayNumber: 1, // 这里需要根据实际情况计算
+            declarationDate: new Date().toISOString().split('T')[0],
+            morningPlan: '',
+            noonPlan: '',
+            afternoonPlan: '',
+            eveningPlan: '',
+            dayScore: '',
+            dayExperience: '',
+            whatWorked: '',
+            whatDidntWork: '',
+            whatLearned: '',
+            whatNext: '',
+            dailyGoals: []
+          };
+
+          try {
+            const createResponse = await dailyDeclarationApi.createNewDailyDeclaration(newDeclaration);
+            if (createResponse.data) {
+              // 创建成功后重新获取今日宣告
+              const newDayDeclaration = await dailyDeclarationApi.getNewDailyDeclarationDetail(createResponse.data.toString());
+              setTodayDeclaration(newDayDeclaration.data);
+            }
+          } catch (createError) {
+            console.error('创建今日宣告失败:', createError);
+            setTodayDeclaration(null);
+          }
+        } else {
+          setTodayDeclaration(todayResponse.data || null);
+        }
+
+        try {
+          // 获取历史宣告列表
+          const historyResponse = await dailyDeclarationApi.getBookDailyDeclarations(bookId);
+
+          if (historyResponse.data) {
+            // 获取今天的日期字符串
+            const today = new Date().toISOString().split('T')[0];
+
+            // 设置历史宣告（排除今天的）
+            const sortedDeclarations = historyResponse.data
+              .filter(declaration => declaration.declarationDate !== today)
+              .sort((a, b) => new Date(b.declarationDate).getTime() - new Date(a.declarationDate).getTime());
+            setHistoricalDeclarations(sortedDeclarations);
+          }
+        } catch (error: any) {
+          // 如果是 500 错误，说明没有历史记录
+          if (error.response?.status === 500) {
+            setHistoricalDeclarations([]);
+          } else {
+            throw error;
+          }
+        }
+      } catch (error) {
+        console.error('获取日宣告失败:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDeclarations();
   }, []);
+
+  // 将历史宣告数据转换为展示格式
+  const historicalDailyData = useMemo(() => {
+    return historicalDeclarations.map(declaration => ({
+      date: new Date(declaration.declarationDate),
+      timeSlots: [
+        {
+          title: '上午',
+          items: [{ content: declaration.morningPlan || '', time: '7:00' }],
+        },
+        {
+          title: '中午',
+          items: [{ content: declaration.noonPlan || '', time: '12:00' }],
+        },
+        {
+          title: '下午',
+          items: [{ content: declaration.afternoonPlan || '', time: '14:00' }],
+        },
+        {
+          title: '晚上',
+          items: [{ content: declaration.eveningPlan || '', time: '19:00' }],
+        },
+      ],
+      eveningContent: '',
+      eveningStatus: 'completed' as const,
+      eveningReport: [
+        { label: '打分', value: declaration.dayScore || '' },
+        { label: '体验', value: declaration.dayExperience || '' },
+        { label: '行得通', value: declaration.whatWorked || '' },
+        { label: '行不通', value: declaration.whatDidntWork || '' },
+        { label: '学习到', value: declaration.whatLearned || '' },
+        { label: '下一步', value: declaration.whatNext || '' },
+      ],
+      dailyResult: {
+        goals: declaration.dailyGoals?.map(goal => ({
+          content: goal.title,
+          unit: goal.unit,
+        })) || [],
+        weeklyProgress: '0/0',
+        monthlyProgress: '0/0',
+      },
+    }));
+  }, [historicalDeclarations]);
 
   // 更新剩余时间的副作用
   useEffect(() => {
@@ -378,16 +420,63 @@ export default function DailyDeclaration() {
         <Text className="ml-2 text-sm text-red-500">{remainingTime}</Text>
       </View>
 
-      {/* 宣告列表 */}
-      <FlatList
-        data={dailyData}
-        renderItem={({ item }) => <DailyDeclarationItem item={item} />}
-        keyExtractor={(item, index) => index.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 160, // 确保底部内容不被导航栏遮挡
-        }}
-      />
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-gray-500">加载中...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={[
+            // 如果有今日宣告数据，将其添加到列表最前面
+            ...(todayDeclaration ? [{
+              date: new Date(todayDeclaration.declarationDate),
+              timeSlots: [
+                {
+                  title: '上午',
+                  items: [{ content: todayDeclaration.morningPlan || '', time: '7:00' }],
+                },
+                {
+                  title: '中午',
+                  items: [{ content: todayDeclaration.noonPlan || '', time: '12:00' }],
+                },
+                {
+                  title: '下午',
+                  items: [{ content: todayDeclaration.afternoonPlan || '', time: '14:00' }],
+                },
+                {
+                  title: '晚上',
+                  items: [{ content: todayDeclaration.eveningPlan || '', time: '19:00' }],
+                },
+              ],
+              eveningContent: '',
+              eveningStatus: 'pending' as const,
+              eveningReport: [
+                { label: '打分', value: todayDeclaration.dayScore || '' },
+                { label: '体验', value: todayDeclaration.dayExperience || '' },
+                { label: '行得通', value: todayDeclaration.whatWorked || '' },
+                { label: '行不通', value: todayDeclaration.whatDidntWork || '' },
+                { label: '学习到', value: todayDeclaration.whatLearned || '' },
+                { label: '下一步', value: todayDeclaration.whatNext || '' },
+              ],
+              dailyResult: {
+                goals: todayDeclaration.dailyGoals?.map(goal => ({
+                  content: goal.title,
+                  unit: goal.unit,
+                })) || [],
+                weeklyProgress: '0/0',
+                monthlyProgress: '0/0',
+              },
+            }] : []),
+            ...historicalDailyData,
+          ]}
+          renderItem={({ item }) => <DailyDeclarationItem item={item} />}
+          keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 160, // 确保底部内容不被导航栏遮挡
+          }}
+        />
+      )}
     </View>
   );
 }

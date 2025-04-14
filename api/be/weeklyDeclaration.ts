@@ -1,16 +1,36 @@
 import { request } from '~/utils/request';
 import {
   WeeklyDeclarationDTO,
-  DailyDeclarationDTO,
   BaseResponseWeeklyDeclarationDTO,
-  BaseResponseDailyDeclarationDTO,
   BaseResponseBoolean,
   BaseResponseLong,
   NewWeeklyDeclarationDTO,
-  BaseResponseNewWeeklyDeclarationDTO
+  BaseResponseNewWeeklyDeclarationDTO,
 } from '~/types/be/declarationType';
 
-export const declarationApi = {
+export const weeklyDeclarationApi = {
+  /**
+   * 获取指定成就书的所有周宣告
+   * @param bookId 成就书ID
+   * @returns 返回周宣告列表
+   */
+  getWeeklyDeclarationList: (bookId: string) => {
+    return request.get<WeeklyDeclarationDTO[]>('/wl/weekly-declaration/list', {
+      params: { bookId },
+    });
+  },
+
+  /**
+   * 获取当前周的周宣告
+   * @param bookId 成就书ID
+   * @returns 返回当前周的周宣告
+   */
+  getCurrentWeeklyDeclaration: (bookId: string) => {
+    return request.get<WeeklyDeclarationDTO>('/wl/weekly-declaration/current', {
+      params: { bookId },
+    });
+  },
+
   /**
    * 创建周宣告
    * @param data 周宣告数据，包含宣告内容、日期等信息
@@ -49,43 +69,6 @@ export const declarationApi = {
   },
 
   /**
-   * 创建日宣告
-   * @param data 日宣告数据，包含宣告内容、日期等信息
-   * @returns 返回创建成功的日宣告ID
-   */
-  createDailyDeclaration: (data: DailyDeclarationDTO) => {
-    return request.post<BaseResponseLong>('/wl/daily-declaration', data);
-  },
-
-  /**
-   * 获取日宣告详情
-   * @param id 日宣告ID
-   * @returns 返回日宣告的详细信息
-   */
-  getDailyDeclarationDetail: (id: number) => {
-    return request.get<BaseResponseDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
-  },
-
-  /**
-   * 更新日宣告
-   * @param id 日宣告ID
-   * @param data 更新的日宣告数据
-   * @returns 返回更新是否成功
-   */
-  updateDailyDeclaration: (id: number, data: DailyDeclarationDTO) => {
-    return request.put<BaseResponseBoolean>(`/wl/daily-declaration/${id}`, data);
-  },
-
-  /**
-   * 删除日宣告
-   * @param id 日宣告ID
-   * @returns 返回删除是否成功
-   */
-  deleteDailyDeclaration: (id: number) => {
-    return request.delete<BaseResponseBoolean>(`/wl/daily-declaration/${id}`);
-  },
-
-  /**
    * 创建新格式的周宣告
    * @param data 周宣告数据，包含详细的宣告内容和周目标
    * @returns 返回创建成功的周宣告ID
@@ -121,4 +104,4 @@ export const declarationApi = {
   deleteNewWeeklyDeclaration: (id: number) => {
     return request.delete<BaseResponseBoolean>(`/wl/new-weekly-declaration/${id}`);
   }
-};
+}; 
