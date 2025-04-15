@@ -211,62 +211,20 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
       {/* 今日成果模块 */}
       {expanded ? (
         /* 展开状态 - 显示完整的今日成果组件 */
-        <View className="mb-4 overflow-hidden rounded-xl bg-white">
-          <LinearGradient
-            colors={['#20B4F3', '#5762FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex h-[38px] flex-col items-start justify-center rounded-t-xl px-4"
-            style={{
-              boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-            }}>
-            <Text
-              className="text-white"
-              style={{
-                fontFamily: 'Roboto',
-                fontSize: 16,
-                fontWeight: '700',
-                lineHeight: 20,
-              }}>
-              今日成果
-            </Text>
-          </LinearGradient>
-
-          <DailyResult
-            goals={item.dailyResult.goals}
-            showHeader={false}
-            showGoalsOnly={false}
-            declarationId={item.id}
-            onUpdate={onRefresh}
-          />
-        </View>
+        <DailyResult
+          goals={item.dailyResult.goals}
+          showHeader={true}
+          declarationId={item.id}
+          onUpdate={onRefresh}
+        />
       ) : (
         /* 收起状态 - 仅显示目标列表内容，不带标题 */
-        <View className="p-4 bg-white rounded-b-xl">
-          {/* 目标列表 */}
-          <View>
-            {item.dailyResult.goals.map((goal, index) => (
-              <View key={index} className="relative mb-4 overflow-hidden rounded-[6px]">
-                <View className="flex-col">
-                  <Text className="ml-1 text-[14px] font-medium text-gray-700">
-                    目标{index + 1}：
-                  </Text>
-                  <View className="flex-row items-center">
-                    <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
-                    <TextInput
-                      className="z-10 min-h-[47px] flex-1 p-3 text-gray-600"
-                      placeholder={`请输入目标${index + 1}...`}
-                      multiline
-                      value={goal.content || ''}
-                      editable={false}
-                    />
-                    {goal.unit && <Text className="mr-3 text-gray-500">{goal.unit}</Text>}
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+        <DailyResult
+          goals={item.dailyResult.goals}
+          showHeader={false}
+          declarationId={item.id}
+          onUpdate={onRefresh}
+        />
       )}
     </View>
   );
