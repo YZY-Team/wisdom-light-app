@@ -191,7 +191,9 @@ export default function DailyResult({
               {goals.map((goal, index) => (
                 <View key={index} className="relative mb-4 overflow-hidden rounded-[6px]">
                   <View className="flex-col">
-                    <Text className="ml-1  text-[14px] font-[600] text-gray-700">{goal.title || `目标${index + 1}`}:</Text>
+                    <Text className="ml-1 text-[14px] font-[600] text-gray-700">
+                      {goal.title || `目标${index + 1}`}{goal.unit ? ` (${goal.unit})` : ''}:
+                    </Text>
                     {/* 进度指标展示 */}
                     <View className="flex flex-row gap-2 items-center">
                       <View className="flex-1 items-center">
@@ -277,23 +279,27 @@ export default function DailyResult({
             {goals.map((goal, index) => (
               <View key={index} className="mb-4">
                 <View className="flex-col">
+                  {/* 目标标题和单位 */}
+                  <Text className="ml-1 mb-2 text-[14px] font-[600] text-gray-700">
+                    {goal.title || `目标${index + 1}`}{goal.unit ? ` (${goal.unit})` : ''}
+                  </Text>
                   {/* 进度指标展示 */}
                   <View className="flex flex-row gap-2 items-center">
                     <View className="flex-1 items-center">
 
                       {/* 周度进度显示框 */}
-                      <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px]">
+                      <View className="flex h-[70px] w-full border border-[#0000001A] items-center justify-center overflow-hidden rounded-[6px]">
                         <Text
                           className="mb-2"
                           style={{
-                            color: 'rgba(0, 0, 0, 0.50)',
+                            color: '#00000080',
                             fontSize: 14,
                             fontWeight: '400',
                           }}>
                           周累计达成数
                           <Text
                             style={{
-                              color: 'rgba(0, 0, 0, 0.50)',
+                              color: '#00000080',
                               fontFamily: 'Roboto',
                               fontSize: 14,
                               fontWeight: '400',
@@ -302,17 +308,8 @@ export default function DailyResult({
                           </Text>
                           周目标数
                         </Text>
-                        <View
-                          className="absolute left-0 top-[10px] h-[30px] w-[30px] rounded-full opacity-100"
-                          style={{
-                            backgroundColor: '#1483FD',
-                            filter: 'blur(25px)',
-                          }}
-                        />
-                        <BlurView
-                          intensity={10}
-                          className="absolute h-full w-full bg-[#1483FD0D]"
-                        />
+
+
                         <Text
                           style={{
                             color: '#1483FD',
@@ -329,19 +326,19 @@ export default function DailyResult({
                     <View className="flex-1 items-center">
 
                       {/* 月度进度显示框 */}
-                      <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px]">
+                      <View className="flex h-[70px] border border-[#0000001A]  w-full items-center justify-center overflow-hidden rounded-[6px]">
                         <Text
                           className="mb-2"
                           style={{
-                            color: 'rgba(0, 0, 0, 0.50)',
+                            color: '#00000080',
                             fontSize: 14,
                             fontWeight: '400',
                           }}>
                           累计达成数
                           <Text
                             style={{
-                              color: 'rgba(0, 0, 0, 0.50)',
-                              fontFamily: 'Roboto', 
+                              color: '#00000080',
+                              fontFamily: 'Roboto',
                               fontSize: 14,
                               fontWeight: '400',
                             }}>
@@ -349,17 +346,7 @@ export default function DailyResult({
                           </Text>
                           总目标数
                         </Text>
-                        <View
-                          className="absolute left-0 top-[10px] h-[30px] w-[30px] rounded-full opacity-100"
-                          style={{
-                            backgroundColor: '#1483FD',
-                            filter: 'blur(25px)',
-                          }}
-                        />
-                        <BlurView
-                          intensity={10}
-                          className="absolute h-full w-full bg-[#1483FD0D]"
-                        />
+
                         <Text
                           style={{
                             color: '#1483FD',
