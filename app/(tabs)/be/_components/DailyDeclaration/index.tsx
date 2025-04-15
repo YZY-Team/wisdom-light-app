@@ -78,7 +78,9 @@ type DailyData = {
   eveningReport: EveningReportItem[]; // 晚间报告
   dailyResult: {
     goals: Array<{
-      content: string; // 目标内容
+      content?: string; // 目标内容
+      title?: string; // 目标标题
+      completedQuantity?: number; // 完成数量
       unit?: string; // 单位
     }>;
     weeklyProgress: string; // 周进度
@@ -93,7 +95,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
   const week = Math.ceil((item.date.getDate() - item.date.getDay()) / 7);
 
   // 添加展开/收起状态
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   // 切换展开/收起状态的函数
   const toggleExpand = () => {
@@ -196,7 +198,13 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
               晚总结
             </Text>
           </LinearGradient>
-          <EveningDeclaration date={item.date} eveningReport={item.eveningReport} showHeader={false} />
+          <EveningDeclaration
+            date={item.date}
+            eveningReport={item.eveningReport}
+            showHeader={false}
+            declarationId={item.id}
+            onUpdate={onRefresh}
+          />
         </View>
       )}
 
@@ -226,10 +234,10 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
 
           <DailyResult
             goals={item.dailyResult.goals}
-            weeklyProgress={item.dailyResult.weeklyProgress}
-            monthlyProgress={item.dailyResult.monthlyProgress}
             showHeader={false}
             showGoalsOnly={false}
+            declarationId={item.id}
+            onUpdate={onRefresh}
           />
         </View>
       ) : (
@@ -249,7 +257,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
                       className="z-10 min-h-[47px] flex-1 p-3 text-gray-600"
                       placeholder={`请输入目标${index + 1}...`}
                       multiline
-                      value={goal.content}
+                      value={goal.content || ''}
                       editable={false}
                     />
                     {goal.unit && <Text className="mr-3 text-gray-500">{goal.unit}</Text>}
@@ -288,7 +296,7 @@ export default function DailyDeclaration() {
 
         if (currentWeekResponse.code === 404) {
           // 如果没有当前周宣告，创建一个新的周宣告
-          const newWeeklyDeclaration: WeeklyDeclarationDTO = {
+          const newWeeklyDeclaration = {
             bookId: bookId,
             userId: "1909855525598679042", // TODO: 从用户上下文获取
             weekNumber: 1, // TODO: 计算当前是第几周
@@ -312,7 +320,7 @@ export default function DailyDeclaration() {
             updateTime: new Date().toISOString()
           };
 
-          const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(newWeeklyDeclaration);
+          const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(newWeeklyDeclaration as any);
           if (createWeeklyResponse.code !== 200) {
             throw new Error('创建周宣告失败');
           }
@@ -400,7 +408,8 @@ export default function DailyDeclaration() {
             ],
             dailyResult: {
               goals: declaration.dailyGoals?.map(goal => ({
-                content: goal.title,
+                title: goal.title,
+                completedQuantity: goal.completedQuantity,
                 unit: goal.unit,
               })) || [],
               weeklyProgress: '0/0',
@@ -473,11 +482,13 @@ export default function DailyDeclaration() {
               ],
               dailyResult: {
                 goals: todayDeclaration.dailyGoals?.map(goal => ({
-                  content: goal.title,
+                  goalId: goal.goalId,
+                  title: goal.title,
+                  completedQuantity: goal.completedQuantity,
                   unit: goal.unit,
+                  weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
+                  totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
                 })) || [],
-                weeklyProgress: '0/0',
-                monthlyProgress: '0/0',
               },
             }] : []),
             ...historicalDailyData,

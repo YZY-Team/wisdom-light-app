@@ -96,9 +96,10 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
 
       // 更新成功后清除编辑状态
       setEditingStates(prev => ({ ...prev, [key]: false }));
-      if (onUpdate) {
-        onUpdate();
-      }
+      // 只在明确需要刷新整个列表时才触发onUpdate回调
+      // if (onUpdate) {
+      //   onUpdate();
+      // }
     } catch (error) {
       console.error('更新失败:', error);
     } finally {
@@ -111,6 +112,22 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
     const key = `${sectionTitle}-${itemIndex}`;
     setEditingStates(prev => ({ ...prev, [key]: false }));
     setTempContents(prev => ({ ...prev, [key]: '' }));
+  };
+
+  // 处理文本输入变更
+  const handleTextChange = (sectionTitle: string, itemIndex: number, text: string) => {
+    const key = `${sectionTitle}-${itemIndex}`;
+    setTempContents(prev => ({ ...prev, [key]: text }));
+  };
+
+  // 处理回车保存
+  const handleSubmitEditing = (sectionTitle: string, itemIndex: number) => {
+    saveEditing(sectionTitle, itemIndex);
+  };
+
+  // 处理失去焦点保存
+  const handleBlur = (sectionTitle: string, itemIndex: number) => {
+    saveEditing(sectionTitle, itemIndex);
   };
 
   return (
@@ -184,57 +201,24 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
                         placeholder={`请输入${section.title}的计划...`}
                         multiline
                         textAlignVertical="top"
-                        value={isEditing ? tempContents[key] : item.content}
-                        onChangeText={(text) => {
-                          if (isEditing) {
-                            setTempContents(prev => ({ ...prev, [key]: text }));
-                          }
-                        }}
-                        editable={isEditing}
+                        value={tempContents[key] || item.content}
+                        onChangeText={(text) => handleTextChange(section.title, itemIndex, text)}
+                        onBlur={() => handleBlur(section.title, itemIndex)}
+                        blurOnSubmit={true}
                       />
-                      {/* 编辑/保存按钮 */}
-                      <View className="absolute bottom-2 right-2 flex-row">
-                        {isEditing ? (
-                          <>
-                            <Text
-                              style={{
-                                color: '#40CA00',
-                                textAlign: 'right',
-
-                                fontSize: 12,
-                                fontWeight: '400',
-                                marginRight: 8,
-                              }}
-                              onPress={() => cancelEditing(section.title, itemIndex)}>
-                              取消
-                            </Text>
-                            <Text
-                              style={{
-                                color: '#40CA00',
-                                textAlign: 'right',
-
-                                fontSize: 12,
-                                fontWeight: '400',
-                              }}
-                              onPress={() => saveEditing(section.title, itemIndex)}
-                              disabled={isLoading}>
-                              {isLoading ? '保存中...' : '提交'}
-                            </Text>
-                          </>
-                        ) : (
-                          <Text
-                            style={{
-                              color: '#40CA00',
-                              textAlign: 'right',
-
-                              fontSize: 12,
-                              fontWeight: '400',
-                            }}
-                            onPress={() => startEditing(section.title, itemIndex, item.content)}>
-                            编辑
-                          </Text>
-                        )}
-                      </View>
+                      {/* 加载中指示器 */}
+                      {loadingStates[`${section.title}-${itemIndex}`] && (
+                        <Text
+                          style={{
+                            position: 'absolute',
+                            bottom: 2,
+                            right: 2,
+                            color: '#40CA00',
+                            fontSize: 12,
+                          }}>
+                          保存中...
+                        </Text>
+                      )}
                     </View>
                   );
                 })}
