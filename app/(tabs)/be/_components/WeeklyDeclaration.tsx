@@ -158,7 +158,7 @@ export default function WeeklyDeclaration() {
       </View>
 
       <View className={`flex-col ${isExpanded ? '' : ' bg-white rounded-b-[12px]'}`}>{/* 成果宣告 */}
-        <View style={{ overflow: 'visible' }} className="mb-4    bg-white">
+        <View style={{ overflow: 'visible' }} className="mb-4  rounded-b-[12px]  bg-white">
           <Pressable
             onPress={toggleExpand}
             android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
