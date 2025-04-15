@@ -362,7 +362,7 @@ export default function WeeklyDeclaration() {
       )}
 
       {/* 第1周总结 */}
-      <View className="mb-4 overflow-hidden rounded-xl bg-white">
+      <View className="mb-4 overflow-hidden rounded-[12px] bg-white">
         <LinearGradient
           colors={['#20B4F3', '#5762FF']}
           start={{ x: 0, y: 0 }}
@@ -370,164 +370,191 @@ export default function WeeklyDeclaration() {
           style={{
             boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
           }}
-          className="flex h-[38px]  justify-center px-4">
+          className="flex h-[38px] justify-center px-4">
           <Text className="font-bold text-[16px] text-white">第{currentDeclaration.weekNumber}周总结</Text>
         </LinearGradient>
         <View className="p-4">
           {/* 进度条 */}
-          <View className="mb-4 flex-row items-center justify-between">
-            <Text className=" text-[16px]  font-bold">本周达成:</Text>
-            <View className="ml-2 mr-4 h-2 w-[60%] rounded-full bg-gray-200">
-              <View
-                className="h-full rounded-full bg-[#20B4F3]"
-                style={{ width: `${currentDeclaration.averageCompletionRate}%` }}
-              />
+          <View className="mb-4 flex-col   ">
+            <Text className="text-[16px] font-bold">本周达成:</Text>
+            <View className='flex-row items-center justify-between'>
+              <View className="ml-2 mr-4 h-[6px]  w-[80%] rounded-[9.5px] bg-[#D9D9D9] overflow-hidden">
+                <LinearGradient
+                  colors={['#FF9F21', '#15FF00']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className='h-full'
+                  style={{
+                    width: `${currentDeclaration.averageCompletionRate}%`,
+                    borderRadius: 2.5,
+                  }}
+                />
+              </View>
+              <Text className="text-[20px] font-bold text-[#FF9F21]">{currentDeclaration.averageCompletionRate}%</Text>
             </View>
-            <Text className="text-[#FF9F21]">{currentDeclaration.averageCompletionRate}%</Text>
-          </View>
-          <View className="mb-4 flex-row gap-1">
-            <Text className="mb-2 text-sm ">达成成果:</Text>
-            <TextInput
-              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              multiline
-              value={currentDeclaration.achievement}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, achievement: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4  gap-1">
-            <Text className="mb-2    text-[14px] font-bold">从本周成果和行动出发自我总结:</Text>
-            <TextInput
-              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              multiline
-              value={currentDeclaration.selfSummary}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, selfSummary: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4  gap-1">
-            <Text className="mb-2 text-sm ">
-              123、4+5+6本周我运用了哪些?特别有体验的是哪条,为什么?
-            </Text>
-            <TextInput
-              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              multiline
-              value={currentDeclaration.summary123456}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, summary123456: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4  gap-1">
-            <Text className="mb-2 text-sm ">我的下一步:</Text>
-            <TextInput
-              className="min-h-[60px] text-sm flex-1 rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              multiline
-              value={currentDeclaration.nextStep}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, nextStep: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]  text-sm">本周打分:</Text>
-            <TextInput
-              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              value={currentDeclaration.weekScore}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, weekScore: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]  text-sm">本周体验:</Text>
-            <TextInput
-              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              value={currentDeclaration.weekExperience}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, weekExperience: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]   text-sm">行得通:</Text>
-            <TextInput
-              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              value={currentDeclaration.whatWorked}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, whatWorked: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]  text-sm">学习到:</Text>
-            <TextInput
-              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              value={currentDeclaration.whatLearned}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, whatLearned: text } : null
-                );
-              }}
-            />
-          </View>
-          <View className="mb-4 flex-row items-center gap-1">
-            <Text className="mb-2 w-[60px]  text-sm">下一步:</Text>
-            <TextInput
-              className="min-h-[36px] flex-1 text-sm rounded-lg bg-[#F5F8FF] p-3"
-              placeholder="请输入..."
-              value={currentDeclaration.whatNext}
-              onChangeText={(text) => {
-                setCurrentDeclaration((prev) =>
-                  prev ? { ...prev, whatNext: text } : null
-                );
-              }}
-            />
           </View>
 
-          {/* 周目标列表 */}
-          <View className="mt-4">
-            <Text className="mb-2 text-[16px] font-bold">周目标:</Text>
-            {currentDeclaration.weeklyGoals.map((goal, index) => (
-              <View key={goal.goalId} className="mb-2 rounded-lg bg-[#F5F8FF] p-3">
-                <Text className="text-sm font-medium">{goal.title}</Text>
-                <View className="mt-2 flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-600">
-                    目标: {goal.targetQuantity} {goal.unit}
-                  </Text>
-                  <Text className="text-sm text-gray-600">
-                    已完成: {goal.completedQuantity} {goal.unit}
-                  </Text>
-                  <Text className="text-sm text-[#FF9F21]">
-                    完成率: {goal.completionRate}%
-                  </Text>
-                </View>
-              </View>
-            ))}
+          <View className="mb-4 flex-col gap-2">
+            <Text className="text-[14px]">达成成果:</Text>
+            <View className="flex-1">
+              <TextInput
+                className="min-h-[100px] rounded-[6px] bg-[#1483FD1A] p-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                multiline
+                value={currentDeclaration.achievement}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, achievement: text } : null
+                  );
+                }}
+              />
+            </View>
+          </View>
+
+          <View className="mb-4 gap-2">
+            <Text className="text-[16px] font-bold">从本周成果和行动出发自我总结:</Text>
+            <View className="relative">
+              <TextInput
+                className="min-h-[200px] rounded-[6px] bg-[#1483FD1A] p-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                multiline
+                maxLength={300}
+                value={currentDeclaration.selfSummary}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, selfSummary: text } : null
+                  );
+                }}
+              />
+              <Text className="absolute bottom-2 right-3 text-[14px]">
+                <Text className="text-black">{currentDeclaration.selfSummary?.length || 0}</Text>
+                <Text className="text-[rgba(0,0,0,0.5)]">/300</Text>
+              </Text>
+            </View>
+          </View>
+
+          <View className="mb-4 gap-2">
+            <Text className="text-[14px]">123、4+5+6本周我运用了哪些？特别有体验的是哪条，为什么？</Text>
+            <View className="relative">
+              <TextInput
+                className="min-h-[200px] rounded-[6px] bg-[#1483FD1A] p-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                multiline
+                maxLength={300}
+                value={currentDeclaration.summary123456}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, summary123456: text } : null
+                  );
+                }}
+              />
+              <Text className="absolute bottom-2 right-3 text-[14px]">
+                <Text className="text-black">{currentDeclaration.summary123456?.length || 0}</Text>
+                <Text className="text-[rgba(0,0,0,0.5)]">/300</Text>
+              </Text>
+            </View>
+          </View>
+
+          <View className="mb-4 gap-2">
+            <Text className="text-[14px]">我的下一步:</Text>
+            <View className="relative">
+              <TextInput
+                className="min-h-[200px] rounded-[6px] bg-[#1483FD1A] p-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                multiline
+                maxLength={300}
+                value={currentDeclaration.nextStep}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, nextStep: text } : null
+                  );
+                }}
+              />
+              <Text className="absolute bottom-2 right-3 text-[14px]">
+                <Text className="text-black">{currentDeclaration.nextStep?.length || 0}</Text>
+                <Text className="text-[rgba(0,0,0,0.5)]">/300</Text>
+              </Text>
+            </View>
+          </View>
+
+          <View className="gap-2">
+            <View className="flex-row items-center gap-2 ">
+              <Text className="w-[80px] text-[14px]">本周打分:</Text>
+              <TextInput
+                className="flex-1 h-[36px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={currentDeclaration.weekScore}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, weekScore: text } : null
+                  );
+                }}
+              />
+            </View>
+
+            <View className="flex-row items-center gap-2 ">
+              <Text className="w-[80px] text-[14px]">本周体验:</Text>
+              <TextInput
+                className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={currentDeclaration.weekExperience}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, weekExperience: text } : null
+                  );
+                }}
+              />
+            </View>
+
+            <View className="flex-row items-center gap-2 ">
+              <Text className="w-[80px] text-[14px]">行 得 通:</Text>
+              <TextInput
+                className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={currentDeclaration.whatWorked}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, whatWorked: text } : null
+                  );
+                }}
+              />
+            </View>
+
+            <View className="flex-row items-center gap-2 ">
+              <Text className="w-[80px] text-[14px]">学 习 到:</Text>
+              <TextInput
+                className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={currentDeclaration.whatLearned}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, whatLearned: text } : null
+                  );
+                }}
+              />
+            </View>
+            <View className="flex-row items-center gap-2">
+              <Text className="w-[80px] text-[14px]">下 一 步:</Text>
+              <TextInput
+                className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                placeholder="请输入..."
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={currentDeclaration.whatNext}
+                onChangeText={(text) => {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, whatNext: text } : null
+                  );
+                }}
+              />
+            </View>
           </View>
         </View>
       </View>
