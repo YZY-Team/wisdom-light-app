@@ -1,8 +1,11 @@
 // 导入必要的React Native和第三方组件
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
 
 // 启用nativewind的CSS类名支持
 cssInterop(LinearGradient, { className: 'style' });
@@ -26,6 +29,8 @@ type MorningDeclarationProps = {
   timeSlots: TimeSlotSection[]; // 时间段数据
   expanded?: boolean;         // 是否展开显示详细内容
   showHeader?: boolean;       // 是否显示标题栏
+  declarationId?: string;     // 日宣告ID
+  onUpdate?: () => void;      // 更新回调
 };
 
 // 根据时间段标题获取对应的颜色
@@ -45,7 +50,69 @@ const getBarColor = (title: string) => {
 };
 
 // 早宣告组件：展示每日早晨的时间段计划
-export default function MorningDeclaration({ date, timeSlots, expanded = true, showHeader = true }: MorningDeclarationProps) {
+export default function MorningDeclaration({ date, timeSlots, expanded = true, showHeader = true, declarationId, onUpdate }: MorningDeclarationProps) {
+  // 编辑状态管理
+  const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
+  // 临时内容管理
+  const [tempContents, setTempContents] = useState<{ [key: string]: string }>({});
+  // 加载状态管理
+  const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
+
+  // 开始编辑
+  const startEditing = (sectionTitle: string, itemIndex: number, content: string) => {
+    const key = `${sectionTitle}-${itemIndex}`;
+    setEditingStates(prev => ({ ...prev, [key]: true }));
+    setTempContents(prev => ({ ...prev, [key]: content }));
+  };
+
+  // 保存编辑
+  const saveEditing = async (sectionTitle: string, itemIndex: number) => {
+    if (!declarationId) return;
+
+    const key = `${sectionTitle}-${itemIndex}`;
+    const content = tempContents[key];
+
+    try {
+      setLoadingStates(prev => ({ ...prev, [key]: true }));
+
+      // 根据时间段更新对应的字段
+      const updateData: any = {};
+      switch (sectionTitle) {
+        case '上午':
+          updateData.morningPlan = content;
+          break;
+        case '中午':
+          updateData.noonPlan = content;
+          break;
+        case '下午':
+          updateData.afternoonPlan = content;
+          break;
+        case '晚上':
+          updateData.eveningPlan = content;
+          break;
+      }
+
+      await dailyDeclarationApi.updateNewDailyDeclaration(declarationId, updateData);
+
+      // 更新成功后清除编辑状态
+      setEditingStates(prev => ({ ...prev, [key]: false }));
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('更新失败:', error);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  // 取消编辑
+  const cancelEditing = (sectionTitle: string, itemIndex: number) => {
+    const key = `${sectionTitle}-${itemIndex}`;
+    setEditingStates(prev => ({ ...prev, [key]: false }));
+    setTempContents(prev => ({ ...prev, [key]: '' }));
+  };
+
   return (
     <View className="overflow-hidden rounded-b-xl bg-white">
       {/* 头部渐变标题栏 */}
@@ -92,31 +159,85 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
               </View>
               {/* 右侧计划内容列表 */}
               <View className="flex flex-1 flex-col gap-2">
-                {section.items.map((item, itemIndex) => (
-                  <View
-                    key={`${section.title}-${itemIndex}`}
-                    className="relative h-[80px] overflow-hidden rounded-[6px]">
-                    {/* 装饰性模糊圆点 */}
+                {section.items.map((item, itemIndex) => {
+                  const key = `${section.title}-${itemIndex}`;
+                  const isEditing = editingStates[key];
+                  const isLoading = loadingStates[key];
+
+                  return (
                     <View
-                      className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
-                      style={{
-                        backgroundColor: getBarColor(section.title),
-                        filter: 'blur(15px)',
-                      }}
-                    />
-                    {/* 半透明背景 */}
-                    <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
-                    {/* 计划内容输入框 */}
-                    <TextInput
-                      className="z-10 h-[80px] p-3 text-gray-600"
-                      placeholder={`请输入${section.title}的计划...`}
-                      multiline
-                      textAlignVertical="top"
-                      value={item.content}
-                      editable={false}
-                    />
-                  </View>
-                ))}
+                      key={`${section.title}-${itemIndex}`}
+                      className="relative h-[80px] overflow-hidden rounded-[6px]">
+                      {/* 装饰性模糊圆点 */}
+                      <View
+                        className="absolute bottom-[10px] right-[10px] h-[30px] w-[30px] rounded-full opacity-100"
+                        style={{
+                          backgroundColor: getBarColor(section.title),
+                          filter: 'blur(15px)',
+                        }}
+                      />
+                      {/* 半透明背景 */}
+                      <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+                      {/* 计划内容输入框 */}
+                      <TextInput
+                        className="z-10 h-[80px] p-3 text-gray-600"
+                        placeholder={`请输入${section.title}的计划...`}
+                        multiline
+                        textAlignVertical="top"
+                        value={isEditing ? tempContents[key] : item.content}
+                        onChangeText={(text) => {
+                          if (isEditing) {
+                            setTempContents(prev => ({ ...prev, [key]: text }));
+                          }
+                        }}
+                        editable={isEditing}
+                      />
+                      {/* 编辑/保存按钮 */}
+                      <View className="absolute bottom-2 right-2 flex-row">
+                        {isEditing ? (
+                          <>
+                            <Text
+                              style={{
+                                color: '#40CA00',
+                                textAlign: 'right',
+
+                                fontSize: 12,
+                                fontWeight: '400',
+                                marginRight: 8,
+                              }}
+                              onPress={() => cancelEditing(section.title, itemIndex)}>
+                              取消
+                            </Text>
+                            <Text
+                              style={{
+                                color: '#40CA00',
+                                textAlign: 'right',
+
+                                fontSize: 12,
+                                fontWeight: '400',
+                              }}
+                              onPress={() => saveEditing(section.title, itemIndex)}
+                              disabled={isLoading}>
+                              {isLoading ? '保存中...' : '提交'}
+                            </Text>
+                          </>
+                        ) : (
+                          <Text
+                            style={{
+                              color: '#40CA00',
+                              textAlign: 'right',
+
+                              fontSize: 12,
+                              fontWeight: '400',
+                            }}
+                            onPress={() => startEditing(section.title, itemIndex, item.content)}>
+                            编辑
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           ))}

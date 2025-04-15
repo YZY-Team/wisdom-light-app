@@ -16,18 +16,47 @@ export default function WeeklyDeclaration() {
   const [currentDeclaration, setCurrentDeclaration] = useState<WeeklyDeclarationDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [dailyPlans, setDailyPlans] = useState<Array<{
+    achievementPlan: string;
+    completion: string;
+  }>>([
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+    { achievementPlan: '', completion: '' },
+  ]);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const updateDailyPlan = (type: 'achievementPlan' | 'completion', text: string) => {
+    setDailyPlans(prev => {
+      const newPlans = [...prev];
+      newPlans[selectedDay] = {
+        ...newPlans[selectedDay],
+        [type]: text
+      };
+      return newPlans;
+    });
+  };
 
   useEffect(() => {
     const initializeWeeklyDeclaration = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // 1. 先获取当前周宣告
         const currentResponse = await weeklyDeclarationApi.getCurrentWeeklyDeclaration(BOOK_ID);
-        console.log("currentResponse",currentResponse);
-        
-        if (currentResponse.code===200) {
+        console.log("currentResponse", currentResponse);
+
+        if (currentResponse.code === 200) {
           setCurrentDeclaration(currentResponse.data);
           return;
         }
@@ -108,136 +137,229 @@ export default function WeeklyDeclaration() {
         paddingBottom: 160,
       }}>
       {/* 标题部分 */}
-      <View className="mb-4 flex-col items-center justify-between">
+      <View className="mb-4 flex-row items-center justify-center">
         <View className="flex-row items-center">
-          <Text className="text-base font-medium">
-            第{currentDeclaration.weekNumber}周宣告:{currentDeclaration.title || '未设置标题'}
+          <Text className="text-[16px] font-bold text-black">
+            第
           </Text>
-          <Pressable className="ml-2">
-            <Ionicons name="create-outline" size={16} color="#1483fd" />
-          </Pressable>
+          <Text className="text-[20px] font-bold text-[#F18318]">
+            {currentDeclaration.weekNumber}
+          </Text>
+          <Text className="text-[16px] mr-4 font-bold text-black">
+            周宣告
+          </Text>
+          <Text className="text-[16px] font-bold text-[#1483FD]">
+            {currentDeclaration.title || '未设置标题'}
+          </Text>
         </View>
-        <Text className="text-sm text-gray-400">
-          {new Date(currentDeclaration.weekStartDate).toLocaleDateString()} - {new Date(currentDeclaration.weekEndDate).toLocaleDateString()}
-        </Text>
+        <Pressable className="ml-2 flex-row items-center justify-center ">
+          <Ionicons name="create-outline" size={16} color="#1483fd" />
+        </Pressable>
       </View>
 
       {/* 成果宣告 */}
-      <View className="mb-4 overflow-hidden rounded-xl bg-white">
-        <LinearGradient
-          colors={['#20B4F3', '#5762FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-          }}
-          className="flex h-[38px] justify-center px-4">
-          <Text className="font-bold text-[16px] text-white">成果宣告</Text>
-        </LinearGradient>
-        <View className="">
-          <TextInput
-            className="min-h-[80px] rounded-lg p-3"
-            placeholder="请输入宣告成果..."
-            multiline
-            value={currentDeclaration.declarationContent}
-            onChangeText={(text) => {
-              setCurrentDeclaration((prev) => 
-                prev ? { ...prev, declarationContent: text } : null
-              );
+      <View className="mb-4 overflow-hidden rounded-[12px] bg-white">
+        <Pressable
+          onPress={toggleExpand}
+          android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.9 : 1 }
+          ]}>
+          <LinearGradient
+            colors={['#20B4F3', '#5762FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
             }}
-          />
-        </View>
+            className="flex h-[38px] flex-row items-center justify-between px-4">
+            <Text className="font-bold text-[16px] text-white">成果宣告</Text>
+            <View className="flex-row items-center gap-4">
+              <Text className="text-[16px] text-white mr-2">
+                {new Date(currentDeclaration.weekStartDate).getFullYear()}年
+                {new Date(currentDeclaration.weekStartDate).getMonth() + 1}月
+                {new Date(currentDeclaration.weekStartDate).getDate()}日
+              </Text>
+              <Ionicons
+                name={isExpanded ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#fff"
+              />
+            </View>
+          </LinearGradient>
+        </Pressable>
+        {isExpanded && (
+          <View className="px-4 mt-8">
+            {/* 本周宣告标题 */}
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-2 w-1 h-7 bg-[#1483FD]" />
+              <Text className="text-[16px] font-bold">本周宣告</Text>
+            </View>
+
+            {/* 宣告内容输入框 */}
+            <TextInput
+              className="mb-4 min-h-[60px] rounded-lg bg-[#1483FD1A] p-4 text-[14px]"
+              placeholder="请输入宣告成果"
+              multiline
+              value={currentDeclaration?.declarationContent}
+              onChangeText={(text) => {
+                if (text.length <= 150) {
+                  setCurrentDeclaration((prev) =>
+                    prev ? { ...prev, declarationContent: text } : null
+                  );
+                }
+              }}
+              maxLength={150}
+            />
+
+            {/* 本周目标标题 */}
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-2 w-1 h-7 bg-[#1483FD]" />
+              <Text className="text-[16px] font-bold">本周目标</Text>
+            </View>
+
+            {/* 目标列表 */}
+            {currentDeclaration.weeklyGoals.map((goal, index) => (
+              <View key={goal.goalId} className="mb-4 gap-2 flex-row items-center justify-between">
+                <Text className="text-[14px] font-[600]" >
+                  目标{index + 1}{" "}:
+                </Text>
+                <View className="flex-row items-center flex-1 ml-2">
+                  <View className="w-[70%]">
+                    <TextInput
+                      className="h-[36px] rounded-lg bg-[#1483FD0D] px-3"
+                      placeholder="请输入数量"
+                      keyboardType="numeric"
+                      maxLength={10}
+                      value={goal.targetQuantity.toString()}
+                      onChangeText={(text) => {
+                        const numericValue = text.replace(/[^0-9]/g, '');
+                        const updatedGoals = [...currentDeclaration.weeklyGoals];
+                        updatedGoals[index] = {
+                          ...goal,
+                          completedQuantity: parseInt(numericValue) || 0
+                        };
+                        setCurrentDeclaration(prev =>
+                          prev ? { ...prev, weeklyGoals: updatedGoals } : null
+                        );
+                      }}
+                    />
+                  </View>
+                  <Text className=" pl-7 flex-1 text-[14px] text-[#00000080]">
+                    {goal.unit}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* 行动计划 */}
-      <View className="mb-4 overflow-hidden rounded-2xl bg-white">
-        <LinearGradient
-          colors={['#20B4F3', '#5762FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-          }}
-          className="flex h-[38px]  justify-center px-4">
-          <Text className="font-bold text-[16px] text-white">行动计划</Text>
-        </LinearGradient>
-        <View className="p-4">
-          {/* 星期选择器 */}
-          <View className="mb-4">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {isExpanded && (
+        <View className="mb-4 overflow-hidden rounded-[12px] bg-white">
+          <LinearGradient
+            colors={['#20B4F3', '#5762FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+            }}
+            className="flex h-[38px]  justify-center px-4">
+            <Text className="font-bold text-[16px] text-white">行动计划</Text>
+          </LinearGradient>
+          <View className="p-4">
+            {/* 星期选择器 */}
+            <View className="mb-4 flex-row px-4 items-center justify-between">
               {['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map((day, index) => (
                 <Pressable
                   key={day}
-                  className={`mr-4 ${index === 0 ? 'border-b-2 border-[#1483FD]' : ''}`}>
-                  <Text className={`text-base ${index === 0 ? 'text-[#1483FD]' : 'text-gray-400'}`}>
+                  onPress={() => setSelectedDay(index)}
+                  className={`mr-4 ${index === selectedDay ? 'border-b-2 border-[#1483FD]' : ''}`}>
+                  <Text className={`text-base ${index === selectedDay ? 'text-[#1483FD]' : 'text-gray-400'}`}>
                     {day}
                   </Text>
                 </Pressable>
               ))}
-            </ScrollView>
-          </View>
-
-          <View className="flex-col">
-            {/* 左侧标签 */}
-            <View className="mr-4 items-center">
-              <View className="flex flex-row justify-between gap-2 py-2">
-                <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
-                  {[...'个人成就计划'].map((char, index) => (
-                    <Text key={index} className="text-[16px]   font-bold">
-                      {char}
-                    </Text>
-                  ))}
-                </View>
-                <View className="flex flex-1 flex-col gap-2">
-                  {['上午', '中午', '下午', '晚上'].map((time) => (
-                    <View key={time} className="">
-                      <View className="relative min-h-[50px] rounded-lg bg-[#F5F8FF]">
-                        <View className="absolute left-3 top-3 z-10">
-                          <Text className="text-[12px] text-gray-600">{time}：</Text>
-                        </View>
-                        <TextInput
-                          className="p-3 pl-[45px] text-[12px]"
-                          placeholderTextColor="#9CA3AF"
-                          placeholder="今天我计划完成项目报告的初稿，并与团队讨论下一步计划。我会保..."
-                          multiline
-                          textAlignVertical="top"
-                          defaultValue=""
-                          selection={{ start: 0, end: 0 }}
-                        />
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
             </View>
 
-            <View className="mr-4 items-center">
-              <View className="flex flex-row justify-between gap-2 py-2">
-                <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
-                  {[...'完成情况'].map((char, index) => (
-                    <Text key={index} className="text-[16px]   font-bold">
-                      {char}
-                    </Text>
-                  ))}
+            <View className="flex-col">
+              {/* 左侧标签 */}
+              <View className="mr-4 border-b border-[#0000000D] items-center">
+                <View className="flex flex-row justify-between gap-2 pt-2 pb-4">
+                  <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
+                    {[...'个人成就计划'].map((char, index) => (
+                      <Text key={index} className="text-[16px]   font-bold">
+                        {char}
+                      </Text>
+                    ))}
+                  </View>
+                  <View className="flex flex-1 flex-col gap-2">
+                    <View className="relative min-h-[200px] rounded-lg bg-[#F5F8FF]">
+                      <TextInput
+                        className="p-3 flex-1 text-[14px]"
+                        placeholderTextColor="#9CA3AF"
+                        placeholder="请输入今天的个人成就计划..."
+                        multiline
+                        textAlignVertical="top"
+                        value={dailyPlans[selectedDay].achievementPlan}
+                        onChangeText={(text) => {
+                          if (text.length <= 300) {
+                            updateDailyPlan('achievementPlan', text);
+                          }
+                        }}
+                        maxLength={300}
+                      />
+                      <View className="absolute bottom-2 right-3">
+                        <Text>
+                          <Text className="text-[14px] text-black">{dailyPlans[selectedDay].achievementPlan.length}</Text>
+                          <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                 </View>
-                <View className="flex flex-1 flex-col gap-2">
-                  <View className="relative  rounded-lg bg-[#F5F8FF]">
-                    <TextInput
-                      className="min-h-[130px] p-3 pl-[12px] text-[12px]"
-                      placeholderTextColor="#9CA3AF"
-                      placeholder="请输入..."
-                      multiline
-                      textAlignVertical="top"
-                      defaultValue=""
-                      selection={{ start: 0, end: 0 }}
-                    />
+              </View>
+
+              <View className="mr-4 items-center">
+                <View className="flex flex-row justify-between gap-2 pt-4 ">
+                  <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
+                    {[...'完成情况'].map((char, index) => (
+                      <Text key={index} className="text-[16px]   font-bold">
+                        {char}
+                      </Text>
+                    ))}
+                  </View>
+                  <View className="flex flex-1 flex-col gap-2">
+                    <View className="relative  min-h-[200px] rounded-lg bg-[#F5F8FF]">
+                      <TextInput
+                        className="flex-1 p-3 pl-[12px] text-[14px]"
+                        placeholderTextColor="#9CA3AF"
+                        placeholder="请输入..."
+                        multiline
+                        textAlignVertical="top"
+                        value={dailyPlans[selectedDay].completion}
+                        onChangeText={(text) => {
+                          if (text.length <= 300) {
+                            updateDailyPlan('completion', text);
+                          }
+                        }}
+                        maxLength={300}
+                      />
+                      <View className="absolute bottom-2 right-3">
+                        <Text>
+                          <Text className="text-[14px] text-black">{dailyPlans[selectedDay].completion.length}</Text>
+                          <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </View>
             </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* 第1周总结 */}
       <View className="mb-4 overflow-hidden rounded-xl bg-white">
@@ -256,8 +378,8 @@ export default function WeeklyDeclaration() {
           <View className="mb-4 flex-row items-center justify-between">
             <Text className=" text-[16px]  font-bold">本周达成:</Text>
             <View className="ml-2 mr-4 h-2 w-[60%] rounded-full bg-gray-200">
-              <View 
-                className="h-full rounded-full bg-[#20B4F3]" 
+              <View
+                className="h-full rounded-full bg-[#20B4F3]"
                 style={{ width: `${currentDeclaration.averageCompletionRate}%` }}
               />
             </View>
@@ -271,7 +393,7 @@ export default function WeeklyDeclaration() {
               multiline
               value={currentDeclaration.achievement}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, achievement: text } : null
                 );
               }}
@@ -285,7 +407,7 @@ export default function WeeklyDeclaration() {
               multiline
               value={currentDeclaration.selfSummary}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, selfSummary: text } : null
                 );
               }}
@@ -301,7 +423,7 @@ export default function WeeklyDeclaration() {
               multiline
               value={currentDeclaration.summary123456}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, summary123456: text } : null
                 );
               }}
@@ -315,7 +437,7 @@ export default function WeeklyDeclaration() {
               multiline
               value={currentDeclaration.nextStep}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, nextStep: text } : null
                 );
               }}
@@ -328,7 +450,7 @@ export default function WeeklyDeclaration() {
               placeholder="请输入..."
               value={currentDeclaration.weekScore}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, weekScore: text } : null
                 );
               }}
@@ -341,7 +463,7 @@ export default function WeeklyDeclaration() {
               placeholder="请输入..."
               value={currentDeclaration.weekExperience}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, weekExperience: text } : null
                 );
               }}
@@ -354,7 +476,7 @@ export default function WeeklyDeclaration() {
               placeholder="请输入..."
               value={currentDeclaration.whatWorked}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, whatWorked: text } : null
                 );
               }}
@@ -367,7 +489,7 @@ export default function WeeklyDeclaration() {
               placeholder="请输入..."
               value={currentDeclaration.whatLearned}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, whatLearned: text } : null
                 );
               }}
@@ -380,7 +502,7 @@ export default function WeeklyDeclaration() {
               placeholder="请输入..."
               value={currentDeclaration.whatNext}
               onChangeText={(text) => {
-                setCurrentDeclaration((prev) => 
+                setCurrentDeclaration((prev) =>
                   prev ? { ...prev, whatNext: text } : null
                 );
               }}

@@ -16,7 +16,7 @@ export interface BaseResponse<T> {
  */
 export interface WeeklyDeclarationDTO {
   /** 唯一标识符 */
-  id: number;
+  id: string;
   /** 用户ID */
   userId: string;
   /** 书籍ID */
@@ -142,11 +142,11 @@ export interface WeeklyGoalDTO {
  */
 export interface NewWeeklyDeclarationDTO {
   /** 唯一标识符 */
-  id?: number;
+  id?: string;
   /** 用户ID */
-  userId: number;
+  userId: string;
   /** 书籍ID */
-  bookId: number;
+  bookId: string;
   /** 周数 */
   weekNumber: number;
   /** 标题 */
@@ -225,13 +225,13 @@ export interface DailyGoalDTO {
  */
 export interface NewDailyDeclarationDTO {
   /** 唯一标识符 */
-  id?: number;
+  id?: string;
   /** 用户ID */
-  userId: number;
+  userId: string;
   /** 书籍ID */
-  bookId: number;
+  bookId: string;
   /** 关联的周宣告ID */
-  weeklyDeclarationId: number;
+  weeklyDeclarationId: string;
   /** 当前是第几天 */
   dayNumber: number;
   /** 宣告日期 */

@@ -96,7 +96,7 @@ export default function DailyResult({
                   <View className="flex-col">
                     <Text className="ml-1  text-[14px] font-[600] text-gray-700">目标{index}:</Text>
                     {/* 进度指标展示 */}
-                    <View className="flex flex-row items-center">
+                    <View className="flex flex-row gap-2 items-center">
                       <View className="flex-1 items-center">
                         <Text
                           className="mb-2"

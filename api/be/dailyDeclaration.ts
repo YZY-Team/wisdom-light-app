@@ -80,7 +80,7 @@ export const dailyDeclarationApi = {
    * @param data 更新的日宣告数据
    * @returns 返回更新是否成功
    */
-  updateNewDailyDeclaration: (id: number, data: NewDailyDeclarationDTO) => {
+  updateNewDailyDeclaration: (id: string, data: NewDailyDeclarationDTO) => {
     return request.put<BaseResponseBoolean>(`/wl/daily-declaration/${id}`, data);
   },
 

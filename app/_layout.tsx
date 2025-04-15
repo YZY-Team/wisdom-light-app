@@ -38,7 +38,7 @@ export default function RootLayout() {
             await AsyncStorage.removeItem('token');
           }
         }
-        setInitialRoute('/(auth)/login');
+        setInitialRoute('/(tabs)/be');
         setIsReady(true);
       } catch (error) {
         console.error(error);
