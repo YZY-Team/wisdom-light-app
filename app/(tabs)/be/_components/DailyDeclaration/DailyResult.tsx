@@ -223,11 +223,29 @@ export default function DailyResult({
                             style={{
                               color: '#1483FD',
                               fontFamily: 'Roboto',
-                              fontSize: 24,
+                              fontSize: 14,
                               fontWeight: '700',
                               zIndex: 1,
                             }}>
-                            {goal.weeklyProgress || '0/0'}
+                            {goal.weeklyProgress?.split('/')[0] || '0'}
+                            <Text
+                              style={{
+                                color: '#00000080',
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: '400',
+                              }}>
+                              /
+                            </Text>
+                            <Text
+                              style={{
+                                color: '#000000',
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: '400',
+                              }}>
+                              {goal.weeklyProgress?.split('/')[1] || '0'}
+                            </Text>
                           </Text>
                         </View>
                       </View>
@@ -259,11 +277,29 @@ export default function DailyResult({
                             style={{
                               color: '#1483FD',
                               fontFamily: 'Roboto',
-                              fontSize: 24,
+                              fontSize: 14,
                               fontWeight: '700',
                               zIndex: 1,
                             }}>
-                            {goal.totalProgress || '0/0'}
+                            {goal.totalProgress?.split('/')[0] || '0'}
+                            <Text
+                              style={{
+                                color: '#00000080',
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: '400',
+                              }}>
+                              /
+                            </Text>
+                            <Text
+                              style={{
+                                color: '#000000',
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: '400',
+                              }}>
+                              {goal.totalProgress?.split('/')[1] || '0'}
+                            </Text>
                           </Text>
                         </View>
                       </View>
@@ -312,13 +348,31 @@ export default function DailyResult({
 
                         <Text
                           style={{
-                            color: '#1483FD',
+                            color: '#00000080',
                             fontFamily: 'Roboto',
                             fontSize: 14,
                             fontWeight: '700',
                             zIndex: 1,
                           }}>
-                          {goal.weeklyProgress || '0/0'}
+                          {goal.weeklyProgress?.split('/')[0] || '0'}
+                          <Text
+                            style={{
+                              color: '#00000080',
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              fontWeight: '400',
+                            }}>
+                            /
+                          </Text>
+                          <Text
+                            style={{
+                              color: '#1483FD',
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              fontWeight: '400',
+                            }}>
+                            {goal.weeklyProgress?.split('/')[1] || '0'}
+                          </Text>
                         </Text>
 
                       </View>
@@ -349,13 +403,31 @@ export default function DailyResult({
 
                         <Text
                           style={{
-                            color: '#1483FD',
+                            color: '#00000080',
                             fontFamily: 'Roboto',
                             fontSize: 14,
                             fontWeight: '700',
                             zIndex: 1,
                           }}>
-                          {goal.totalProgress || '0/0'}
+                          {goal.totalProgress?.split('/')[0] || '0'}
+                          <Text
+                            style={{
+                              color: '#00000080',
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              fontWeight: '400',
+                            }}>
+                            /
+                          </Text>
+                          <Text
+                            style={{
+                              color: '#1483FD',
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              fontWeight: '400',
+                            }}>
+                            {goal.totalProgress?.split('/')[1] || '0'}
+                          </Text>
                         </Text>
 
                       </View>
