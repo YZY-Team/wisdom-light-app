@@ -1,7 +1,7 @@
 // 导入必要的React Native组件和钩子
-import { View, Text, FlatList, TouchableOpacity, TextInput, Pressable } from 'react-native';
+import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MorningDeclaration from './MorningDeclaration';
 import EveningDeclaration from './EveningDeclaration';
 import DailyResult from './DailyResult';
@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
 import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
-import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
+
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -439,9 +439,6 @@ export default function DailyDeclaration() {
 
   return (
     <View className="flex-1">
-      <View className="flex-row items-center justify-between px-4 py-2">
-        <Text className="text-lg font-bold">每日宣告</Text>
-      </View>
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-500">加载中...</Text>
