@@ -1,7 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "baseUrl": ".",
