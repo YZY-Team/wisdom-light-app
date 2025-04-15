@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
 import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
-import { WeeklyDeclarationDTO, NewWeeklyDeclarationDTO } from '~/types/be/declarationType';
+import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -164,11 +164,11 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
 
         {/* 条件渲染早宣告内容 */}
         {expanded && (
-          <MorningDeclaration 
-            date={item.date} 
-            timeSlots={item.timeSlots} 
-            showHeader={false} 
-            declarationId={item.id} 
+          <MorningDeclaration
+            date={item.date}
+            timeSlots={item.timeSlots}
+            showHeader={false}
+            declarationId={item.id}
             onUpdate={onRefresh}
           />
         )}
@@ -288,11 +288,11 @@ export default function DailyDeclaration() {
 
         if (currentWeekResponse.code === 404) {
           // 如果没有当前周宣告，创建一个新的周宣告
-          const newWeeklyDeclaration: NewWeeklyDeclarationDTO = {
+          const newWeeklyDeclaration: WeeklyDeclarationDTO = {
             bookId: bookId,
             userId: "1909855525598679042", // TODO: 从用户上下文获取
             weekNumber: 1, // TODO: 计算当前是第几周
-            title: '', 
+            title: '',
             declarationContent: '',
             weekStartDate: new Date().toISOString().split('T')[0],
             weekEndDate: new Date().toISOString().split('T')[0], // TODO: 计算周结束日期
@@ -312,7 +312,7 @@ export default function DailyDeclaration() {
             updateTime: new Date().toISOString()
           };
 
-          const createWeeklyResponse = await weeklyDeclarationApi.createNewWeeklyDeclaration(newWeeklyDeclaration);
+          const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(newWeeklyDeclaration);
           if (createWeeklyResponse.code !== 200) {
             throw new Error('创建周宣告失败');
           }
