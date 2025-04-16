@@ -18,7 +18,7 @@ import { Keyboard, KeyboardEvent } from 'react-native';
 export default function Login() {
   const insets = useSafeAreaInsets();
   // 移除 headerHeight
-  const headerHeight = useHeaderHeight();
+
   const [isChecked, setChecked] = useState(false);
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
@@ -51,8 +51,8 @@ export default function Login() {
           setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
         }
-
-        router.replace('/(tabs)/have');
+        console.log('用户信息：', userRes);
+        router.replace('/do');
       }
     } catch (error) {
       console.error('登录失败：', error);

@@ -162,7 +162,7 @@ export default function WhoIndex() {
       // 清除用户信息
       setUserInfo(null);
       // 跳转到登录页
-      router.replace('/login');
+      router.replace('(auth)/login');
     } catch (error) {
       console.error('退出登录失败:', error);
       alert('退出登录失败，请重试');
