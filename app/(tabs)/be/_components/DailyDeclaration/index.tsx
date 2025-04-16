@@ -1,71 +1,30 @@
 // 导入必要的React Native组件和钩子
 import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import MorningDeclaration from './MorningDeclaration';
 import EveningDeclaration from './EveningDeclaration';
 import DailyResult from './DailyResult';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
-import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
+import {
+  useTodayDeclaration,
+  useBookDeclarations,
+  useCreateDeclaration,
+} from '~/queries/dailyDeclaration';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
-
+import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
 cssInterop(LinearGradient, { className: 'style' });
 cssInterop(BlurView, { className: 'style' });
 
-// 定义宣告卡片的属性类型接口
-type DeclarationCardProps = {
-  title: string; // 卡片标题
-  time: string; // 时间
-  status: 'completed' | 'pending'; // 完成状态
-  content?: string; // 可选的内容
-  onSubmit?: (content: string) => void; // 提交回调
-  inputValue?: string; // 输入值
-  onInputChange?: (value: string) => void; // 输入变化回调
-};
-
 // 定义晚总结报告项的类型接口
 type EveningReportItem = {
   label: string; // 报告项标签
   value: string; // 报告项值
-};
-
-// 宣告卡片组件（当前为空实现）
-const DeclarationCard = ({
-  title,
-  time,
-  status,
-  content,
-  onSubmit,
-  inputValue,
-  onInputChange,
-}: DeclarationCardProps) => <View className="mb-4 overflow-hidden rounded-xl bg-white"></View>;
-
-// 定义时间段的类型接口
-type TimeSlot = {
-  content: string; // 内容
-  time: string; // 时间
-};
-
-// 获取时间段对应的颜色
-const getBarColor = (title: string) => {
-  switch (title) {
-    case '上午':
-      return '#7AE1C3';
-    case '中午':
-      return '#FBA720';
-    case '下午':
-      return '#1587FD';
-    case '晚上':
-      return '#440063';
-    default:
-      return '#1483FD';
-  }
 };
 
 // 定义每日数据的类型接口
@@ -105,37 +64,32 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
   return (
     <View className="">
       {/* 日期头部 */}
-      <View className="items-center py-4 flex-row  justify-center px-4">
+      <View className="flex-row items-center justify-center  px-4 py-4">
         <View className="mt-1 flex-row items-end">
           <View className="flex-row items-center">
-            <Text className="text-[20px] text-gray-500 font-bold">{`第`}</Text>
-            <Text className="text-[20px] text-[#F18318] font-bold">{week}</Text>
-            <Text className="text-[20px] text-gray-500 font-bold">{`天`}</Text>
+            <Text className="text-[20px] font-bold text-gray-500">{`第`}</Text>
+            <Text className="text-[20px] font-bold text-[#F18318]">{week}</Text>
+            <Text className="text-[20px] font-bold text-gray-500">{`天`}</Text>
           </View>
-          <View className="flex-row items-center ml-1">
-            <Text className="text-base text-gray-500 font-bold">{`第`}</Text>
-            <Text className="text-base text-[#1483FD] font-bold">{week}</Text>
-            <Text className="text-base text-gray-500 font-bold">{`周`}</Text>
+          <View className="ml-1 flex-row items-center">
+            <Text className="text-base font-bold text-gray-500">{`第`}</Text>
+            <Text className="text-base font-bold text-[#1483FD]">{week}</Text>
+            <Text className="text-base font-bold text-gray-500">{`周`}</Text>
           </View>
-          <View className="flex-row items-center ml-1">
-            <Text className="text-base text-gray-500 font-bold">{`星期`}</Text>
-            <Text className="text-base text-[#1483FD] font-bold">{weekday}</Text>
+          <View className="ml-1 flex-row items-center">
+            <Text className="text-base font-bold text-gray-500">{`星期`}</Text>
+            <Text className="text-base font-bold text-[#1483FD]">{weekday}</Text>
           </View>
         </View>
-
-
       </View>
 
-
       {/* 早宣告模块 - 收起时只显示标题栏 */}
-      <View className={`${expanded ? "mb-4" : ""} overflow-hidden rounded-xl bg-white`}>
+      <View className={`${expanded ? 'mb-4' : ''} overflow-hidden rounded-xl bg-white`}>
         {/* 头部渐变标题栏 */}
         <Pressable
           onPress={toggleExpand}
           android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
-          style={({ pressed }) => [
-            { opacity: pressed ? 0.9 : 1 }
-          ]}>
+          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
           <LinearGradient
             colors={['#20B4F3', '#5762FF']}
             start={{ x: 0, y: 0 }}
@@ -155,14 +109,9 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
             </Text>
             <Text className="text-[16px] text-white">{`${item.date.getFullYear()}年${item.date.getMonth() + 1}月${item.date.getDate()}日`}</Text>
             {/* 添加展开/收起图标 */}
-            <Ionicons
-              name={expanded ? "chevron-up" : "chevron-down"}
-              size={20}
-              color="#fff"
-            />
+            <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="#fff" />
           </LinearGradient>
         </Pressable>
-
 
         {/* 条件渲染早宣告内容 */}
         {expanded && (
@@ -232,223 +181,216 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
 
 // 主组件：每日宣告列表
 export default function DailyDeclaration() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [todayDeclaration, setTodayDeclaration] = useState<NewDailyDeclarationDTO | null>(null);
-  const [historicalDailyData, setHistoricalDailyData] = useState<DailyData[]>([]);
+  const bookId = '1911671090439000066'; // 这里需要从上下文获取实际的bookId
+  const createDeclaration = useCreateDeclaration();
 
-  // 获取宣告数据
-  const fetchDeclarations = useCallback(async () => {
+  // 获取今日宣告
+  const { data: todayDeclarationRes, isLoading: isTodayLoading, refetch: refetchToday } = useTodayDeclaration(bookId);
+
+  // 获取历史宣告列表
+  const { data: historyResponse, isLoading: isHistoryLoading, refetch: refetchHistory } = useBookDeclarations(bookId);
+
+  // 刷新数据的回调函数
+  const fetchDeclarations = useCallback(() => {
+    refetchToday();
+    refetchHistory();
+  }, [refetchToday, refetchHistory]);
+
+  // 处理历史宣告数据
+  const historicalDailyData = useMemo(() => {
+    if (!historyResponse?.data) return [];
+
+    const today = new Date().toISOString().split('T')[0];
+    return historyResponse.data
+      .filter((declaration) => declaration.declarationDate !== today)
+      .sort((a, b) => new Date(b.declarationDate).getTime() - new Date(a.declarationDate).getTime())
+      .map((declaration) => ({
+        date: new Date(declaration.declarationDate),
+        timeSlots: [
+          {
+            title: '上午',
+            items: [{ content: declaration.morningPlan || '', time: '7:00' }],
+          },
+          {
+            title: '中午',
+            items: [{ content: declaration.noonPlan || '', time: '12:00' }],
+          },
+          {
+            title: '下午',
+            items: [{ content: declaration.afternoonPlan || '', time: '14:00' }],
+          },
+          {
+            title: '晚上',
+            items: [{ content: declaration.eveningPlan || '', time: '19:00' }],
+          },
+        ],
+        eveningContent: '',
+        eveningStatus: 'completed' as const,
+        eveningReport: [
+          { label: '打分', value: declaration.dayScore || '' },
+          { label: '体验', value: declaration.dayExperience || '' },
+          { label: '行得通', value: declaration.whatWorked || '' },
+          { label: '行不通', value: declaration.whatDidntWork || '' },
+          { label: '学习到', value: declaration.whatLearned || '' },
+          { label: '下一步', value: declaration.whatNext || '' },
+        ],
+        dailyResult: {
+          goals:
+            declaration.dailyGoals?.map((goal) => ({
+              title: goal.title,
+              completedQuantity: goal.completedQuantity,
+              unit: goal.unit,
+            })) || [],
+          weeklyProgress: '0/0',
+          monthlyProgress: '0/0',
+        },
+      }));
+  }, [historyResponse?.data]);
+
+  // 创建今日宣告的处理函数
+  const handleCreateTodayDeclaration = async (weeklyDeclarationId: string) => {
+    const newDeclaration: NewDailyDeclarationDTO = {
+      userId: '1909855525598679042', // TODO: 从用户上下文获取
+      bookId: bookId,
+      weeklyDeclarationId: weeklyDeclarationId,
+      dayNumber: 1, // TODO: 根据实际情况计算
+      declarationDate: new Date().toISOString().split('T')[0],
+      morningPlan: '',
+      noonPlan: '',
+      afternoonPlan: '',
+      eveningPlan: '',
+      dayScore: '',
+      dayExperience: '',
+      whatWorked: '',
+      whatDidntWork: '',
+      whatLearned: '',
+      whatNext: '',
+      dailyGoals: [],
+    };
+
     try {
-      setIsLoading(true);
-
-      // 获取成就书的所有日宣告
-      const bookId = "1911671090439000066"; // 这里需要从上下文获取实际的bookId
-
-      // 先获取今日宣告
-      const todayResponse = await dailyDeclarationApi.getTodayDailyDeclaration(bookId);
-
-      if (todayResponse.code === 404) {
-        // 如果没有今日宣告，先检查是否有当前周宣告
-        const currentWeekResponse = await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
-        let weeklyDeclarationId: string;
-
-        if (currentWeekResponse.code === 404) {
-          // 如果没有当前周宣告，创建一个新的周宣告
-          const newWeeklyDeclaration = {
-            bookId: bookId,
-            userId: "1909855525598679042", // TODO: 从用户上下文获取
-            weekNumber: 1, // TODO: 计算当前是第几周
-            title: '',
-            declarationContent: '',
-            weekStartDate: new Date().toISOString().split('T')[0],
-            weekEndDate: new Date().toISOString().split('T')[0], // TODO: 计算周结束日期
-            achievement: '',
-            selfSummary: '',
-            summary123456: '',
-            nextStep: '',
-            weekScore: '',
-            weekExperience: '',
-            whatWorked: '',
-            whatDidntWork: '',
-            whatLearned: '',
-            whatNext: '',
-            weeklyGoals: [],
-            averageCompletionRate: 0,
-            createTime: new Date().toISOString(),
-            updateTime: new Date().toISOString()
-          };
-
-          const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(newWeeklyDeclaration as any);
-          if (createWeeklyResponse.code !== 200) {
-            throw new Error('创建周宣告失败');
-          }
-          weeklyDeclarationId = createWeeklyResponse.data.toString();
-        } else {
-          weeklyDeclarationId = currentWeekResponse.data.id;
-        }
-
-        // 创建今日宣告
-        const newDeclaration: NewDailyDeclarationDTO = {
-          userId: "1909855525598679042", // TODO: 从用户上下文获取
-          bookId: bookId,
-          weeklyDeclarationId: weeklyDeclarationId,
-          dayNumber: 1, // TODO: 根据实际情况计算
-          declarationDate: new Date().toISOString().split('T')[0],
-          morningPlan: '',
-          noonPlan: '',
-          afternoonPlan: '',
-          eveningPlan: '',
-          dayScore: '',
-          dayExperience: '',
-          whatWorked: '',
-          whatDidntWork: '',
-          whatLearned: '',
-          whatNext: '',
-          dailyGoals: []
-        };
-
-        try {
-          const createResponse = await dailyDeclarationApi.createNewDailyDeclaration(newDeclaration);
-          if (createResponse.data) {
-            // 创建成功后重新获取今日宣告
-            const newDayDeclaration = await dailyDeclarationApi.getNewDailyDeclarationDetail(createResponse.data.toString());
-            setTodayDeclaration(newDayDeclaration.data);
-          }
-        } catch (createError) {
-          console.error('创建今日宣告失败:', createError);
-          setTodayDeclaration(null);
-        }
-      } else {
-        setTodayDeclaration(todayResponse.data || null);
-      }
-
-      try {
-        // 获取历史宣告列表
-        const historyResponse = await dailyDeclarationApi.getBookDailyDeclarations(bookId);
-
-        if (historyResponse.data) {
-          // 获取今天的日期字符串
-          const today = new Date().toISOString().split('T')[0];
-
-          // 设置历史宣告（排除今天的）
-          const sortedDeclarations = historyResponse.data
-            .filter(declaration => declaration.declarationDate !== today)
-            .sort((a, b) => new Date(b.declarationDate).getTime() - new Date(a.declarationDate).getTime());
-          setHistoricalDailyData(sortedDeclarations.map(declaration => ({
-            date: new Date(declaration.declarationDate),
-            timeSlots: [
-              {
-                title: '上午',
-                items: [{ content: declaration.morningPlan || '', time: '7:00' }],
-              },
-              {
-                title: '中午',
-                items: [{ content: declaration.noonPlan || '', time: '12:00' }],
-              },
-              {
-                title: '下午',
-                items: [{ content: declaration.afternoonPlan || '', time: '14:00' }],
-              },
-              {
-                title: '晚上',
-                items: [{ content: declaration.eveningPlan || '', time: '19:00' }],
-              },
-            ],
-            eveningContent: '',
-            eveningStatus: 'completed' as const,
-            eveningReport: [
-              { label: '打分', value: declaration.dayScore || '' },
-              { label: '体验', value: declaration.dayExperience || '' },
-              { label: '行得通', value: declaration.whatWorked || '' },
-              { label: '行不通', value: declaration.whatDidntWork || '' },
-              { label: '学习到', value: declaration.whatLearned || '' },
-              { label: '下一步', value: declaration.whatNext || '' },
-            ],
-            dailyResult: {
-              goals: declaration.dailyGoals?.map(goal => ({
-                title: goal.title,
-                completedQuantity: goal.completedQuantity,
-                unit: goal.unit,
-              })) || [],
-              weeklyProgress: '0/0',
-              monthlyProgress: '0/0',
-            },
-          })));
-        }
-      } catch (error: any) {
-        // 如果是 500 错误，说明没有历史记录
-        if (error.response?.status === 500) {
-          setHistoricalDailyData([]);
-        } else {
-          throw error;
-        }
-      }
+      await createDeclaration.mutateAsync(newDeclaration);
     } catch (error) {
-      console.error('获取宣告数据失败:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('创建今日宣告失败:', error);
     }
-  }, []);
+  };
 
-  // 初始加载
+  // 如果没有今日宣告，创建新的宣告
   useEffect(() => {
-    fetchDeclarations();
-  }, [fetchDeclarations]);
+    if (todayDeclarationRes?.code === 404) {
+      const createWeeklyDeclarationAndDaily = async () => {
+        try {
+          const currentWeekResponse =
+            await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
+          let weeklyDeclarationId: string;
+
+          if (currentWeekResponse.code === 404) {
+            const newWeeklyDeclaration = {
+              bookId: bookId,
+              userId: '1909855525598679042', // TODO: 从用户上下文获取
+              weekNumber: 1, // TODO: 计算当前是第几周
+              title: '',
+              declarationContent: '',
+              weekStartDate: new Date().toISOString().split('T')[0],
+              weekEndDate: new Date().toISOString().split('T')[0], // TODO: 计算周结束日期
+              achievement: '',
+              selfSummary: '',
+              summary123456: '',
+              nextStep: '',
+              weekScore: '',
+              weekExperience: '',
+              whatWorked: '',
+              whatDidntWork: '',
+              whatLearned: '',
+              whatNext: '',
+              weeklyGoals: [],
+              averageCompletionRate: 0,
+              createTime: new Date().toISOString(),
+              updateTime: new Date().toISOString(),
+            };
+
+            const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(
+              newWeeklyDeclaration as any
+            );
+            if (createWeeklyResponse.code !== 200) {
+              throw new Error('创建周宣告失败');
+            }
+            weeklyDeclarationId = createWeeklyResponse.data.toString();
+          } else {
+            weeklyDeclarationId = currentWeekResponse.data.id;
+          }
+
+          await handleCreateTodayDeclaration(weeklyDeclarationId);
+        } catch (error) {
+          console.error('创建周宣告失败:', error);
+        }
+      };
+
+      createWeeklyDeclarationAndDaily();
+    }
+  }, [todayDeclarationRes?.code, bookId]);
 
   return (
     <View className="flex-1">
-      {isLoading ? (
+      {isHistoryLoading ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-500">加载中...</Text>
         </View>
       ) : (
         <FlatList
           data={[
-            ...(todayDeclaration ? [{
-              id: todayDeclaration.id,
-              date: new Date(todayDeclaration.declarationDate),
-              timeSlots: [
-                {
-                  title: '上午',
-                  items: [{ content: todayDeclaration.morningPlan || '', time: '7:00' }],
-                },
-                {
-                  title: '中午',
-                  items: [{ content: todayDeclaration.noonPlan || '', time: '12:00' }],
-                },
-                {
-                  title: '下午',
-                  items: [{ content: todayDeclaration.afternoonPlan || '', time: '14:00' }],
-                },
-                {
-                  title: '晚上',
-                  items: [{ content: todayDeclaration.eveningPlan || '', time: '19:00' }],
-                },
-              ],
-              eveningContent: '',
-              eveningStatus: 'pending' as const,
-              eveningReport: [
-                { label: '打分', value: todayDeclaration.dayScore || '' },
-                { label: '体验', value: todayDeclaration.dayExperience || '' },
-                { label: '行得通', value: todayDeclaration.whatWorked || '' },
-                { label: '行不通', value: todayDeclaration.whatDidntWork || '' },
-                { label: '学习到', value: todayDeclaration.whatLearned || '' },
-                { label: '下一步', value: todayDeclaration.whatNext || '' },
-              ],
-              dailyResult: {
-                goals: todayDeclaration.dailyGoals?.map(goal => ({
-                  goalId: goal.goalId,
-                  title: goal.title,
-                  completedQuantity: goal.completedQuantity,
-                  unit: goal.unit,
-                  weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
-                  totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
-                })) || [],
-              },
-            }] : []),
+            ...(todayDeclarationRes?.data
+              ? [
+                  {
+                    id: todayDeclarationRes.data.id,
+                    date: new Date(todayDeclarationRes.data.declarationDate),
+                    timeSlots: [
+                      {
+                        title: '上午',
+                        items: [{ content: todayDeclarationRes.data.morningPlan || '', time: '7:00' }],
+                      },
+                      {
+                        title: '中午',
+                        items: [{ content: todayDeclarationRes.data.noonPlan || '', time: '12:00' }],
+                      },
+                      {
+                        title: '下午',
+                        items: [{ content: todayDeclarationRes.data.afternoonPlan || '', time: '14:00' }],
+                      },
+                      {
+                        title: '晚上',
+                        items: [{ content: todayDeclarationRes.data.eveningPlan || '', time: '19:00' }],
+                      },
+                    ],
+                    eveningContent: '',
+                    eveningStatus: 'pending' as const,
+                    eveningReport: [
+                      { label: '打分', value: todayDeclarationRes.data.dayScore || '' },
+                      { label: '体验', value: todayDeclarationRes.data.dayExperience || '' },
+                      { label: '行得通', value: todayDeclarationRes.data.whatWorked || '' },
+                      { label: '行不通', value: todayDeclarationRes.data.whatDidntWork || '' },
+                      { label: '学习到', value: todayDeclarationRes.data.whatLearned || '' },
+                      { label: '下一步', value: todayDeclarationRes.data.whatNext || '' },
+                    ],
+                    dailyResult: {
+                      goals:
+                        todayDeclarationRes.data.dailyGoals?.map((goal) => ({
+                          goalId: goal.goalId,
+                          title: goal.title,
+                          completedQuantity: goal.completedQuantity,
+                          unit: goal.unit,
+                          weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
+                          totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
+                        })) || [],
+                    },
+                  },
+                ]
+              : []),
             ...historicalDailyData,
           ]}
-          renderItem={({ item }) => <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />}
+          renderItem={({ item }) => (
+            <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />
+          )}
           keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{

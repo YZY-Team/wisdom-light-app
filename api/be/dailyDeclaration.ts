@@ -1,12 +1,5 @@
 import { request } from '~/utils/request';
-import {
-  DailyDeclarationDTO,
-  BaseResponseDailyDeclarationDTO,
-  BaseResponseBoolean,
-  BaseResponseLong,
-  NewDailyDeclarationDTO,
-  BaseResponseNewDailyDeclarationDTO
-} from '~/types/be/declarationType';
+import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 
 export const dailyDeclarationApi = {
   /**
@@ -14,8 +7,8 @@ export const dailyDeclarationApi = {
    * @param data 日宣告数据，包含宣告内容、日期等信息
    * @returns 返回创建成功的日宣告ID
    */
-  createDailyDeclaration: (data: DailyDeclarationDTO) => {
-    return request.post<BaseResponseLong>('/wl/daily-declaration', data);
+  createDailyDeclaration: (data: NewDailyDeclarationDTO) => {
+    return request.post<NewDailyDeclarationDTO>('/wl/daily-declaration', data);
   },
 
   /**
@@ -24,7 +17,7 @@ export const dailyDeclarationApi = {
    * @returns 返回日宣告的详细信息
    */
   getDailyDeclarationDetail: (id: number) => {
-    return request.get<BaseResponseDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
+    return request.get<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
   },
 
   /**
@@ -33,8 +26,8 @@ export const dailyDeclarationApi = {
    * @param data 更新的日宣告数据
    * @returns 返回更新是否成功
    */
-  updateDailyDeclaration: (id: number, data: DailyDeclarationDTO) => {
-    return request.put<BaseResponseBoolean>(`/wl/daily-declaration/${id}`, data);
+  updateDailyDeclaration: (id: number, data: NewDailyDeclarationDTO) => {
+    return request.put<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
   },
 
   /**
@@ -43,7 +36,7 @@ export const dailyDeclarationApi = {
    * @returns 返回删除是否成功
    */
   deleteDailyDeclaration: (id: number) => {
-    return request.delete<BaseResponseBoolean>(`/wl/daily-declaration/${id}`);
+    return request.delete<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
   },
 
   /**
@@ -52,16 +45,16 @@ export const dailyDeclarationApi = {
    * @returns 返回创建成功的日宣告ID
    */
   createNewDailyDeclaration: (data: NewDailyDeclarationDTO) => {
-    return request.post<BaseResponseLong>('/wl/daily-declaration', data);
+    return request.post<NewDailyDeclarationDTO>('/wl/daily-declaration', data);
   },
 
   /**
    * 获取今日日宣告详情
    * @returns 返回今日日宣告的详细信息
    */
-  getTodayDailyDeclaration: (bookId:string) => {
+  getTodayDailyDeclaration: (bookId: string) => {
     return request.get<NewDailyDeclarationDTO>('/wl/daily-declaration/today', {
-      params: { bookId }
+      params: { bookId },
     });
   },
 
@@ -81,7 +74,7 @@ export const dailyDeclarationApi = {
    * @returns 返回更新是否成功
    */
   updateNewDailyDeclaration: (id: string, data: NewDailyDeclarationDTO) => {
-    return request.put<BaseResponseBoolean>(`/wl/daily-declaration/${id}`, data);
+    return request.put<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
   },
 
   /**
@@ -90,7 +83,7 @@ export const dailyDeclarationApi = {
    * @returns 返回删除是否成功
    */
   deleteNewDailyDeclaration: (id: number) => {
-    return request.delete<BaseResponseBoolean>(`/wl/daily-declaration/${id}`);
+    return request.delete<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
   },
 
   /**
@@ -100,12 +93,12 @@ export const dailyDeclarationApi = {
    */
   getBookDailyDeclarations: (bookId: string) => {
     return request.get<NewDailyDeclarationDTO[]>(`/wl/daily-declaration/list/book`, {
-      params:{
-        bookId
+      params: {
+        bookId,
       },
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     });
-  }
-}; 
+  },
+};

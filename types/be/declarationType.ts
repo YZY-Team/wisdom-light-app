@@ -1,17 +1,4 @@
 /**
- * 基础响应类型
- * @template T 响应数据类型
- */
-export interface BaseResponse<T> {
-  /** 响应码 */
-  code: number;
-  /** 响应消息 */
-  message: string;
-  /** 响应数据 */
-  data: T;
-}
-
-/**
  * 周目标DTO
  */
 export interface WeeklyGoalDTO {
@@ -79,42 +66,6 @@ export interface WeeklyDeclarationDTO {
   createTime: string;
   /** 更新时间 */
   updateTime: string;
-}
-
-/**
- * 日宣告DTO
- */
-export interface DailyDeclarationDTO {
-  /** 唯一标识符 */
-  id?: number;
-  /** 宣告内容 */
-  content: string;
-  /** ISO 8601 日期格式的宣告日期 */
-  declarationDate: string; // ISO 8601 日期格式
-  /** 用户ID */
-  userId: number;
-  /** 是否已完成 */
-  isCompleted?: boolean;
-  /** 创建时间 */
-  createdAt?: string;
-  /** 更新时间 */
-  updatedAt?: string;
-}
-
-/**
- * 错误响应
- */
-export interface ErrorResponse {
-  /** 响应码 */
-  code: number;
-  /** 错误发生时间戳 */
-  timestamp: string;
-  /** 错误类型 */
-  error: string;
-  /** 错误路径 */
-  path: string;
-  /** 错误详情 */
-  detail: string;
 }
 
 /**
