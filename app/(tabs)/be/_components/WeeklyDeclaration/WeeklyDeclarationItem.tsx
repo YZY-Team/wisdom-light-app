@@ -4,7 +4,7 @@ import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
-import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
+import { useUpdateWeeklyDeclaration } from '~/queries/weeklyDeclaration';
 
 cssInterop(LinearGradient, { className: 'style' });
 
@@ -17,9 +17,9 @@ interface WeeklyDeclarationItemProps {
 export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration, readOnly = false }: WeeklyDeclarationItemProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedDay, setSelectedDay] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [localDeclaration, setLocalDeclaration] = useState(declaration);
+  const updateMutation = useUpdateWeeklyDeclaration();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const [dailyPlans, setDailyPlans] = useState<Array<{
     achievementPlan: string;
@@ -44,21 +44,12 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
     if (readOnly || !localDeclaration.id) return;
     
     try {
-      setIsSaving(true);
-      
-      const response = await weeklyDeclarationApi.updateWeeklyDeclaration(
-        localDeclaration.id.toString(),
-        localDeclaration
-      );
-      
-      if (response.code === 200) {
-        // 更新成功，通知父组件更新数据
-        onUpdateDeclaration(response.data || localDeclaration);
-      }
+      await updateMutation.mutateAsync({
+        id: localDeclaration.id.toString(),
+        declaration: localDeclaration
+      });
     } catch (error) {
       console.error('保存周宣告失败:', error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -165,7 +156,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
         </View>
         {!readOnly && (
           <View className="flex-row items-center">
-            {isSaving && (
+            {updateMutation.isPending && (
               <Text className="text-xs text-gray-500 mr-2">保存中...</Text>
             )}
             <Pressable className="ml-2 flex-row items-center justify-center">
@@ -550,4 +541,4 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
       </View>
     </View>
   );
-} 
+}
