@@ -60,10 +60,42 @@ const courseData = {
         'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
     },
   ],
-  内在成长: [],
-  情绪处理: [],
-  团队管理: [],
-  道的部分: [],
+  内在成长: [
+    {
+      title: '自我认知与成长',
+      teacher: '王导师',
+      description: '探索内在潜能，建立健康的自我认知体系',
+      rating: 4.7,
+      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    }
+  ],
+  情绪处理: [
+    {
+      title: '情绪管理技巧',
+      teacher: '陈导师',
+      description: '学习有效的情绪管理方法，提升情商',
+      rating: 4.6,
+      image: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    }
+  ],
+  团队管理: [
+    {
+      title: '高效团队建设',
+      teacher: '刘导师',
+      description: '打造高效协作的团队文化与管理体系',
+      rating: 4.9,
+      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    }
+  ],
+  道的部分: [
+    {
+      title: '传统智慧探索',
+      teacher: '赵导师',
+      description: '探讨东方智慧与现代管理的结合之道',
+      rating: 4.8,
+      image: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    }
+  ]
 };
 
 
