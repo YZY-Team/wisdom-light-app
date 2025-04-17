@@ -86,5 +86,5 @@
 
 项目使用 EAS (Expo Application Services) 进行构建和部署：
 - Project ID: 8e80af25-2f84-48c4-9c82-9aeba55e5f83
-- Bundle Identifier (iOS): com.freelove.wisdomlightapp
-- Package Name (Android): com.freelove.wisdomlightapp
+- Bundle Identifier (iOS): com.anjiuwenhua.chengxinwangluoapp
+- Package Name (Android): com.anjiuwenhua.chengxinwangluoapp
