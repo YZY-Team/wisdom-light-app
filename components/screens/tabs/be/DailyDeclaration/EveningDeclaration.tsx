@@ -95,7 +95,9 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
 
   // 处理文本输入变更
   const handleTextChange = (label: string, text: string) => {
-    setTempContents(prev => ({ ...prev, [label]: text }));
+    if (text.length <= 100) {
+      setTempContents(prev => ({ ...prev, [label]: text }));
+    }
   };
 
   // 处理失去焦点保存
@@ -128,12 +130,12 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
       )}
 
       {/* 报告项列表区域 */}
-      <View className="p-4">
+      <View className="p-4 gap-4">
         {eveningReport.map((reportItem, index) => {
           const isLoading = loadingStates[reportItem.label];
           
           return (
-            <View key={reportItem.label} className="mb-4 flex flex-row items-start">
+            <View key={reportItem.label} className=" flex flex-row items-start">
               {/* 左侧标签 */}
               <View className="mt-3 w-12 flex-row justify-between">
                 {[...reportItem.label].map((char, i) => (
@@ -145,7 +147,7 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
               <Text className="mt-3 px-1 text-sm font-medium text-gray-700">:</Text>
               {/* 右侧内容输入区域 */}
               <View className="relative flex-1 overflow-hidden rounded-[6px]">
-                <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+                <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
                 <TextInput
                   className="z-10 min-h-[54px] p-3 text-gray-600"
                   placeholder={`请输入${reportItem.label}...`}
@@ -156,6 +158,7 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
                   onBlur={() => handleBlur(reportItem.label)}
                   blurOnSubmit={true}
                   editable={declarationId !== undefined}
+                  maxLength={100}
                 />
                 {/* 加载中指示器 */}
                 {loadingStates[reportItem.label] && (
@@ -170,6 +173,15 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
                     保存中...
                   </Text>
                 )}
+                {/* 字数限制显示 */}
+                <View className="absolute bottom-2 right-3">
+                  <Text>
+                    <Text className="text-[14px] text-black">
+                      {(tempContents[reportItem.label] || reportItem.value || '').length}
+                    </Text>
+                    <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/100</Text>
+                  </Text>
+                </View>
               </View>
             </View>
           );

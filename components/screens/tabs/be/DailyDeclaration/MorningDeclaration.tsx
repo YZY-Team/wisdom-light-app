@@ -157,9 +157,9 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
 
       {/* 只在展开状态下显示时间段列表区域 */}
       {expanded && (
-        <View className="p-4">
+        <View className="p-4 gap-4">
           {timeSlots.map((section, sectionIndex) => (
-            <View key={section.title} className="mb-4 flex-row">
+            <View key={section.title} className=" flex-row">
               {/* 左侧时间段标题和装饰条 */}
               <View className="mr-4 h-[80px] flex-row items-center">
                 <View
@@ -194,7 +194,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
                         }}
                       />
                       {/* 半透明背景 */}
-                      <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD1A]/10" />
+                      <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
                       {/* 计划内容输入框 */}
                       <TextInput
                         className="z-10 h-[80px] p-3 text-gray-600"

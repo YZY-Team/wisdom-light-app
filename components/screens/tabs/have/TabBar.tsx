@@ -14,7 +14,7 @@ const tabImages = {
   聊天广场: require('~/assets/images/have/tabs/聊天广场.png'),
   视频会议: require('~/assets/images/have/tabs/视频会议.png'),
   寻找支持: require('~/assets/images/have/tabs/寻找支持.png'),
-  好友列表: require('~/assets/images/have/tabs/寻找支持.png'),
+  好友列表: require('~/assets/images/have/tabs/好友列表.png'),
 };
 
 cssInterop(Image, { className: 'style' });

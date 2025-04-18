@@ -17,8 +17,7 @@ export default function WeeklyDeclaration() {
   const { data: currentDeclaration, isLoading, error } = useCurrentWeeklyDeclaration(BOOK_ID);
   const createMutation = useCreateWeeklyDeclaration();
   // 添加保存处理函数
-  const handleSave = () => {
-  };
+  const handleSave = () => {};
 
   // 如果没有当前周宣告，创建一个新的
   if (!isLoading && !currentDeclaration && !createMutation.isPending) {
@@ -70,14 +69,16 @@ export default function WeeklyDeclaration() {
   return (
     <View className="flex-1 pt-4">
       <View className="absolute right-4 top-10 z-[1000]">
-        <BlurView intensity={10}>
-          <Pressable onPress={handleSave}>
-            <View className="h-12 w-12 flex-col items-center justify-center rounded-full bg-[#1483FD0D]">
-              <Image source={saveIcon} className="h-5 w-5" />
-              <Text className="text-sm text-[#1483FD]">保存</Text>
-            </View>
-          </Pressable>
-        </BlurView>
+        <Pressable onPress={handleSave}>
+          <BlurView
+            className="h-12 w-12 flex-col items-center justify-center rounded-full bg-[#1483FD0D]"
+            experimentalBlurMethod="dimezisBlurView"
+            intensity={10}>
+
+            <Image source={saveIcon} className="h-5 w-5" />
+            <Text className="text-[12px] font-[600] text-[#1483FD]">保存</Text>
+          </BlurView>
+        </Pressable>
       </View>
       <WeeklyDeclarationList bookId={BOOK_ID} />
     </View>

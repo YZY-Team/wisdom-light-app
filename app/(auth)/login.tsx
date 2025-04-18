@@ -51,12 +51,12 @@ export default function Login() {
           setUserInfo(userRes.data);
           // wsContext.connect(userRes.data.globalUserId);
         }
-        console.log('用户信息：', userRes);
+        console.error('用户信息：', userRes);
         router.replace('/do');
       }
     } catch (error) {
       router.replace('(tabs)/do');
-      console.log('登录失败：', error);
+      console.error('登录失败：', error);
     }
   };
 

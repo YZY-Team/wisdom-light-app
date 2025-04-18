@@ -13,17 +13,17 @@ cssInterop(BlurView, { className: 'style' });
 // 定义组件的属性类型接口
 type DailyResultProps = {
   goals: Array<{
-    goalId?: string;    // 目标ID
-    content?: string;  // 目标内容（旧字段）
-    title?: string;    // 目标标题
+    goalId?: string; // 目标ID
+    content?: string; // 目标内容（旧字段）
+    title?: string; // 目标标题
     completedQuantity?: number; // 完成数量
-    unit?: string;    // 可选的单位（如：个、次、份等）
-    weeklyProgress?: string;   // 每个目标的周进度
-    totalProgress?: string;  // 每个目标的月进度
+    unit?: string; // 可选的单位（如：个、次、份等）
+    weeklyProgress?: string; // 每个目标的周进度
+    totalProgress?: string; // 每个目标的月进度
   }>;
-  showHeader?: boolean;     // 是否显示标题栏
-  declarationId?: string;   // 宣告ID
-  onUpdate?: () => void;    // 更新回调
+  showHeader?: boolean; // 是否显示标题栏
+  declarationId?: string; // 宣告ID
+  onUpdate?: () => void; // 更新回调
 };
 
 // 今日成果组件：展示每日目标完成情况和进度
@@ -31,7 +31,7 @@ export default function DailyResult({
   goals,
   showHeader = true,
   declarationId,
-  onUpdate
+  onUpdate,
 }: DailyResultProps) {
   // 编辑状态管理
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
@@ -42,8 +42,8 @@ export default function DailyResult({
 
   // 开始编辑
   const startEditing = (index: number, content: string) => {
-    setEditingStates(prev => ({ ...prev, [index]: true }));
-    setTempContents(prev => ({ ...prev, [index]: content }));
+    setEditingStates((prev) => ({ ...prev, [index]: true }));
+    setTempContents((prev) => ({ ...prev, [index]: content }));
   };
 
   // 保存编辑
@@ -54,23 +54,25 @@ export default function DailyResult({
     const unit = goals[index]?.unit || '';
 
     try {
-      setLoadingStates(prev => ({ ...prev, [index]: true }));
+      setLoadingStates((prev) => ({ ...prev, [index]: true }));
 
       // 构建目标数组
-      const updatedGoals = [...goals.map((goal, i) => ({
-        goalId: goal.goalId,
-        title: goal.title || goal.content || '',
-        unit: goal.unit,
-        completedQuantity: i === index ? Number(content) || 0 : (goal.completedQuantity || 0)
-      }))];
+      const updatedGoals = [
+        ...goals.map((goal, i) => ({
+          goalId: goal.goalId,
+          title: goal.title || goal.content || '',
+          unit: goal.unit,
+          completedQuantity: i === index ? Number(content) || 0 : goal.completedQuantity || 0,
+        })),
+      ];
 
       // 更新目标
       await dailyDeclarationApi.updateNewDailyDeclaration(declarationId, {
-        dailyGoals: updatedGoals
+        dailyGoals: updatedGoals,
       } as any);
 
       // 更新成功后清除编辑状态
-      setEditingStates(prev => ({ ...prev, [index]: false }));
+      setEditingStates((prev) => ({ ...prev, [index]: false }));
       // 只在明确需要刷新整个列表时才触发onUpdate回调
       // if (onUpdate) {
       //   onUpdate();
@@ -78,19 +80,19 @@ export default function DailyResult({
     } catch (error) {
       console.log('更新失败:', error);
     } finally {
-      setLoadingStates(prev => ({ ...prev, [index]: false }));
+      setLoadingStates((prev) => ({ ...prev, [index]: false }));
     }
   };
 
   // 取消编辑
   const cancelEditing = (index: number) => {
-    setEditingStates(prev => ({ ...prev, [index]: false }));
-    setTempContents(prev => ({ ...prev, [index]: '' }));
+    setEditingStates((prev) => ({ ...prev, [index]: false }));
+    setTempContents((prev) => ({ ...prev, [index]: '' }));
   };
 
   // 处理文本输入变更
   const handleTextChange = (index: number, text: string) => {
-    setTempContents(prev => ({ ...prev, [index]: text }));
+    setTempContents((prev) => ({ ...prev, [index]: text }));
   };
 
   // 处理失去焦点保存
@@ -139,13 +141,16 @@ export default function DailyResult({
                 return (
                   <View key={index} className="relative mb-4 overflow-hidden rounded-[6px]">
                     <View className="flex-col">
-                      <View className="flex-row items-center mb-1">
+                      <View className="mb-1 flex-row items-center">
                         <Text className="ml-1 text-[14px] font-medium text-gray-700">
                           {goalText || `目标${index + 1}`} {goal.unit ? `(${goal.unit})` : ''}：
                         </Text>
                       </View>
                       <View className="relative">
-                        <BlurView intensity={10} className="absolute h-full w-full bg-[#1483FD0D]" />
+                        <BlurView
+                          intensity={10}
+                          className="absolute h-full w-full bg-[#1483FD0D]"
+                        />
                         <TextInput
                           className="z-10 min-h-[47px] w-full p-3 text-gray-600"
                           placeholder={`请输入...`}
@@ -187,15 +192,16 @@ export default function DailyResult({
               <View className="mr-2 h-8 w-1 rounded-full bg-[#1483FD]" />
               <Text className=" text-[16px] font-[700] text-black">今日进度</Text>
             </View>
-            <View>
+            <View className="gap-4">
               {goals.map((goal, index) => (
-                <View key={index} className="relative mb-4 overflow-hidden rounded-[6px]">
+                <View key={index} className="relative  overflow-hidden rounded-[6px]">
                   <View className="flex-col">
                     <Text className="ml-1 text-[14px] font-[600] text-gray-700">
-                      {goal.title || `目标${index + 1}`}{goal.unit ? ` (${goal.unit})` : ''}:
+                      {goal.title || `目标${index + 1}`}
+                      {goal.unit ? ` (${goal.unit})` : ''}:
                     </Text>
                     {/* 进度指标展示 */}
-                    <View className="flex flex-row gap-2 items-center">
+                    <View className="flex flex-row items-center gap-2">
                       <View className="flex-1 items-center">
                         <Text
                           className="mb-2"
@@ -311,20 +317,20 @@ export default function DailyResult({
           </View>
         ) : (
           // 收起状态：只显示进度指标展示部分的 goals.map
-          <View>
+          <View className="gap-4">
             {goals.map((goal, index) => (
-              <View key={index} className="mb-4">
+              <View key={index} className="">
                 <View className="flex-col">
                   {/* 目标标题和单位 */}
-                  <Text className="ml-1 mb-2 text-[14px] font-[600] text-gray-700">
-                    {goal.title || `目标${index + 1}`}{goal.unit ? ` (${goal.unit})` : ''}
+                  <Text className="mb-2 ml-1 text-[14px] font-[600] text-gray-700">
+                    {goal.title || `目标${index + 1}`}
+                    {goal.unit ? ` (${goal.unit})` : ''}
                   </Text>
                   {/* 进度指标展示 */}
-                  <View className="flex flex-row gap-2 items-center">
+                  <View className="flex flex-row items-center gap-2">
                     <View className="flex-1 items-center">
-
                       {/* 周度进度显示框 */}
-                      <View className="flex h-[70px] w-full border border-[#0000001A] items-center justify-center overflow-hidden rounded-[6px]">
+                      <View className="flex h-[70px] w-full items-center justify-center overflow-hidden rounded-[6px] border border-[#0000001A]">
                         <Text
                           className="mb-2"
                           style={{
@@ -344,7 +350,6 @@ export default function DailyResult({
                           </Text>
                           周目标数
                         </Text>
-
 
                         <Text
                           style={{
@@ -374,13 +379,11 @@ export default function DailyResult({
                             {goal.weeklyProgress?.split('/')[1] || '0'}
                           </Text>
                         </Text>
-
                       </View>
                     </View>
                     <View className="flex-1 items-center">
-
                       {/* 月度进度显示框 */}
-                      <View className="flex h-[70px] border border-[#0000001A]  w-full items-center justify-center overflow-hidden rounded-[6px]">
+                      <View className="flex h-[70px] w-full items-center  justify-center overflow-hidden rounded-[6px] border border-[#0000001A]">
                         <Text
                           className="mb-2"
                           style={{
@@ -429,7 +432,6 @@ export default function DailyResult({
                             {goal.totalProgress?.split('/')[1] || '0'}
                           </Text>
                         </Text>
-
                       </View>
                     </View>
                   </View>

@@ -68,7 +68,7 @@ export default function AiIndex() {
       <View
         className="absolute  mt-6  w-full   px-4 "
         style={{
-          bottom: insets.bottom + 100 || 20,
+          bottom: 20,
         }}>
         <View className=' bg-[#1483fd]/5 rounded-[6px]'>
           <Link href="/ai/tutor" asChild>

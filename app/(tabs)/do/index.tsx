@@ -117,7 +117,7 @@ export default function DoIndex() {
 
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-[#F5F8FC]">
       <View className="p-4">
         <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2 ">
           <TextInput
@@ -130,7 +130,7 @@ export default function DoIndex() {
       </View>
 
       {/* 一级分类 */}
-      <View className="mx-5 flex-row gap-[36px] rounded-[8px] bg-[#1687fd]/10 p-2">
+      <View className="mx-5 flex-row  justify-between rounded-[8px] bg-[#1687fd]/10 p-2">
         <PrimaryCategory
           title="学习视频"
           isActive={activePrimaryIndex === 0}
@@ -153,7 +153,6 @@ export default function DoIndex() {
         <VideoCategory
           activeSecondaryIndex={activeSecondaryIndices[0]}
           onSecondaryCategoryPress={(index) => handleSecondaryCategory(index)}
-          courses={courseData['成功学']}
         />
       )}
       {activePrimaryIndex === 1 && (

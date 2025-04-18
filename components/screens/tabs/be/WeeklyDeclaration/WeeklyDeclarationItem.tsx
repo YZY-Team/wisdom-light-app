@@ -275,8 +275,8 @@ export default function WeeklyDeclarationItem({
 
             <View className="flex-col">
               {/* 左侧标签 */}
-              <View className="mr-4 items-center border-b border-[#0000000D]">
-                <View className="flex flex-row justify-between gap-2 pb-4 pt-2">
+              <View className=" items-center border-b border-[#0000000D]">
+                <View className="flex flex-row  justify-between gap-2 pb-4 pt-2">
                   <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
                     {[...'个人成就计划'].map((char, index) => (
                       <Text key={index} className="text-[16px] font-bold">
@@ -382,13 +382,13 @@ export default function WeeklyDeclarationItem({
                     end={{ x: 1, y: 0 }}
                     className="h-full"
                     style={{
-                      width: `${localDeclaration.averageCompletionRate}%`,
+                      width: `${Math.min(localDeclaration.averageCompletionRate,100)}%`,
                       borderRadius: 2.5,
                     }}
                   />
                 </View>
                 <Text className="w-[16%] text-center text-[20px] font-bold text-[#FF9F21]">
-                  {localDeclaration.averageCompletionRate}%
+                  {Math.min(localDeclaration.averageCompletionRate,100)}%
                 </Text>
               </View>
             </View>
@@ -403,6 +403,7 @@ export default function WeeklyDeclarationItem({
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
+                    textAlignVertical="top"
                     value={localDeclaration.achievement}
                     onChangeText={(text) => handleTextChange('achievement', text)}
                     editable={!readOnly}
@@ -419,6 +420,7 @@ export default function WeeklyDeclarationItem({
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
                     maxLength={300}
+                    textAlignVertical="top"
                     value={localDeclaration.selfSummary}
                     onChangeText={(text) => handleTextChange('selfSummary', text, 300)}
                     editable={!readOnly}
@@ -441,6 +443,7 @@ export default function WeeklyDeclarationItem({
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
                     maxLength={300}
+                    textAlignVertical="top"
                     value={localDeclaration.summary123456}
                     onChangeText={(text) => handleTextChange('summary123456', text, 300)}
                     editable={!readOnly}
@@ -463,6 +466,7 @@ export default function WeeklyDeclarationItem({
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
                     maxLength={300}
+                    textAlignVertical="top"
                     value={localDeclaration.nextStep}
                     onChangeText={(text) => handleTextChange('nextStep', text, 300)}
                     editable={!readOnly}
@@ -480,6 +484,7 @@ export default function WeeklyDeclarationItem({
                   <TextInput
                     className="h-[36px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
+                    textAlignVertical="top"
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     value={localDeclaration.weekScore}
                     onChangeText={(text) => handleTextChange('weekScore', text)}
@@ -494,6 +499,7 @@ export default function WeeklyDeclarationItem({
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
+                    textAlignVertical="top"
                     value={localDeclaration.weekExperience}
                     onChangeText={(text) => handleTextChange('weekExperience', text)}
                     editable={!readOnly}
@@ -505,6 +511,7 @@ export default function WeeklyDeclarationItem({
                   <TextInput
                     className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
+                    textAlignVertical="top"
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
                     value={localDeclaration.whatWorked}
@@ -520,6 +527,7 @@ export default function WeeklyDeclarationItem({
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
+                    textAlignVertical="top"
                     value={localDeclaration.whatLearned}
                     onChangeText={(text) => handleTextChange('whatLearned', text)}
                     editable={!readOnly}
@@ -533,6 +541,7 @@ export default function WeeklyDeclarationItem({
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
+                    textAlignVertical="top"
                     value={localDeclaration.whatNext}
                     onChangeText={(text) => handleTextChange('whatNext', text)}
                     editable={!readOnly}
