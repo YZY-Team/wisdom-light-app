@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import DailyDeclaration from './_components/DailyDeclaration';
-import WeeklyDeclaration from './_components/WeeklyDeclaration';
-import Achievements from './_components/Achievements';
+import DailyDeclaration from '../../../components/screens/tabs/be/DailyDeclaration';
+import WeeklyDeclaration from '../../../components/screens/tabs/be/WeeklyDeclaration';
+import Achievements from '../../../components/screens/tabs/be/Achievements';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 

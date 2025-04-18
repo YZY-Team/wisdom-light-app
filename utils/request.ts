@@ -104,16 +104,16 @@ instance.interceptors.response.use(
             return `unknown error: ${error.message}`;
         }
       })();
-      console.error(errorMessage);
+      console.log(errorMessage);
       // 返回响应错误
       return Promise.reject(new Error(errorMessage));
     } else if (error.request) {
       const errorMessage = "网络错误，请检查您的网络连接";
-      console.error(errorMessage);
+      console.log(errorMessage);
       return Promise.reject(new Error(errorMessage));
     } else {
       const errorMessage = `请求配置错误: ${error.message}`;
-      console.error(errorMessage);
+      console.log(errorMessage);
       return Promise.reject(new Error(errorMessage));
     }
   }
@@ -179,7 +179,7 @@ instance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error('获取token失败:', error);
+      console.log('获取token失败:', error);
     }
     return config;
   },

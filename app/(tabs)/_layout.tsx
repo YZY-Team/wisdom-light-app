@@ -1,9 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
+import { Tabs } from 'expo-router';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
+import { Image } from 'expo-image';
+import { cssInterop } from 'nativewind';
+import { Text, View } from 'react-native';
 import beIcon from '~/assets/images/tabs/be.png';
 import beActiveIcon from '~/assets/images/tabs/be_active.png';
 import doIcon from '~/assets/images/tabs/do.png';
@@ -14,9 +15,9 @@ import aiIcon from '~/assets/images/tabs/ai.png';
 import aiActiveIcon from '~/assets/images/tabs/ai_active.png';
 import whoIcon from '~/assets/images/tabs/who.png';
 import whoActiveIcon from '~/assets/images/tabs/who_active.png';
-import { Image } from 'expo-image';
-import { cssInterop } from 'nativewind';
+
 cssInterop(Image, { className: 'style' });
+
 const TABS = [
   {
     name: 'be',
@@ -56,14 +57,12 @@ export default function TabLayout() {
   const pathname = usePathname();
 
   const hideTabBarRoutes = [
-    // have 相关路由
     '/have/chat-square',
     '/have/add-friend',
     '/have/create-group',
     '/have/private-chat',
     '/have/video-meeting',
     '/have/find-support',
-    // 其他路由保持不变
     '/who/general',
     '/who/support',
     '/who/membership',
@@ -73,60 +72,62 @@ export default function TabLayout() {
     '/be/promise',
     '/be/achievement',
   ];
-  const shouldHideTabBar = hideTabBarRoutes.some((route) => pathname.includes(route));
+
+  // const shouldHideTabBar = hideTabBarRoutes.some((route) => pathname.includes(route));
 
   return (
-    <Tabs asChild>
-      <View className="relative flex flex-1 flex-col bg-[#f5f5f5]">
-        <View
-          style={{
-            flex: 1,
-            // paddingBottom: bottomPadding, // 添加底部 padding
-          }}>
-          <TabSlot />
-        </View>
-        <TabList asChild>
-          <View
-            className="absolute flex  flex-col items-center justify-end self-center rounded-[20px] border border-white bg-white "
-            style={{
-              bottom: insets.bottom + 10,
-              width: 356,
-              height: 60,
-              paddingHorizontal: 16,
-              gap: 23,
-              display: !shouldHideTabBar ? 'flex' : 'none',
-              boxShadow: '0px 0px 10px 0px rgba(20, 131, 253, 0.25)',
-            }}>
-            {TABS.map((tab) => {
-              const isActive = pathname.includes(`/${tab.name}`);
-              return (
-                <TabTrigger
-                  key={tab.name}
-                  name={tab.name}
-                  href={`/(tabs)/${tab.name}`}
-                  className={`flex flex-1 flex-col  items-center justify-center  ${isActive ? 'bg-primary/10' : ''}`}>
-                  <View className="flex flex-1 flex-col items-center  justify-between gap-1">
-                    {/* 在 TabTrigger 组件中修改 Image 部分 */}
-                    <Image
-                      source={isActive ? tab.activeIcon : tab.icon}
-                      className={`h-6  ${isActive ? '' : 'opacity-50'} w-6`}
-                      contentFit="cover"
-                    />
-                    <Text
-                      className={`text-[10px] font-bold ${isActive ? 'text-[#1483FD]' : 'text-gray-400'}`}
-                      style={{
-                        fontFamily: 'Inter',
-                        lineHeight: 10, // normal 一般对应字体大小
-                      }}>
-                      {tab.title}
-                    </Text>
-                  </View>
-                </TabTrigger>
-              );
-            })}
-          </View>
-        </TabList>
-      </View>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: '#1483FD',
+        tabBarInactiveTintColor: 'gray',
+        tabBarLabelStyle: {
+          fontFamily: 'Inter',
+          fontSize: 10,
+          fontWeight: 'bold',
+          lineHeight: 10,
+        },
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 1,
+          borderTopColor: '#e0e0e0',
+          paddingBottom: insets.bottom,
+          height: 60,
+          display: 'flex',
+        },
+        lazy: true, // 启用懒加载
+      }}>
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            headerShown: false,
+            tabBarStyle: {
+              backgroundColor: '#ffffff',
+            },
+            tabBarIcon: ({ focused }) => (
+              <View className="flex items-center justify-center gap-1">
+                <Image
+                  source={focused ? tab.activeIcon : tab.icon}
+                  className={`h-6 w-6 ${focused ? '' : 'opacity-50'}`}
+                  contentFit="cover"
+                />
+              </View>
+            ),
+            tabBarLabel: ({ focused }) => (
+              <Text
+                className={`text-[10px] font-bold ${focused ? 'text-[#1483FD]' : 'text-gray-400'}`}
+                style={{
+                  fontFamily: 'Inter',
+                  lineHeight: 10,
+                }}>
+                {tab.title}
+              </Text>
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

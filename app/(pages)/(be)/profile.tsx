@@ -110,7 +110,7 @@ export default function Profile() {
         Alert.alert('保存失败', response.data.message || '请稍后重试');
       }
     } catch (error) {
-      console.error('保存个人资料时出错:', error);
+      console.log('保存个人资料时出错:', error);
       Alert.alert('保存失败', '请检查网络连接后重试');
     }
   };

@@ -72,7 +72,7 @@ export default function WhoIndex() {
         console.log('更新成功:', res.data);
       }
     } catch (error) {
-      console.error('更新失败:', error);
+      console.log('更新失败:', error);
     }
   };
 
@@ -142,14 +142,14 @@ export default function WhoIndex() {
             }
           }
         } catch (error) {
-          console.error('上传失败:', error);
+          console.log('上传失败:', error);
           alert('上传失败，请重试');
         } finally {
           setUploading(false);
         }
       }
     } catch (error) {
-      console.error('选择图片失败:', error);
+      console.log('选择图片失败:', error);
       alert('选择图片失败，请重试');
     }
   };
@@ -164,7 +164,7 @@ export default function WhoIndex() {
       // 跳转到登录页
       router.replace('(auth)/login');
     } catch (error) {
-      console.error('退出登录失败:', error);
+      console.log('退出登录失败:', error);
       alert('退出登录失败，请重试');
     }
   };

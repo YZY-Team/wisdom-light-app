@@ -54,7 +54,7 @@ export const useCopyToClipboard = () => {
         if (!success) throw new Error(t("common.copy.failed"));
         toast.success(t("common.copy.success"));
       } catch (fallbackErr) {
-        console.error(t("common.copy.failed"), fallbackErr);
+        console.log(t("common.copy.failed"), fallbackErr);
         toast.error(t("common.copy.failed"));
       }
     }

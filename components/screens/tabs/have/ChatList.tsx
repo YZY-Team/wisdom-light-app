@@ -138,7 +138,7 @@ export default function ChatList() {
       if (res.code === 200 && res.data) {
         finalDialogId = res.data;
       } else {
-        console.error('创建对话失败');
+        console.log('创建对话失败');
         return;
       }
 
@@ -155,7 +155,7 @@ export default function ChatList() {
       
       console.log('总耗时:', performance.now() - startTime, 'ms');
     } catch (error) {
-      console.error('处理对话出错:', error);
+      console.log('处理对话出错:', error);
     }
   };
   

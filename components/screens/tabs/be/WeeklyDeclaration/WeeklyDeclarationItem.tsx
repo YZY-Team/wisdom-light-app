@@ -56,7 +56,7 @@ export default function WeeklyDeclarationItem({
         declaration: localDeclaration,
       });
     } catch (error) {
-      console.error('保存周宣告失败:', error);
+      console.log('保存周宣告失败:', error);
     }
   };
 
@@ -109,7 +109,7 @@ export default function WeeklyDeclarationItem({
         declaration: localDeclaration,
       });
     } catch (error) {
-      console.error('保存周宣告失败:', error);
+      console.log('保存周宣告失败:', error);
     }
   };
 

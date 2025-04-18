@@ -87,7 +87,7 @@ export default function ChatSquare() {
         console.log('WebSocket 连接已关闭');
       },
       onError: (error) => {
-        console.error('WebSocket 错误:', error);
+        console.log('WebSocket 错误:', error);
       },
       onMessage: (event) => {
 
@@ -103,7 +103,7 @@ export default function ChatSquare() {
         //     isSelf: data.userId === '123'
         //   }]);
         // } catch (error) {
-        //   console.error('解析消息失败:', error);
+        //   console.log('解析消息失败:', error);
         // }
       },
     }

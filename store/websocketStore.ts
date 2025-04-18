@@ -29,7 +29,7 @@ const loadPersistedMessages = async (): Promise<Record<string, Message[]>> => {
     const savedMessages = await AsyncStorage.getItem(MESSAGES_STORAGE_KEY);
     return savedMessages ? JSON.parse(savedMessages) : {};
   } catch (error) {
-    console.error('加载消息失败:', error);
+    console.log('加载消息失败:', error);
     return {};
   }
 };
@@ -49,7 +49,7 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
           parsedMessage.senderId = String(parsedMessage.senderId);
           parsedMessage.status = parsedMessage.senderId === currentUserId ? 'READ' : 'CREATED';
         } catch (e) {
-          console.error('消息解析失败:', e);
+          console.log('消息解析失败:', e);
           return state;
         }
       } else {
@@ -70,7 +70,7 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
 
       // 持久化更新
       AsyncStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(newMessages)).catch((error) =>
-        console.error('保存消息失败:', error)
+        console.log('保存消息失败:', error)
       );
 
       return { messages: newMessages };
@@ -105,7 +105,7 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
 
       // 持久化更新
       AsyncStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(newMessages)).catch((error) =>
-        console.error('更新消息状态失败:', error)
+        console.log('更新消息状态失败:', error)
       );
 
       return { messages: newMessages };

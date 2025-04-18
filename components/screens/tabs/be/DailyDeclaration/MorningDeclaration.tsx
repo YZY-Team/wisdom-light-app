@@ -101,7 +101,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
       //   onUpdate();
       // }
     } catch (error) {
-      console.error('更新失败:', error);
+      console.log('更新失败:', error);
     } finally {
       setLoadingStates(prev => ({ ...prev, [key]: false }));
     }

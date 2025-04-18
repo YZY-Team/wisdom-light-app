@@ -29,7 +29,7 @@ export default function PromisePage() {
           }
         }
       } catch (error) {
-        console.error('获取承诺内容失败:', error);
+        console.log('获取承诺内容失败:', error);
       }
     };
 
@@ -60,7 +60,7 @@ export default function PromisePage() {
         Alert.alert('保存失败', '请稍后重试');
       }
     } catch (error) {
-      console.error('保存承诺内容失败:', error);
+      console.log('保存承诺内容失败:', error);
       Alert.alert('保存失败', '请检查网络连接后重试');
     } finally {
       setLoading(false);

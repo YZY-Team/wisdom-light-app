@@ -25,7 +25,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log('WebSocket 连接已关闭');
     },
     onError: (error) => {
-      console.error('WebSocket 错误:', error);
+      console.log('WebSocket 错误:', error);
     },
     onMessage: async (event) => {
       console.log('收到消息:', event.data);

@@ -28,7 +28,7 @@ export default function AddFriend() {
         console.log("response",response);
         setPendingRequests(response.data);
       } catch (error) {
-        console.error('获取待处理好友请求失败:', error);
+        console.log('获取待处理好友请求失败:', error);
       }
     };
     fetchPendingRequests();
@@ -44,7 +44,7 @@ export default function AddFriend() {
       });
       alert('好友请求已发送');
     } catch (error) {
-      console.error('发送好友请求失败:', error);
+      console.log('发送好友请求失败:', error);
       alert('发送好友请求失败');
     }
   };
@@ -57,7 +57,7 @@ export default function AddFriend() {
       setPendingRequests((prev) => prev.filter((req) => req.requestId !== requestId));
       alert('已同意好友请求');
     } catch (error) {
-      console.error('同意好友请求失败:', error);
+      console.log('同意好友请求失败:', error);
       alert('同意好友请求失败');
     }
   };
@@ -80,7 +80,7 @@ export default function AddFriend() {
         setSearchResults(results.filter(Boolean) || []);
       }
     } catch (error) {
-      console.error('搜索好友失败:', error);
+      console.log('搜索好友失败:', error);
     } finally {
       setIsLoading(false);
     }

@@ -57,7 +57,7 @@ export default function CourseCard({ title, teacher, description, rating, image 
           className="aspect-[100/136] w-[90%] rounded-[6px]"
           contentFit="cover"
           onLoad={() => console.log('Image loaded successfully')}
-          onError={(error) => console.error('Image loading error:', error)}
+          onError={(error) => console.log('Image loading error:', error)}
         />
       </View>
     </Pressable>

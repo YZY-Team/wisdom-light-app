@@ -235,7 +235,7 @@ export default function Achievement() {
           }
         }
       } catch (error) {
-        console.error('获取数据失败:', error);
+        console.log('获取数据失败:', error);
       }
     };
 
@@ -303,7 +303,7 @@ export default function Achievement() {
                   setAchievements(newAchievements);
                 }
               } catch (error) {
-                console.error('删除目标失败:', error);
+                console.log('删除目标失败:', error);
                 Alert.alert('提示', '删除失败，请稍后重试');
               }
             }
@@ -339,7 +339,7 @@ export default function Achievement() {
         });
         console.log('更新目标响应:', response);
       } catch (error) {
-        console.error('更新目标失败:', error);
+        console.log('更新目标失败:', error);
         Alert.alert('提示', '更新失败，请稍后重试');
       }
     }
@@ -382,7 +382,7 @@ export default function Achievement() {
             });
             console.log('更新目标响应:', response);
           } catch (error) {
-            console.error('更新目标失败:', error);
+            console.log('更新目标失败:', error);
             Alert.alert('提示', '更新失败，请稍后重试');
             setLoading(false);
             return;
@@ -393,7 +393,7 @@ export default function Achievement() {
             const goalResponse = await achievementBookApi.createGoal(achievement);
             console.log('创建目标响应:', goalResponse);
           } catch (error) {
-            console.error('创建目标失败:', error);
+            console.log('创建目标失败:', error);
             Alert.alert('提示', '创建失败，请稍后重试');
             setLoading(false);
             return;
@@ -404,7 +404,7 @@ export default function Achievement() {
       Alert.alert('成功', '成就内容已保存');
       router.back();
     } catch (error) {
-      console.error('保存成就内容失败:', error);
+      console.log('保存成就内容失败:', error);
       Alert.alert('保存失败', '请检查网络连接后重试');
     } finally {
       setLoading(false);

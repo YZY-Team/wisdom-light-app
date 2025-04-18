@@ -271,7 +271,7 @@ export default function DailyDeclaration() {
     try {
       await createDeclaration.mutateAsync(newDeclaration);
     } catch (error) {
-      console.error('创建今日宣告失败:', error);
+      console.log('创建今日宣告失败:', error);
     }
   };
 
@@ -322,7 +322,7 @@ export default function DailyDeclaration() {
 
           await handleCreateTodayDeclaration(weeklyDeclarationId);
         } catch (error) {
-          console.error('创建周宣告失败:', error);
+          console.log('创建周宣告失败:', error);
         }
       };
 

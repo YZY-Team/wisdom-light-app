@@ -43,7 +43,7 @@ export default function Achievements() {
         }
 
       } catch (error) {
-        console.error('获取成就书失败:', error);
+        console.log('获取成就书失败:', error);
       } finally {
         setLoading(false);
       }
@@ -201,7 +201,7 @@ export default function Achievements() {
           return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
         }
       } catch (e) {
-        console.error('日期解析错误:', e);
+        console.log('日期解析错误:', e);
       }
     }
     return '2023/04/15'; // 默认日期
@@ -336,7 +336,7 @@ export default function Achievements() {
           ].map((item) => (
             <Link
               key={item.title}
-              href={`/be/${item.href}`}
+              href={`${item.href}`}
               asChild
               className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
               <Pressable className="flex-row items-center gap-4">

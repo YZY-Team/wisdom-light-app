@@ -1,7 +1,7 @@
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import { Stack } from 'expo-router';
 
-export default function BeLayout() {
+export default function AILayout() {
   const commonOptions: NativeStackNavigationOptions = {
     headerShown: false,
     headerShadowVisible: false,
@@ -11,9 +11,6 @@ export default function BeLayout() {
     <Stack screenOptions={commonOptions}>
       <Stack.Screen
         name="index"
-        options={{
-          headerShown: false,
-        }}
       />
     </Stack>
   );

@@ -76,7 +76,7 @@ export default function DailyResult({
       //   onUpdate();
       // }
     } catch (error) {
-      console.error('更新失败:', error);
+      console.log('更新失败:', error);
     } finally {
       setLoadingStates(prev => ({ ...prev, [index]: false }));
     }

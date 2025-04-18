@@ -1,7 +1,7 @@
 import { View, TextInput, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ChatList from './_components/ChatList';
-import TabBar from './_components/TabBar';
+import ChatList from '../../../components/screens/tabs/have/ChatList';
+import TabBar from '../../../components/screens/tabs/have/TabBar';
 import { useRouter } from 'expo-router';
 import { useWebSocketStore } from '~/store/websocketStore';
 

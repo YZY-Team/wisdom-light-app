@@ -137,7 +137,7 @@ console.log("应用更新");
         minute: '2-digit',
       });
     } catch (error) {
-      console.error('时间格式化错误:', error);
+      console.log('时间格式化错误:', error);
       return '';
     }
   }, []);
