@@ -51,7 +51,7 @@ export const weeklyDeclarationApi = {
    * @returns 返回更新是否成功
    */
   updateWeeklyDeclaration: (id: string, data: WeeklyDeclarationDTO) => {
-    return request.put<WeeklyDeclarationDTO>(`/wl/weekly-declaration/${id}`, data);
+    return request.patch<WeeklyDeclarationDTO>(`/wl/weekly-declaration/${id}`, data);
   },
 
   /**

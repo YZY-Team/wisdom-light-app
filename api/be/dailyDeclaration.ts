@@ -74,7 +74,7 @@ export const dailyDeclarationApi = {
    * @returns 返回更新是否成功
    */
   updateNewDailyDeclaration: (id: string, data: NewDailyDeclarationDTO) => {
-    return request.put<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
+    return request.patch<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
   },
 
   /**

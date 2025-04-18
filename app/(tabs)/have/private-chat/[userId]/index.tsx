@@ -19,6 +19,7 @@ import { useUserStore } from '~/store/userStore';
 import { usePathname } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { FlashList } from '@shopify/flash-list';
 type MessageProps = {
   content: string;
   time: string;
@@ -44,6 +45,7 @@ const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
 
 export default function PrivateChat() {
   const renderTimeRef = useRef(performance.now());
+console.log("应用更新");
 
   // 只保留一个性能统计
   useFocusEffect(
@@ -263,17 +265,15 @@ export default function PrivateChat() {
     
         {/* 消息区域 */}
         <View className="flex-1">
-          <FlatList
+          <FlashList
             data={[...formattedMessages].reverse()}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
+            estimatedItemSize={100}
             contentContainerStyle={{ padding: 16 }}
             inverted
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={5}
           />
         </View>
     

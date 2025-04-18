@@ -1,13 +1,24 @@
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import WeeklyDeclarationList from './WeeklyDeclarationList';
-import { useCurrentWeeklyDeclaration, useCreateWeeklyDeclaration } from '~/queries/weeklyDeclaration';
-
+import {
+  useCurrentWeeklyDeclaration,
+  useCreateWeeklyDeclaration,
+} from '~/queries/weeklyDeclaration';
+import { Image } from 'react-native';
+import saveIcon from '~/assets/saveIcon.png';
+import { cssInterop } from 'nativewind';
+import { BlurView } from 'expo-blur';
+cssInterop(Image, { className: 'style' });
+cssInterop(BlurView, { className: 'style' });
 const BOOK_ID = '1911671090439000066'; // TODO: 从路由或者props中获取
 
 export default function WeeklyDeclaration() {
   const { data: currentDeclaration, isLoading, error } = useCurrentWeeklyDeclaration(BOOK_ID);
   const createMutation = useCreateWeeklyDeclaration();
+  // 添加保存处理函数
+  const handleSave = () => {
+  };
 
   // 如果没有当前周宣告，创建一个新的
   if (!isLoading && !currentDeclaration && !createMutation.isPending) {
@@ -32,7 +43,7 @@ export default function WeeklyDeclaration() {
       weeklyGoals: [],
       averageCompletionRate: 0,
       createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString()
+      updateTime: new Date().toISOString(),
     };
 
     createMutation.mutate(newDeclaration as WeeklyDeclarationDTO);
@@ -57,8 +68,17 @@ export default function WeeklyDeclaration() {
   }
 
   return (
-    <View
-      className="flex-1 pt-4">
+    <View className="flex-1 pt-4">
+      <View className="absolute right-4 top-10 z-[1000]">
+        <BlurView intensity={10}>
+          <Pressable onPress={handleSave}>
+            <View className="h-12 w-12 flex-col items-center justify-center rounded-full bg-[#1483FD0D]">
+              <Image source={saveIcon} className="h-5 w-5" />
+              <Text className="text-sm text-[#1483FD]">保存</Text>
+            </View>
+          </Pressable>
+        </BlurView>
+      </View>
       <WeeklyDeclarationList bookId={BOOK_ID} />
     </View>
   );

@@ -19,6 +19,7 @@ export default function HaveLayout() {
   return (
     <Stack screenOptions={{
       headerShown: false,// 动画时长设为 0
+      // animation: 'none',
     }}>
       <Stack.Screen
         name="index"

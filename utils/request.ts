@@ -159,6 +159,15 @@ export const request = {
   ): Promise<ApiResponse<T>> {
     return instance.delete(url, config);
   },
+
+  // PATCH请求
+  patch<T = unknown, D = unknown>(
+    url: string,
+    data?: D,
+    config?: AxiosRequestConfig
+  ): Promise<ApiResponse<T>> {
+    return instance.patch(url, data, config);
+  },
 };
 
 // 修改请求拦截器

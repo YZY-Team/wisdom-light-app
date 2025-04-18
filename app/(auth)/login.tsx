@@ -23,7 +23,7 @@ export default function Login() {
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
   const [showError, setShowError] = useState(false); // 添加错误状态
-  const wsContext = useWebSocketContext();
+  // const wsContext = useWebSocketContext();
   const setUserInfo = useUserStore((state) => state.setUserInfo);
 
   const handleRegister = async () => {
@@ -49,12 +49,13 @@ export default function Login() {
           await AsyncStorage.setItem('globalUserId', userRes.data.globalUserId);
           // 建立WebSocket连接
           setUserInfo(userRes.data);
-          wsContext.connect(userRes.data.globalUserId);
+          // wsContext.connect(userRes.data.globalUserId);
         }
         console.log('用户信息：', userRes);
         router.replace('/do');
       }
     } catch (error) {
+      router.replace('/do');
       console.error('登录失败：', error);
     }
   };

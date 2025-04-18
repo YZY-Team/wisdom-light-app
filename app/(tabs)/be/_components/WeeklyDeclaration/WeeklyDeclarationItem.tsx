@@ -1,30 +1,37 @@
-import { View, Text, Pressable, TextInput } from 'react-native';
+import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useRef } from 'react';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import { useUpdateWeeklyDeclaration } from '~/queries/weeklyDeclaration';
-
+import { Image } from 'react-native';
+import saveIcon from '~/assets/saveIcon.png';
 cssInterop(LinearGradient, { className: 'style' });
-
+cssInterop(Image, { className: 'style' });
 interface WeeklyDeclarationItemProps {
   declaration: WeeklyDeclarationDTO;
   onUpdateDeclaration: (updatedDeclaration: WeeklyDeclarationDTO) => void;
   readOnly?: boolean;
 }
 
-export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration, readOnly = false }: WeeklyDeclarationItemProps) {
+export default function WeeklyDeclarationItem({
+  declaration,
+  onUpdateDeclaration,
+  readOnly = false,
+}: WeeklyDeclarationItemProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedDay, setSelectedDay] = useState(0);
   const [localDeclaration, setLocalDeclaration] = useState(declaration);
   const updateMutation = useUpdateWeeklyDeclaration();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const [dailyPlans, setDailyPlans] = useState<Array<{
-    achievementPlan: string;
-    completion: string;
-  }>>([
+
+  const [dailyPlans, setDailyPlans] = useState<
+    Array<{
+      achievementPlan: string;
+      completion: string;
+    }>
+  >([
     { achievementPlan: '', completion: '' },
     { achievementPlan: '', completion: '' },
     { achievementPlan: '', completion: '' },
@@ -42,11 +49,11 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
   // 自动保存函数
   const autoSave = async () => {
     if (readOnly || !localDeclaration.id) return;
-    
+
     try {
       await updateMutation.mutateAsync({
         id: localDeclaration.id.toString(),
-        declaration: localDeclaration
+        declaration: localDeclaration,
       });
     } catch (error) {
       console.error('保存周宣告失败:', error);
@@ -59,7 +66,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     // 设置新的定时器，3秒后保存
     saveTimeoutRef.current = setTimeout(() => {
       autoSave();
@@ -81,75 +88,64 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
 
   const updateDailyPlan = (type: 'achievementPlan' | 'completion', text: string) => {
     if (readOnly) return;
-    
-    setDailyPlans(prev => {
+
+    setDailyPlans((prev) => {
       const newPlans = [...prev];
       newPlans[selectedDay] = {
         ...newPlans[selectedDay],
-        [type]: text
+        [type]: text,
       };
       return newPlans;
     });
   };
 
-  const handleTextChange = (field: keyof WeeklyDeclarationDTO, value: string, maxLength?: number) => {
+  // 修改自动保存逻辑，改为手动保存
+  const handleSave = async () => {
+    if (readOnly || !localDeclaration.id) return;
+
+    try {
+      await updateMutation.mutateAsync({
+        id: localDeclaration.id.toString(),
+        declaration: localDeclaration,
+      });
+    } catch (error) {
+      console.error('保存周宣告失败:', error);
+    }
+  };
+
+  // 修改 handleTextChange，移除自动保存
+  const handleTextChange = (
+    field: keyof WeeklyDeclarationDTO,
+    value: string,
+    maxLength?: number
+  ) => {
     if (readOnly) return;
     if (maxLength && value.length > maxLength) return;
 
     // 更新本地状态
-    setLocalDeclaration(prev => ({
+    setLocalDeclaration((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // 通知父组件
     onUpdateDeclaration({
       ...localDeclaration,
-      [field]: value
+      [field]: value,
     });
-    
-    // 触发防抖保存
-    debouncedSave();
-  };
-
-  const updateWeeklyGoal = (index: number, value: string) => {
-    if (readOnly) return;
-    
-    const numericValue = value.replace(/[^0-9]/g, '');
-    const updatedGoals = [...localDeclaration.weeklyGoals];
-    updatedGoals[index] = {
-      ...updatedGoals[index],
-      completedQuantity: parseInt(numericValue) || 0
-    };
-
-    // 更新本地状态
-    const updatedDeclaration = {
-      ...localDeclaration,
-      weeklyGoals: updatedGoals
-    };
-    
-    setLocalDeclaration(updatedDeclaration);
-    
-    // 通知父组件
-    onUpdateDeclaration(updatedDeclaration);
-    
-    // 触发防抖保存
-    debouncedSave();
   };
 
   return (
-    <View className="flex-col">
+    <View className="relative flex-col">
+      {/* 添加悬浮保存按钮 */}
+
       <View className="mb-4 flex-row items-center justify-center">
         <View className="flex-row items-center">
-          <Text className="text-[16px] font-bold text-black">
-            第
-          </Text>
+          <Text className="text-[16px] font-bold text-black">第</Text>
           <Text className="text-[20px] font-bold text-[#F18318]">
             {localDeclaration.weekNumber}
           </Text>
-          <Text className="text-[16px] mr-4 font-bold text-black">
-            周宣告
-          </Text>
+          <Text className="mr-4 text-[16px] font-bold text-black">周宣告</Text>
           <Text className="text-[16px] font-bold text-[#1483FD]">
             {localDeclaration.title || '未设置标题'}
           </Text>
@@ -157,7 +153,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
         {!readOnly && (
           <View className="flex-row items-center">
             {updateMutation.isPending && (
-              <Text className="text-xs text-gray-500 mr-2">保存中...</Text>
+              <Text className="mr-2 text-xs text-gray-500">保存中...</Text>
             )}
             <Pressable className="ml-2 flex-row items-center justify-center">
               <Ionicons name="create-outline" size={16} color="#1483fd" />
@@ -166,15 +162,13 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
         )}
       </View>
 
-      <View className={`flex-col ${isExpanded ? '' : ' bg-white rounded-b-[12px]'}`}>
+      <View className={`flex-col ${isExpanded ? '' : ' rounded-b-[12px] bg-white'}`}>
         {/* 成果宣告 */}
         <View style={{ overflow: 'visible' }} className="mb-4 rounded-b-[12px] bg-white">
           <Pressable
             onPress={toggleExpand}
             android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
-            style={({ pressed }) => [
-              { opacity: pressed ? 0.9 : 1 }
-            ]}>
+            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
             <LinearGradient
               colors={['#20B4F3', '#5762FF']}
               start={{ x: 0, y: 0 }}
@@ -184,26 +178,26 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
               }}
               className={`flex ${isExpanded ? 'rounded-t-[12px]' : 'rounded-[12px]'} h-[38px] flex-row items-center justify-between px-4`}>
               <View className="flex-row items-center">
-                <Text className="font-bold text-[16px] text-white">成果宣告</Text>
+                <Text className="text-[16px] font-bold text-white">成果宣告</Text>
               </View>
               <View className="flex-row items-center gap-4">
-                <Text className="text-[16px] text-white mr-2">
+                <Text className="mr-2 text-[16px] text-white">
                   {new Date(localDeclaration.weekStartDate).getFullYear()}年
                   {new Date(localDeclaration.weekStartDate).getMonth() + 1}月
                   {new Date(localDeclaration.weekStartDate).getDate()}日
                 </Text>
                 <Ionicons
-                  name={isExpanded ? "chevron-up" : "chevron-down"}
+                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
                   size={20}
                   color="#fff"
                 />
               </View>
             </LinearGradient>
           </Pressable>
-          <View className={`px-4 mt-8 ${isExpanded ? 'block' : 'hidden'}`}>
+          <View className={`mt-8 px-4 ${isExpanded ? 'block' : 'hidden'}`}>
             {/* 本周宣告标题 */}
             <View className="mb-4 flex-row items-center">
-              <View className="mr-2 w-1 h-7 bg-[#1483FD]" />
+              <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
               <Text className="text-[16px] font-bold">本周宣告</Text>
             </View>
 
@@ -220,31 +214,29 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
 
             {/* 本周目标标题 */}
             <View className="mb-4 flex-row items-center">
-              <View className="mr-2 w-1 h-7 bg-[#1483FD]" />
+              <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
               <Text className="text-[16px] font-bold">本周目标</Text>
             </View>
 
             {/* 目标列表 */}
             {localDeclaration.weeklyGoals.map((goal, index) => (
-              <View key={goal.goalId || index} className="mb-4 gap-2 flex-row items-center justify-between">
-                <Text className="text-[14px] font-[600]" >
-                  目标{index + 1}{" "}:
-                </Text>
-                <View className="flex-row items-center flex-1 ml-2">
+              <View
+                key={goal.goalId || index}
+                className="mb-4 flex-row items-center justify-between gap-2">
+                <Text className="text-[14px] font-[600]">目标{index + 1} :</Text>
+                <View className="ml-2 flex-1 flex-row items-center">
                   <View className="w-[70%]">
                     <TextInput
                       className="h-[36px] rounded-lg bg-[#1483FD0D] px-3"
                       placeholder="请输入数量"
                       keyboardType="numeric"
                       maxLength={10}
-                      value={goal.completedQuantity.toString()}
+                      value={goal.targetQuantity.toString()}
                       onChangeText={(text) => updateWeeklyGoal(index, text)}
                       editable={!readOnly}
                     />
                   </View>
-                  <Text className="pl-7 flex-1 text-[14px] text-[#00000080]">
-                    {goal.unit}
-                  </Text>
+                  <Text className="flex-1 pl-7 text-[14px] text-[#00000080]">{goal.unit}</Text>
                 </View>
               </View>
             ))}
@@ -252,7 +244,8 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
         </View>
 
         {/* 行动计划 */}
-        <View className={`mb-4 overflow-hidden rounded-[12px] bg-white ${isExpanded ? 'block' : 'hidden'}`}>
+        <View
+          className={`mb-4 overflow-hidden rounded-[12px] bg-white ${isExpanded ? 'block' : 'hidden'}`}>
           <LinearGradient
             colors={['#20B4F3', '#5762FF']}
             start={{ x: 0, y: 0 }}
@@ -261,18 +254,19 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
               boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
             }}
             className="flex h-[38px] justify-center px-4">
-            <Text className="font-bold text-[16px] text-white">行动计划</Text>
+            <Text className="text-[16px] font-bold text-white">行动计划</Text>
           </LinearGradient>
           <View className="p-4">
             {/* 星期选择器 */}
-            <View className="mb-4 flex-row px-4 items-center justify-between">
+            <View className="mb-4 flex-row items-center justify-between px-4">
               {['周一', '周二', '周三', '周四', '周五', '周六', '周日'].map((day, index) => (
                 <Pressable
                   key={day}
                   onPress={() => setSelectedDay(index)}
                   disabled={readOnly}
                   className={`mr-4 ${index === selectedDay ? 'border-b-2 border-[#1483FD]' : ''}`}>
-                  <Text className={`text-base ${index === selectedDay ? 'text-[#1483FD]' : 'text-gray-400'}`}>
+                  <Text
+                    className={`text-base ${index === selectedDay ? 'text-[#1483FD]' : 'text-gray-400'}`}>
                     {day}
                   </Text>
                 </Pressable>
@@ -281,8 +275,8 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
 
             <View className="flex-col">
               {/* 左侧标签 */}
-              <View className="mr-4 border-b border-[#0000000D] items-center">
-                <View className="flex flex-row justify-between gap-2 pt-2 pb-4">
+              <View className="mr-4 items-center border-b border-[#0000000D]">
+                <View className="flex flex-row justify-between gap-2 pb-4 pt-2">
                   <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
                     {[...'个人成就计划'].map((char, index) => (
                       <Text key={index} className="text-[16px] font-bold">
@@ -293,7 +287,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                   <View className="flex flex-1 flex-col gap-2">
                     <View className="relative min-h-[200px] rounded-lg bg-[#F5F8FF]">
                       <TextInput
-                        className="p-3 flex-1 text-[14px]"
+                        className="flex-1 p-3 text-[14px]"
                         placeholderTextColor="#9CA3AF"
                         placeholder="请输入今天的个人成就计划..."
                         multiline
@@ -309,7 +303,9 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                       />
                       <View className="absolute bottom-2 right-3">
                         <Text>
-                          <Text className="text-[14px] text-black">{dailyPlans[selectedDay].achievementPlan.length}</Text>
+                          <Text className="text-[14px] text-black">
+                            {dailyPlans[selectedDay].achievementPlan.length}
+                          </Text>
                           <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
                         </Text>
                       </View>
@@ -346,7 +342,9 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                       />
                       <View className="absolute bottom-2 right-3">
                         <Text>
-                          <Text className="text-[14px] text-black">{dailyPlans[selectedDay].completion.length}</Text>
+                          <Text className="text-[14px] text-black">
+                            {dailyPlans[selectedDay].completion.length}
+                          </Text>
                           <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
                         </Text>
                       </View>
@@ -368,26 +366,28 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
               boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
             }}
             className={`flex h-[38px] justify-center px-4 ${isExpanded ? '' : 'hidden'}`}>
-            <Text className="font-bold text-[16px] text-white">第{localDeclaration.weekNumber}周总结</Text>
+            <Text className="text-[16px] font-bold text-white">
+              第{localDeclaration.weekNumber}周总结
+            </Text>
           </LinearGradient>
           <View className="p-4">
             {/* 进度条 */}
             <View className={`${isExpanded ? 'mb-4' : ''} flex-col`}>
               <Text className="text-[16px] font-[600]">本周达成:</Text>
-              <View className='flex-row items-center justify-between'>
-                <View className="mr-4 h-[6px] w-[82%] rounded-[9.5px] bg-[#D9D9D9] overflow-hidden">
+              <View className="flex-row items-center justify-between">
+                <View className="mr-4 h-[6px] w-[82%] overflow-hidden rounded-[9.5px] bg-[#D9D9D9]">
                   <LinearGradient
                     colors={['#FF9F21', '#15FF00']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className='h-full'
+                    className="h-full"
                     style={{
                       width: `${localDeclaration.averageCompletionRate}%`,
                       borderRadius: 2.5,
                     }}
                   />
                 </View>
-                <Text className="text-[20px] text-center w-[16%] font-bold text-[#FF9F21]">
+                <Text className="w-[16%] text-center text-[20px] font-bold text-[#FF9F21]">
                   {localDeclaration.averageCompletionRate}%
                 </Text>
               </View>
@@ -431,7 +431,9 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
               </View>
 
               <View className="mb-4 gap-2">
-                <Text className="text-[14px]">123、4+5+6本周我运用了哪些？特别有体验的是哪条，为什么？</Text>
+                <Text className="text-[14px]">
+                  123、4+5+6本周我运用了哪些？特别有体验的是哪条，为什么？
+                </Text>
                 <View className="relative">
                   <TextInput
                     className="min-h-[200px] rounded-[6px] bg-[#1483FD1A] p-3 text-[14px]"
@@ -444,7 +446,9 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
-                    <Text className="text-black">{localDeclaration.summary123456?.length || 0}</Text>
+                    <Text className="text-black">
+                      {localDeclaration.summary123456?.length || 0}
+                    </Text>
                     <Text className="text-[rgba(0,0,0,0.5)]">/300</Text>
                   </Text>
                 </View>
@@ -474,7 +478,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                 <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">本周打分:</Text>
                   <TextInput
-                    className="flex-1 h-[36px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                    className="h-[36px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     value={localDeclaration.weekScore}
@@ -486,7 +490,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                 <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">本周体验:</Text>
                   <TextInput
-                    className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                    className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
@@ -499,7 +503,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                 <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">行 得 通:</Text>
                   <TextInput
-                    className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                    className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
@@ -512,7 +516,7 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                 <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">学 习 到:</Text>
                   <TextInput
-                    className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                    className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
@@ -521,11 +525,11 @@ export default function WeeklyDeclarationItem({ declaration, onUpdateDeclaration
                     editable={!readOnly}
                   />
                 </View>
-                
+
                 <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">下 一 步:</Text>
                   <TextInput
-                    className="flex-1 h-[100px] rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
+                    className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
                     placeholder="请输入..."
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     multiline
