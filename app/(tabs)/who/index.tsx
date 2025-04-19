@@ -177,13 +177,13 @@ export default function WhoIndex() {
         colors={['#E7F2FF', '#FFF']}
         className="absolute w-full"
         style={{
-          top: '22%',
-          height: '78%',
+          top: '15%',
+          height: '85%',
         }}
       />
       <Image
         source={require('~/assets/images/who/bg.png')}
-        className="absolute h-[22%] w-full"
+        className="absolute aspect-[395/186] w-full"
         contentFit="cover"
       />
       <ScrollView className="flex-1">

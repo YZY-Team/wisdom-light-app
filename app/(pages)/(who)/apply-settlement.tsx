@@ -12,7 +12,7 @@ cssInterop(LinearGradient, { className: 'style' });
 export default function ApplySettlementScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
+  
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -97,7 +97,7 @@ export default function ApplySettlementScreen() {
   return (
     <View className="flex-1 bg-white">
       {/* 顶部导航栏 */}
-      <View className="px-4 py-4">
+      <View className="px-4 py-4" style={{ paddingTop: insets.top }}>
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>
             <AntDesign name="left" size={24} color="#00000080" />
@@ -117,14 +117,14 @@ export default function ApplySettlementScreen() {
       </View>
 
       {/* 表单内容 */}
-      <ScrollView
-        className="flex-1 px-4 py-4"
+      <ScrollView 
+        className="flex-1 px-4 py-4" 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <View className="rounded-lg bg-white ">
+        <View className="rounded-lg bg-white space-y-4">
           {/* 基本信息字段 */}
-          <View className='gap-1 '>{formFields.map((field) => (
+          {formFields.map((field) => (
             <View key={field.key} className="flex-row items-center h-[40px]">
               {renderLabel(field.label)}
               <TextInput
@@ -142,7 +142,7 @@ export default function ApplySettlementScreen() {
                 }}
               />
             </View>
-          ))}</View>
+          ))}
 
           {/* 团队和个人数据字段 */}
           <Text className="text-[14px] text-[#040404] mt-4">三大支柱数据：（百分比，不保留小数）</Text>
@@ -192,7 +192,7 @@ export default function ApplySettlementScreen() {
       </ScrollView>
 
       {/* 提交按钮 */}
-      <View
+      <View 
         className="absolute bottom-0 left-0 right-0 p-4 bg-white"
         style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
