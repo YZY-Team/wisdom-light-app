@@ -12,7 +12,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { fileApi } from '~/api/who/file';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { cssInterop } from 'nativewind';
 
+cssInterop(Image, { className: 'style' });
 type MenuItemProps = {
   icon: string;
   title: string;
@@ -37,6 +39,7 @@ export default function WhoIndex() {
   const [editType, setEditType] = useState<'nickname' | 'username' | null>(null);
   const [editValue, setEditValue] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     userApi.me().then((res) => {
@@ -157,7 +160,6 @@ export default function WhoIndex() {
   // 添加退出登录处理函数
   const handleLogout = async () => {
     try {
-      
       await AsyncStorage.removeItem('token');
       // 清除用户信息
       setUserInfo(null);
@@ -232,32 +234,40 @@ export default function WhoIndex() {
           <MenuItem
             icon={require('~/assets/images/who/settings.png')}
             title="通用设置"
-            href="/who/general"
-          />
-          <MenuItem
-            icon={require('~/assets/images/who/customer-service.png')}
-            title="人工客服"
-            href="/who/support"
+            href="/general"
           />
           <MenuItem
             icon={require('~/assets/images/who/vip.png')}
             title="会员充值"
-            href="/who/membership"
+            href="/membership"
           />
           <MenuItem
             icon={require('~/assets/images/who/join.png')}
             title="申请入驻"
-            href="/who/become-mentor"
+            href="/become-mentor"
           />
+          <MenuItem
+            icon={require('~/assets/images/who/customer-service.png')}
+            title="人工客服"
+            href="/support"
+          />
+          <View className="h-[1px] bg-gray-100" />
+          <Pressable
+            onPress={() => setShowLogoutModal(true)}
+            className="flex-row items-center px-4 py-4">
+            <Image
+              source={require('~/assets/images/who/settings.png')}
+              className="h-5 w-5"
+              contentFit="contain"
+            />
+            <Text className="ml-4 flex-1">退出登录</Text>
+          </Pressable>
         </View>
 
         {/* 版本信息 */}
-        <Text className="mb-4 mt-[120px]  text-center text-xs text-[#999]">
+        <Text className="mb-4 mt-[120px] text-center text-xs text-[#999]">
           Wisdom Light v1.0.0
         </Text>
-        <Pressable onPress={handleLogout} className="bg justify-center flex-row items-center px-4 py-4">
-          <Text className="ml-4 flex-1 text-[#FF4D4F]">退出登录</Text>
-        </Pressable>
       </ScrollView>
 
       {/* 编辑弹窗 */}
@@ -295,6 +305,36 @@ export default function WhoIndex() {
             </View>
           </Pressable>
         </Pressable>
+      </Modal>
+
+      {/* 退出登录确认弹窗 */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}>
+        <View className="flex-1 items-center justify-center bg-black/50 px-10">
+          <View className="w-full h-[200px] rounded-lg bg-white py-6">
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-center text-[16px]">确认退出登录?</Text>
+            </View>
+            <View className="flex-row h-[50px] justify-between px-4 ">
+              <Pressable
+                onPress={() => setShowLogoutModal(false)}
+                className="h-full w-[45%] items-center justify-center rounded-lg border border-gray-200">
+                <Text>取消</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setShowLogoutModal(false);
+                  handleLogout();
+                }}
+                className="h-full w-[45%] items-center justify-center rounded-lg border border-gray-200">
+                <Text className="">确认</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </Modal>
       <View className="h-[1px] bg-gray-100" />
     </View>
