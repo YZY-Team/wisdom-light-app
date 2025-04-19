@@ -51,11 +51,11 @@ export default function Login() {
           setUserInfo(userRes.data);
           // wsContext.connect(userRes.data.globalUserId);
         }
-        console.error('用户信息：', userRes);
+        console.log('用户信息：', userRes);
         router.replace('/do');
       }
     } catch (error) {
-      router.replace('(tabs)/do');
+      // router.replace('(tabs)/do');
       console.error('登录失败：', error);
     }
   };
@@ -98,9 +98,9 @@ export default function Login() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         className="min-h-screen flex">
-        <View 
+        <View
           className="flex items-center   justify-center px-4"
-          style={{ 
+          style={{
             height: keyboardHeight > 0 ? '20%' : '50%'
           }}>
           <Text
@@ -113,9 +113,9 @@ export default function Login() {
           </Text>
         </View>
 
-        <View 
+        <View
           className="flex-1 rounded-t-[40px] bg-white px-4"
-          style={{ 
+          style={{
             minHeight: keyboardHeight > 0 ? '80%' : '50%'
           }}>
           <View className="flex-1 pt-14">
@@ -217,7 +217,7 @@ export default function Login() {
               请勾选隐私政策与服务协议
             </Text>
 
-            <View className="items-center">
+            <View className="items-center px-4">
               <LinearGradient
                 colors={
                   isChecked
@@ -226,7 +226,7 @@ export default function Login() {
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="w-[358px] rounded-[6px]"
+                className="w-full rounded-[6px]"
                 style={{
                   boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
                 }}>

@@ -1,5 +1,5 @@
 import '../global.css';
-import 'expo-dev-client';
+// import 'expo-dev-client';
 import { Slot, Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from '~/contexts/WebSocketContext';

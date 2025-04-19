@@ -1,23 +1,50 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { Image, ImageSource } from 'expo-image';
 import { router } from 'expo-router';
 import { useWebSocketStore } from '~/store/websocketStore';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import type { Friend } from '~/types/have/friendType';
 import { dialogApi } from '~/api/have/dialog';
 import { cssInterop } from 'nativewind';
 import defaultAvatar from '~/assets/default-avatar.png';
-cssInterop(Image, { className:'style' });
+cssInterop(Image, { className: 'style' });
 
 type ChatItemProps = {
   id: string;
-  avatar: string;
+  avatar: string | { uri: string } | ImageSource;
   name: string;
   lastMessage: string;
   time: string;
   unreadCount?: number;
   onPress: () => void;
+};
+
+// 检查URL是否有效
+const isValidUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// 获取头像源
+const getAvatarSource = (friend: Friend) => {
+  if (isValidUrl(friend.avatarUrl ?? '')) {
+    return { uri: friend.avatarUrl };
+  }
+
+  if (isValidUrl(friend.originalAvatarUrl ?? '')) {
+    return { uri: friend.originalAvatarUrl };
+  }
+
+  if (isValidUrl(friend.customAvatarUrl ?? '')) {
+    return { uri: friend.customAvatarUrl };
+  }
+
+  return defaultAvatar;
 };
 
 // ChatItem 组件保持不变
@@ -49,7 +76,7 @@ export default function ChatList() {
   const { messages, markMessagesAsRead } = useWebSocketStore();
   const [friends, setFriends] = useState<Friend[]>([]);
 
-  
+
   // 获取好友列表
   const getFriendsList = useCallback(async () => {
     const res = await friendApi.getFriends();
@@ -67,8 +94,8 @@ export default function ChatList() {
     // 找到所有与该好友相关的消息
     const dialogMessages = Object.entries(messages)
       .filter(([dialogId]) => dialogId !== 'undefined') // 过滤掉错误消息
-      .flatMap(([_, msgs]) => 
-        msgs.filter(msg => 
+      .flatMap(([_, msgs]) =>
+        msgs.filter(msg =>
           msg.senderId === friend.userId || msg.receiverId === friend.userId
         )
       )
@@ -78,62 +105,51 @@ export default function ChatList() {
         return timestampB > timestampA ? 1 : timestampB < timestampA ? -1 : 0;
       }); // 按时间排序
 
-      
+
     const lastMessage = dialogMessages.at(0); // 获取最新消息
 
-    const time = lastMessage?.timestamp 
+    const time = lastMessage?.timestamp
       ? (() => {
-          try {
-            // 确保时间戳是数字
-            const timestamp = Number(lastMessage.timestamp);
-            if (isNaN(timestamp)) {
-              console.warn('无效的时间戳:', lastMessage.timestamp);
-              return '';
-            }
-            return new Date(timestamp).toLocaleTimeString('zh-CN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
-          } catch (error) {
-            console.warn('时间格式化错误:', error);
+        try {
+          // 确保时间戳是数字
+          const timestamp = Number(lastMessage.timestamp);
+          if (isNaN(timestamp)) {
+            console.warn('无效的时间戳:', lastMessage.timestamp);
             return '';
           }
-        })()
+          return new Date(timestamp).toLocaleTimeString('zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        } catch (error) {
+          console.warn('时间格式化错误:', error);
+          return '';
+        }
+      })()
       : '';
 
-    const isValidUrl = (url: string) => {
-      try {
-        new URL(url);
-        return true;
-      } catch {
-        return false;
-      }
-    };
     return {
       id: friend.userId,
-      dialogId: lastMessage?.dialogId || '',
-      avatar: isValidUrl(friend.avatarUrl || '') ? { uri: friend.avatarUrl } :
-        isValidUrl(friend.originalAvatarUrl || '') ? { uri: friend.originalAvatarUrl } :
-        isValidUrl(friend.customAvatarUrl || '') ? { uri: friend.customAvatarUrl } :
-        defaultAvatar,
-      name: friend.remark || friend.nickname || friend.username,
-      lastMessage: lastMessage?.textContent || '暂无消息',
+      dialogId: lastMessage?.dialogId ?? '',
+      avatar: getAvatarSource(friend),
+      name: friend.remark ?? friend.nickname ?? friend.username,
+      lastMessage: lastMessage?.textContent ?? '暂无消息',
       time,
-      unreadCount: dialogMessages.filter(msg => 
+      unreadCount: dialogMessages.filter(msg =>
         msg.senderId === friend.userId && msg.status !== 'READ'
       ).length, // 只统计对方发来的未读消息
     };
   });
- 
-  
-  const handleChatPress = async ( userName: string, targetUserId: string) => {
+
+
+  const handleChatPress = async (userName: string, targetUserId: string) => {
     const startTime = performance.now();
     try {
       // 总是尝试创建对话
       const createStart = performance.now();
       const res = await dialogApi.createDialog(targetUserId);
       console.log('创建对话耗时:', performance.now() - createStart, 'ms');
-      
+
       let finalDialogId: string;
       if (res.code === 200 && res.data) {
         finalDialogId = res.data;
@@ -145,28 +161,27 @@ export default function ChatList() {
       // 标记该对话的消息为已读
       console.log('标记消息为已读开始', finalDialogId, targetUserId);
       markMessagesAsRead(finalDialogId, targetUserId);
-      
+
       const routeStart = performance.now();
-      await router.push({
-        pathname: `/have/private-chat/${finalDialogId}`,
+      router.push({
+        pathname: `/private-chat/${finalDialogId}`,
         params: { userName, dialogId: finalDialogId, targetUserId },
       });
       console.log('路由跳转耗时:', performance.now() - routeStart, 'ms');
-      
+
       console.log('总耗时:', performance.now() - startTime, 'ms');
     } catch (error) {
       console.log('处理对话出错:', error);
     }
   };
-  
+
   return (
     <ScrollView className="flex-1 py-4 mt-4" style={{ backgroundColor: 'rgba(20, 131, 253, 0.05)' }}>
       {chatList.map((chat) => (
-        // @ts-expect-error
         <ChatItem
           key={chat.id}
           {...chat}
-          onPress={() => handleChatPress( chat.name, chat.id)}
+          onPress={() => handleChatPress(chat.name, chat.id)}
         />
       ))}
     </ScrollView>

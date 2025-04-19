@@ -1,16 +1,14 @@
-import { ScrollView, View, Text, Pressable,FlatList } from 'react-native';
+import { ScrollView, View, Text, Pressable } from 'react-native';
 import SecondaryCategory from './SecondaryCategory';
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
 import vip from '~/assets/vip.png';
 import { BlurView } from 'expo-blur';
-import { memo, useState } from 'react';
-cssInterop(Image, { className: 'style' });
-import { useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 cssInterop(Image, { className: 'style' });
 
 const CourseItem = memo(
-  ({ title, description, episodeCount }) => {
+  ({ title, description, episodeCount }: { title: string; description: string; episodeCount: number }) => {
     const [expanded, setExpanded] = useState(false);
 
     // 预加载图片（可选，参考前文方案 3）
@@ -73,65 +71,58 @@ const CourseItem = memo(
 
         {/* 使用 CSS 显示/隐藏代替条件渲染 */}
         <View className={`${expanded ? 'block' : 'hidden'} p-2`}>
-          <FlatList
-            data={Array.from({ length: episodeCount })}
-            renderItem={({ index }) => (
-              <Pressable
-                key={index}
-                className="mb-2 flex-row items-center rounded-lg px-1"
-              >
-                <View className="flex-row items-center">
-                  <View>
-                    <Text className="text-[#00000066]">{index}</Text>
-                  </View>
-                  <View className="ml-2 relative w-[30%]">
-                    <Image
-                      source={{
-                        uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
-                      }}
-                      className="aspect-[110/60] w-full rounded-lg"
-                      contentFit="cover"
-                      transition={200}
-                      cachePolicy="memory-disk"
-                      priority="normal"
-                    />
-                    <View className="absolute left-0 top-0 h-full w-full flex items-center justify-center px-1">
-                      <View className="max-w-[80%]">
-                        <Text
-                          className="text-[1.6vw] font-[700] text-[#1483FD] bg-white p-1 truncate"
-                          numberOfLines={1}
-                        >
-                          {title}
-                        </Text>
-                      </View>
-                    </View>
-                    <View className="absolute bottom-1 right-1">
-                      <BlurView
-                        experimentalBlurMethod="dimezisBlurView"
-                        intensity={10}
-                        tint="dark"
-                        className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]"
+          {Array.from({ length: episodeCount }).map((_, index) => (
+            <Pressable
+              key={index}
+              className="mb-2 flex-row items-center rounded-lg px-1"
+            >
+              <View className="flex-row items-center">
+                <View>
+                  <Text className="text-[#00000066]">{index}</Text>
+                </View>
+                <View className="ml-2 relative w-[30%]">
+                  <Image
+                    source={{
+                      uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
+                    }}
+                    className="aspect-[110/60] w-full rounded-lg"
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
+                    priority="normal"
+                  />
+                  <View className="absolute left-0 top-0 h-full w-full flex items-center justify-center px-1">
+                    <View className="max-w-[80%]">
+                      <Text
+                        className="text-[1.6vw] font-[700] text-[#1483FD] bg-white p-1 truncate"
+                        numberOfLines={1}
                       >
-                        <Text className="px-2 py-1 text-[10px] text-white">10:30:23</Text>
-                      </BlurView>
+                        {title}
+                      </Text>
                     </View>
                   </View>
-                  <View className="ml-3 flex-1">
-                    <Text className="text-sm font-[600]" numberOfLines={1}>
-                      {index + 1}.{title}
-                    </Text>
-                    <Text className="mt-1 text-xs text-[#00000066]" numberOfLines={2}>
-                      {description}
-                    </Text>
+                  <View className="absolute bottom-1 right-1">
+                    <BlurView
+                      experimentalBlurMethod="dimezisBlurView"
+                      intensity={10}
+                      tint="dark"
+                      className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]"
+                    >
+                      <Text className="px-2 py-1 text-[10px] text-white">10:30:23</Text>
+                    </BlurView>
                   </View>
                 </View>
-              </Pressable>
-            )}
-            keyExtractor={(_, index) => index.toString()}
-            initialNumToRender={5}
-            maxToRenderPerBatch={5}
-            windowSize={10}
-          />
+                <View className="ml-3 flex-1">
+                  <Text className="text-sm font-[600]" numberOfLines={1}>
+                    {index + 1}.{title}
+                  </Text>
+                  <Text className="mt-1 text-xs text-[#00000066]" numberOfLines={2}>
+                    {description}
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+          ))}
         </View>
       </Pressable>
     );
