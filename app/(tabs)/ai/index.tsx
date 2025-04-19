@@ -103,7 +103,7 @@ export default function AiIndex() {
   return (
     <View className="flex-1 bg-white">
       <View className="p-4">
-        <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
+        <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 ">
           <TextInput
             className="ml-2 flex-1 text-black/40"
             placeholder="搜索ai"
@@ -174,7 +174,7 @@ export default function AiIndex() {
           <Link href="/tutor" asChild>
             <Pressable className="flex-row items-center rounded-xl p-4">
               <View className="h-12 w-12 rounded-full bg-blue-500 items-center justify-center">
-                <Ionicons name="person" size={24} color="white" />
+                <Image source={require('~/assets/images/ai/logo.png')} className="h-12 w-12" contentFit="contain" />
               </View>
               <Text className="ml-3 text-base font-medium">AI导师</Text>
               <Ionicons

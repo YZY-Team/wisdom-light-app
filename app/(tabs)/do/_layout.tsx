@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-export default function DoLayout() {
+export default function Layout() {
   return (
     <Stack
       screenOptions={{
@@ -13,16 +13,16 @@ export default function DoLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: '学习中心',
+          title: '智慧之光',
         }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="[id]"
         options={{
-            // headerShown: true,
-          title: '视频教程',
+          title: '详情',
         }}
-      />
+      /> */}
+
     </Stack>
   );
 }
