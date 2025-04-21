@@ -20,12 +20,17 @@ type MenuItemProps = {
   title: string;
   href: Href;
   color?: string;
+  width?: number;
 };
 
-const MenuItem = ({ icon, title, href }: MenuItemProps) => (
+const MenuItem = ({ icon, title, href,width }: MenuItemProps) => (
   <Link href={href} asChild>
     <Pressable className="flex-row items-center px-4 py-4">
-      <Image source={icon} className="h-5 w-5" contentFit="contain" />
+      <Image 
+        source={icon} 
+        className={width ? `w-${width} h-${width}` : 'h-5 w-5'} 
+        contentFit="contain" 
+      />
       <Text className="ml-4 flex-1 text-[#333]">{title}</Text>
       <Ionicons name="chevron-forward" size={20} color="rgba(0, 0, 0, 0.3)" />
     </Pressable>
@@ -231,11 +236,7 @@ export default function WhoIndex() {
             boxShadow: '0px 4px 30px 0px rgba(20, 131, 253, 0.25)',
           }}
           className="mx-4 mt-8 overflow-hidden rounded-xl bg-white">
-          <MenuItem
-            icon={require('~/assets/images/who/settings.png')}
-            title="通用设置"
-            href="/general"
-          />
+
           <MenuItem
             icon={require('~/assets/images/who/vip.png')}
             title="会员充值"
@@ -247,11 +248,31 @@ export default function WhoIndex() {
             href="/become-mentor"
           />
           <MenuItem
+            icon={require('~/assets/images/who/join.png')}
+            title="导师入口"
+            href="/tutor-entrance"
+          />
+          <MenuItem
             icon={require('~/assets/images/who/customer-service.png')}
             title="人工客服"
             href="/support"
           />
-          <View className="h-[1px] bg-gray-100" />
+          <MenuItem
+            icon={require('~/assets/images/who/platform-message.png')}
+            title="平台消息"
+            href="/platform-message"
+          />
+          <Pressable
+            onPress={() => setShowLogoutModal(true)}
+            disabled={true}
+            className="flex-row items-center px-4 py-4">
+            <Image
+              source={require('~/assets/images/who/update.png')}
+              className="h-5 w-5"
+              contentFit="contain"
+            />
+            <Text className="ml-4 flex-1">检测更新</Text>
+          </Pressable>
           <Pressable
             onPress={() => setShowLogoutModal(true)}
             className="flex-row items-center px-4 py-4">

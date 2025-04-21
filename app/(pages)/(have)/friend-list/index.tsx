@@ -1,4 +1,4 @@
-import { View, Text, Pressable, InteractionManager } from 'react-native';
+import { View, Text, Pressable, InteractionManager, TextInput } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -25,7 +25,7 @@ const generateMockFriends = (count: number): Friend[] => {
 
 // 将 FriendItem 组件使用 memo 包裹以避免不必要的重渲染
 const FriendItem = memo(({ item }: { item: Friend }) => (
-  <Pressable className="flex-row items-center bg-[#1483FD0D] border-b border-gray-100 px-4 py-3">
+  <Pressable className="flex-row items-center bg-[#1483FD0D] border-b border-gray-100 px-4 py-3 rounded-[12px] my-1">
     <Image
       source={{ uri: item.avatarUrl }}
       className="h-12 w-12 rounded-full"
@@ -40,9 +40,18 @@ const FriendItem = memo(({ item }: { item: Friend }) => (
   </Pressable>
 ));
 
+// 字母分组标题组件
+const GroupHeader = memo(({ letter }: { letter: string }) => (
+  <View className="mt-4 mb-2">
+    <View className="bg-[#F5F8FC] py-1 px-3 rounded-md w-[24px] h-[24px] justify-center items-center">
+      <Text className="text-[14px] font-normal">{letter}</Text>
+    </View>
+  </View>
+));
+
 // 添加字母索引组件
 const AlphabetIndex = ({ onPressLetter }: { onPressLetter: (letter: string) => void }) => {
-  const letters = ['A', 'B', 'C', 'D'];
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
   return (
     <View className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -50,9 +59,9 @@ const AlphabetIndex = ({ onPressLetter }: { onPressLetter: (letter: string) => v
         <Pressable
           key={letter}
           onPress={() => onPressLetter(letter)}
-          className="py-1"
+          className="py-[2px]"
         >
-          <Text className="text-sm text-gray-500">{letter}</Text>
+          <Text className="text-[12px] text-black/50">{letter}</Text>
         </Pressable>
       ))}
     </View>
@@ -63,6 +72,7 @@ export default function FriendList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [fps, setFps] = useState(0);
+  const [searchText, setSearchText] = useState('');
 
   // 添加性能监测
   useEffect(() => {
@@ -101,57 +111,91 @@ export default function FriendList() {
     }
   };
 
+  // 按字母分组数据
+  const groupedData = useCallback(() => {
+    const mockData = generateMockFriends(100);
+    const grouped: { [key: string]: Friend[] } = {};
+    
+    // 按首字母分组
+    mockData.forEach(friend => {
+      const firstLetter = (friend.username.charAt(0) || '').toUpperCase();
+      if (!grouped[firstLetter]) {
+        grouped[firstLetter] = [];
+      }
+      grouped[firstLetter].push(friend);
+    });
+    
+    // 转换为渲染数据
+    const sections: any[] = [];
+    Object.keys(grouped).sort().forEach(letter => {
+      sections.push({ type: 'header', letter });
+      grouped[letter].forEach(friend => {
+        sections.push({ type: 'item', data: friend });
+      });
+    });
+    
+    return sections;
+  }, []);
+
+  const renderItem = useCallback(({ item }: any) => {
+    if (item.type === 'header') {
+      return <GroupHeader letter={item.letter} />;
+    } else {
+      return <FriendItem item={item.data} />;
+    }
+  }, []);
+
   return (
     <View className="flex-1 bg-white">
-      {/* 显示FPS */}
-      <Text className="absolute top-10 right-4 z-10 text-xs text-gray-500">
-        FPS: {fps}
-      </Text>
-
       <View className="flex-row items-center px-4 py-3">
         <Pressable onPress={() => router.back()} className="absolute left-4">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
-        <Text className="flex-1 text-center  text-lg font-medium">好友列表</Text>
+        <Text className="flex-1 text-center text-lg font-medium">好友列表</Text>
         <Pressable onPress={() => router.push('/have/friend-list/add-friend')}>
-          <Ionicons name="add" size={24} color="#666" />
+          <Text className="text-black/50 text-[16px]">添加朋友</Text>
         </Pressable>
+      </View>
 
+      {/* 搜索框 */}
+      <View className="mx-4 mb-4">
+        <View className="flex-row items-center bg-[#1483FD0D] rounded-[20px] px-4 py-2">
+          <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
+          <TextInput
+            className="flex-1 ml-2 text-[14px] text-black"
+            placeholder="搜索"
+            placeholderTextColor="rgba(0,0,0,0.4)"
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+        </View>
       </View>
 
       {/* 使用 FlatList 替换 FlashList */}
       <FlatList
-        data={generateMockFriends(100)}
-        renderItem={({ item }) => <FriendItem item={item} />}
-        keyExtractor={item => item.userId}
+        ref={flatListRef}
+        data={groupedData()}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => 
+          item.type === 'header' ? `header-${item.letter}` : `item-${item.data.userId}`
+        }
         // 性能优化配置
-        ItemSeparatorComponent={() => <View style={{ height: 4 }} />}
-        initialNumToRender={10}
+        initialNumToRender={15}
         maxToRenderPerBatch={5}
-        windowSize={3}
+        windowSize={5}
         removeClippedSubviews={true}
         // 滚动事件
         scrollEventThrottle={16}
-        onScroll={useCallback(() => {
-          console.log('Scroll Performance:', performance.now());
-        }, [])}
-        onMomentumScrollBegin={useCallback(() => {
-          console.log('Scroll Start:', performance.now());
-        }, [])}
-        onMomentumScrollEnd={useCallback(() => {
-          console.log('Scroll End:', performance.now());
-        }, [])}
         // 样式
         contentContainerStyle={{ paddingBottom: 20 }}
         // 高度设置
-        style={{ height: '100%',
-          paddingLeft: 16,
-          paddingRight: 16,
-         }}
+        style={{ 
+          height: '100%',
+          paddingHorizontal: 16,
+        }}
       />
       {/* 添加字母索引 */}
       <AlphabetIndex onPressLetter={scrollToLetter} />
-
     </View>
   );
 }

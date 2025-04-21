@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "wisdom-light-app",
-    "slug": "wisdom-light-app",
+    "name": "诚信网络",
+    "slug": "chengxinwangluoapp",
     "version": "1.0.0",
+    "scheme": "chengxinwangluoapp",
     "newArchEnabled": true,
     "web": {
       "favicon": "./assets/favicon.png"

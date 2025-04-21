@@ -55,7 +55,7 @@ export default function Login() {
         router.replace('/do');
       }
     } catch (error) {
-      // router.replace('(tabs)/do');
+      router.replace('(tabs)/do');
       console.error('登录失败：', error);
     }
   };

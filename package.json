@@ -5,7 +5,7 @@
   "scripts": {
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "start": "expo start",
+    "start": "expo start -p 8000",
     "prebuild": "expo prebuild --platform android",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
@@ -43,7 +43,8 @@
     "react-native-uitextview": "^1.4.0",
     "react-use-websocket": "^4.13.0",
     "tailwind-merge": "^3.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-clipboard": "~7.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
