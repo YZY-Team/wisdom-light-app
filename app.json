@@ -36,7 +36,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anjiuwenhua.chengxinwangluoapp"
@@ -46,14 +48,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anjiuwenhua.chengxinwangluoapp"
+      "package": "com.anjiuwenhua.chengxinwangluoapp",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "8e80af25-2f84-48c4-9c82-9aeba55e5f83"
+        "projectId": "8b2498e9-6be0-4622-9843-2572e394270f"
       }
     }
   }

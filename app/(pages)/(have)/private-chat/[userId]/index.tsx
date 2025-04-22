@@ -6,6 +6,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Image } from 'expo-image';
@@ -44,49 +45,6 @@ const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
 );
 
 export default function PrivateChat() {
-  const renderTimeRef = useRef(performance.now());
-console.log("应用更新");
-
-  // 只保留一个性能统计
-  useFocusEffect(
-    useCallback(() => {
-      const startTime = performance.now();
-      console.log('页面获得焦点，开始计时');
-
-      return () => {
-        const endTime = performance.now();
-        console.log(`页面失去焦点，总耗时: ${endTime - startTime} 毫秒`);
-      };
-    }, [])
-  );
-
-  // 只保留组件渲染时间统计
-  useEffect(() => {
-    const endTime = performance.now();
-    console.log(`组件渲染耗时: ${endTime - renderTimeRef.current} 毫秒`);
-    renderTimeRef.current = endTime;
-  });
-
-  // 删除这部分重复的路由监听
-  // useEffect(() => {
-  //   console.log('页面获得焦点，开始计时');
-  //   renderTimeRef.current = performance.now();
-  // }, [pathname]);
-
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const endTime = performance.now();
-    console.log(`组件渲染耗时: ${endTime - renderTimeRef.current} 毫秒`);
-    renderTimeRef.current = endTime;
-  });
-
-  // 监听路由变化
-  useEffect(() => {
-    console.log('页面获得焦点，开始计时');
-    renderTimeRef.current = performance.now();
-  }, [pathname]);
-
   const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const userInfo = useUserStore((state) => state.userInfo);
@@ -239,19 +197,16 @@ console.log("应用更新");
     prevMessagesCount.current = formattedMessages.length;
   }, [formattedMessages]);
 
-  const renderItem = useCallback(({ item: msg }) => (
-    <MessageItem {...msg} />
-  ), []);
+  const renderItem = useCallback(({ item: msg }) => <MessageItem {...msg} />, []);
 
-  const keyExtractor = useCallback((item: any, index: number) => 
-    `${item.time}-${index}`, []);
+  const keyExtractor = useCallback((item: any, index: number) => `${item.time}-${index}`, []);
 
   return (
-    <KeyboardAvoidingView className="flex-1"
+    <KeyboardAvoidingView
+      className="flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={headerHeight}
-    >
-      <View className="flex-1 py-3 bg-[#1483fd]/10">
+      keyboardVerticalOffset={headerHeight}>
+      <View className="flex-1 bg-[#1483fd]/10 py-3">
         {/* 头部 */}
         <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
           <Pressable
@@ -262,7 +217,7 @@ console.log("应用更新");
           </Pressable>
           <Text className="flex-1 text-center text-lg font-medium">{userName}</Text>
         </View>
-    
+
         {/* 消息区域 */}
         <View className="flex-1">
           <FlashList
@@ -276,7 +231,7 @@ console.log("应用更新");
             onEndReachedThreshold={0.5}
           />
         </View>
-    
+
         {/* 底部输入框 */}
         <View className="px-4 pb-4" style={{ paddingBottom: insets.bottom + 20 || 20 }}>
           <View className="flex-row items-center">
