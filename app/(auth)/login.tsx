@@ -56,7 +56,7 @@ export default function Login() {
       }
     } catch (error) {
       router.replace('(tabs)/do');
-      console.error('登录失败：', error);
+      alert('登录失败暂时跳转：' + error);
     }
   };
 
