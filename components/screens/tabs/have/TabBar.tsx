@@ -80,20 +80,14 @@ export default function TabBar() {
         }
       }
       className="rounded-[8px] bg-white p-2">
-      {/* 第一行 */}
-      <View className="mb-[8px] flex-row">
+      <View className="flex-row">
         <Tab
           title="添加好友"
           icon="person-add-outline"
           href="/add-friend"
           badge={pendingRequestCount}
         />
-        <Tab title="发起群聊" icon="people-outline" href="/create-group" />
         <Tab title="聊天广场" icon="chatbubbles-outline" href="/chat-square" />
-      </View>
-
-      {/* 第二行 */}
-      <View className="flex-row">
         <Tab title="视频会议" icon="videocam-outline" href="/video-meeting" />
         <Tab title="寻找支持" icon="help-circle-outline" href="/find-support" />
         <Tab title="好友列表" icon="help-circle-outline" href="/friend-list" />

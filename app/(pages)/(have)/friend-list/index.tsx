@@ -1,31 +1,101 @@
-import { View, Text, Pressable, InteractionManager, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  InteractionManager,
+  TextInput,
+  GestureResponderEvent,
+  TouchableOpacity,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import { router } from 'expo-router';
-import { FlatList } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import type { Friend } from '~/types/have/friendType';
+import { useFriendList } from '~/queries/friend';
+import { pinyin } from 'pinyin-pro';
 
-// 生成模拟数据
-const generateMockFriends = (count: number): Friend[] => {
-  const letters = ['a', 'b', 'c', 'd'];
-  return Array.from({ length: count }, (_, i) => ({
-    userId: `user_${i + 1}`,
-    username: `${letters[i % letters.length]}用户${i + 1}`,
-    nickname: `${letters[i % letters.length]}昵称${i + 1}`,
-    remark: i % 3 === 0 ? `备注${i + 1}` : null,
-    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=user${i + 1}`,
-    originalAvatarUrl: null,
-    customAvatarUrl: null,
-    isFavorite: i % 5 === 0,
-    createTime: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-  }));
+// 字母索引数据
+const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); // 添加 '#' 用于特殊情况
+
+// 接口定义
+interface FriendGroup {
+  [key: string]: Friend[];
+}
+
+interface Item {
+  type: string;
+  key: string;
+  title?: string;
+  friends?: Friend[];
+}
+
+// 按字母分组数据
+const groupFriendsByLetter = (friends: Friend[]): FriendGroup => {
+  const grouped: FriendGroup = {};
+
+  // 初始化每个字母的分组
+  ALPHABET.forEach((letter) => {
+    grouped[letter] = [];
+  });
+
+  // 按首字母分组
+  friends.forEach((friend) => {
+    // 优先使用 nickname，如果为空则使用 username（去掉"用户"前缀）
+    let name = friend.nickname || friend.username.replace('用户', '');
+    let firstLetter = '';
+
+    // 检查是否是中文（使用正则匹配中文字符）
+    const isChinese = /[\u4e00-\u9fa5]/.test(name);
+
+    if (isChinese) {
+      // 获取拼音（无音调）
+      const pinyinStr = pinyin(name, { toneType: 'none' });
+      // 取第一个字的拼音首字母
+      firstLetter = pinyinStr.split(' ')[0][0].toUpperCase();
+    } else {
+      // 非中文，直接取首字母
+      firstLetter = name.charAt(0).toUpperCase();
+    }
+
+    // 确保首字母在 A-Z 范围内
+    if (ALPHABET.includes(firstLetter)) {
+      grouped[firstLetter].push(friend);
+    }
+  });
+
+  // 过滤掉没有好友的字母组
+  Object.keys(grouped).forEach((letter) => {
+    if (grouped[letter].length === 0) {
+      delete grouped[letter];
+    }
+  });
+
+  return grouped;
 };
 
-// 将 FriendItem 组件使用 memo 包裹以避免不必要的重渲染
+// 展平数据为 FlashList 格式
+const flattenGroupedData = (groupedData: FriendGroup): Item[] => {
+  return Object.entries(groupedData).reduce((acc: Item[], [letter, friends]) => {
+    // 添加分组头
+    acc.push({ type: 'header', title: letter, key: `header-${letter}` });
+    // 添加好友项（每行一个）
+    friends.forEach((friend, index) => {
+      acc.push({
+        type: 'item',
+        friends: [friend],
+        key: `item-${letter}-${index}`,
+      });
+    });
+    return acc;
+  }, []);
+};
+
+// 好友项组件
 const FriendItem = memo(({ item }: { item: Friend }) => (
-  <Pressable className="flex-row items-center bg-[#1483FD0D] border-b border-gray-100 px-4 py-3 rounded-[12px] my-1">
+  <Pressable className="flex-row items-center bg-white   py-3  ">
     <Image
       source={{ uri: item.avatarUrl }}
       className="h-12 w-12 rounded-full"
@@ -33,136 +103,170 @@ const FriendItem = memo(({ item }: { item: Friend }) => (
       cachePolicy="memory-disk"
     />
     <View className="ml-3 flex-1">
-      <Text className="text-base font-medium">
-        {item.remark || item.nickname || item.username}
-      </Text>
+      <Text className="text-base font-medium">{item.nickname}</Text>
     </View>
   </Pressable>
 ));
 
-// 字母分组标题组件
+// 分组标题组件
 const GroupHeader = memo(({ letter }: { letter: string }) => (
-  <View className="mt-4 mb-2">
-    <View className="bg-[#F5F8FC] py-1 px-3 rounded-md w-[24px] h-[24px] justify-center items-center">
-      <Text className="text-[14px] font-normal">{letter}</Text>
+  <View className="mb-2 px-2">
+    <View className="h-6 w-6 items-center justify-center rounded-sm">
+      <Text className="text-[14px] text-black">{letter}</Text>
     </View>
   </View>
 ));
 
-// 添加字母索引组件
-const AlphabetIndex = ({ onPressLetter }: { onPressLetter: (letter: string) => void }) => {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-
-  return (
-    <View className="absolute right-2 top-1/2 -translate-y-1/2">
-      {letters.map((letter) => (
-        <Pressable
-          key={letter}
-          onPress={() => onPressLetter(letter)}
-          className="py-[2px]"
-        >
-          <Text className="text-[12px] text-black/50">{letter}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-};
-
 export default function FriendList() {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fps, setFps] = useState(0);
+  const flashListRef = useRef<FlashList<Item>>(null);
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
+  const alphabetContainerRef = useRef<View>(null);
+  const [alphabetLayout, setAlphabetLayout] = useState({ height: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const { data: friendResponse, isLoading, error } = useFriendList();
+  const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends'); // 新增状态管理 active tab
 
-  // 添加性能监测
-  useEffect(() => {
-    let frameCount = 0;
-    let lastTime = Date.now();
+  // 从 ApiResponse 中获取好友列表数据
+  const friends = friendResponse?.data || [];
+  console.log('好友列表原始数据:', friends);
 
-    const measureFPS = () => {
-      const currentTime = Date.now();
-      const delta = currentTime - lastTime;
-      if (delta >= 1000) {
-        setFps(Math.round((frameCount * 1000) / delta));
-        frameCount = 0;
-        lastTime = currentTime;
-      }
-      frameCount++;
-      requestAnimationFrame(measureFPS);
-    };
-
-    const frameId = requestAnimationFrame(measureFPS);
-    return () => cancelAnimationFrame(frameId);
-  }, []);
-
-  // 添加 getItemType 以优化异构列表性能
-  const getItemType = useCallback((item: Friend) => {
-    return item.isFavorite ? 'favorite' : 'normal';
-  }, []);
-
-  const flatListRef = useRef<FlatList>(null);
-
-  const scrollToLetter = (letter: string) => {
-    const index = friends.findIndex(friend => 
-      friend.username.toLowerCase().startsWith(letter.toLowerCase())
+  // 根据搜索文本过滤好友
+  const filteredFriends = friends.filter((friend: Friend) => {
+    const searchLower = searchText.toLowerCase();
+    return (
+      friend.nickname?.toLowerCase().includes(searchLower) ||
+      friend.username?.toLowerCase().includes(searchLower) ||
+      friend.remark?.toLowerCase().includes(searchLower)
     );
-    if (index !== -1) {
-      flatListRef.current?.scrollToIndex({ index, animated: true });
+  });
+
+  // 生成并展平数据
+  const groupedData = groupFriendsByLetter(filteredFriends);
+  console.log('分组后的数据:', groupedData);
+  const flattenedData = flattenGroupedData(groupedData);
+  console.log('展平后的数据:', flattenedData);
+
+  // 处理字母选择，滚动到对应分组
+  const handleLetterSelect = (letter: string) => {
+    setActiveLetter(letter);
+    const index = flattenedData.findIndex(
+      (item) => item.type === 'header' && item.title === letter
+    );
+    if (index !== -1 && flashListRef.current) {
+      flashListRef.current.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0,
+      });
     }
   };
 
-  // 按字母分组数据
-  const groupedData = useCallback(() => {
-    const mockData = generateMockFriends(100);
-    const grouped: { [key: string]: Friend[] } = {};
-    
-    // 按首字母分组
-    mockData.forEach(friend => {
-      const firstLetter = (friend.username.charAt(0) || '').toUpperCase();
-      if (!grouped[firstLetter]) {
-        grouped[firstLetter] = [];
-      }
-      grouped[firstLetter].push(friend);
-    });
-    
-    // 转换为渲染数据
-    const sections: any[] = [];
-    Object.keys(grouped).sort().forEach(letter => {
-      sections.push({ type: 'header', letter });
-      grouped[letter].forEach(friend => {
-        sections.push({ type: 'item', data: friend });
-      });
-    });
-    
-    return sections;
-  }, []);
-
-  const renderItem = useCallback(({ item }: any) => {
-    if (item.type === 'header') {
-      return <GroupHeader letter={item.letter} />;
-    } else {
-      return <FriendItem item={item.data} />;
+  // 测量字母索引容器的布局
+  useEffect(() => {
+    if (alphabetContainerRef.current) {
+      setTimeout(() => {
+        alphabetContainerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          setAlphabetLayout({ height, y: pageY });
+        });
+      }, 500);
     }
   }, []);
 
+  // 根据触摸位置找到对应的字母
+  const findLetterAtPosition = (touchY: number) => {
+    if (alphabetLayout.height <= 0) return;
+
+    const relativeY = touchY - alphabetLayout.y;
+    const letterHeight = alphabetLayout.height / ALPHABET.length;
+    const index = Math.min(Math.max(Math.floor(relativeY / letterHeight), 0), ALPHABET.length - 1);
+    const letter = ALPHABET[index];
+
+    if (letter && letter !== activeLetter) {
+      handleLetterSelect(letter);
+    }
+  };
+
+  // 处理触摸事件
+  const handleTouchStart = (e: GestureResponderEvent) => {
+    setIsDragging(true);
+    findLetterAtPosition(e.nativeEvent.pageY);
+  };
+
+  const handleTouchMove = (e: GestureResponderEvent) => {
+    if (isDragging) {
+      findLetterAtPosition(e.nativeEvent.pageY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setActiveLetter(null);
+  };
+
+  // 渲染字母气泡提示
+  const renderLetterBubble = () => {
+    if (!activeLetter) return null;
+
+    return (
+      <View className="absolute right-12 items-center justify-center" style={{ top: '40%' }}>
+        <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-500 shadow-lg">
+          <Text className="text-2xl font-bold text-white">{activeLetter}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  // 渲染字母索引项
+  const renderLetter = (letter: string) => (
+    <TouchableOpacity
+      key={letter}
+      className="h-5 items-center justify-center"
+      onPress={() => handleLetterSelect(letter)}>
+      <Text
+        className={`text-[12px] ${activeLetter === letter ? 'font-bold text-white' : 'text-gray-300'}`}>
+        {letter}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  // 渲染列表项
+  const renderItem = ({ item }: { item: Item }) => {
+    if (item.type === 'header') {
+      return <GroupHeader letter={item.title || ''} />;
+    }
+    return (
+      <View>{item.friends?.map((friend) => <FriendItem key={friend.userId} item={friend} />)}</View>
+    );
+  };
+
+  // 估算每项高度
+  const getItemHeight = (item: Item) => {
+    if (item.type === 'header') return 32;
+    return 72; // 好友项高度
+  };
+
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable onPress={() => router.back()} className="absolute left-4">
+    <View className="flex-1 ">
+      {/* Use relative positioning on the parent and absolute on children */}
+      <View className="flex-row items-center justify-center bg-white px-4 py-3 relative">
+        {/* Back Button - Absolute Left */}
+        <Pressable onPress={() => router.back()} className="absolute left-4 top-0 bottom-0 justify-center z-10">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
-        <Text className="flex-1 text-center text-lg font-medium">好友列表</Text>
-        <Pressable onPress={() => router.push('/have/friend-list/add-friend')}>
-          <Text className="text-black/50 text-[16px]">添加朋友</Text>
+        {/* Title - Centered */}
+        <Text className="text-center text-lg font-medium">好友列表</Text>
+        {/* Add Friend Button - Absolute Right */}
+        <Pressable onPress={() => router.push('/add-friend')} className="absolute right-4 top-0 bottom-0 justify-center z-10">
+          <Text className="text-[16px] text-black/50">添加朋友</Text>
         </Pressable>
       </View>
-
-      {/* 搜索框 */}
-      <View className="mx-4 mb-4">
-        <View className="flex-row items-center bg-[#1483FD0D] rounded-[20px] px-4 py-2">
+      <View className=' bg-white'>{/* 搜索框 */}
+      <View className="mx-4 mb-1">
+        <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4 ">
           <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
           <TextInput
-            className="flex-1 ml-2 text-[14px] text-black"
+            className="ml-2 flex-1 text-[14px] text-black"
             placeholder="搜索"
             placeholderTextColor="rgba(0,0,0,0.4)"
             value={searchText}
@@ -171,31 +275,91 @@ export default function FriendList() {
         </View>
       </View>
 
-      {/* 使用 FlatList 替换 FlashList */}
-      <FlatList
-        ref={flatListRef}
-        data={groupedData()}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => 
-          item.type === 'header' ? `header-${item.letter}` : `item-${item.data.userId}`
-        }
-        // 性能优化配置
-        initialNumToRender={15}
-        maxToRenderPerBatch={5}
-        windowSize={5}
-        removeClippedSubviews={true}
-        // 滚动事件
-        scrollEventThrottle={16}
-        // 样式
-        contentContainerStyle={{ paddingBottom: 20 }}
-        // 高度设置
-        style={{ 
-          height: '100%',
-          paddingHorizontal: 16,
-        }}
-      />
-      {/* 添加字母索引 */}
-      <AlphabetIndex onPressLetter={scrollToLetter} />
+      {/* Tab 栏 */}
+      <View style={{
+        boxShadow:"0px 4px 4px 0px rgba(20, 131, 253, 0.05)"
+      }} className="mx-4 mb-4 rounded-[6px] flex-row items-center  justify-between bg-[#1483FD1A] px-2 py-[6px]">
+        <TouchableOpacity
+          onPress={() => setActiveTab('friends')}
+          className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'friends' ? 'bg-white' : ''}`}>
+          <Text className={`text-[14px]  `}>好友列表</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setActiveTab('groups')}
+          className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'groups' ? 'bg-white' : ''}`}>
+          <Text className={`text-[14px] `}>群聊列表</Text>
+        </TouchableOpacity>
+      </View></View>
+      
+
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-gray-500">加载中...</Text>
+        </View>
+      ) : error ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-red-500">加载失败，请重试</Text>
+        </View>
+      ) : flattenedData.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-gray-500">暂无好友</Text>
+        </View>
+      ) : (
+        <View className="flex-1">
+          {/* FlashList 渲染分组列表 - 根据 activeTab 决定显示内容 */}
+          {activeTab === 'friends' && (
+            <FlashList
+              ref={flashListRef}
+              data={flattenedData}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.key}
+              estimatedItemSize={72}
+              getItemType={(item) => item.type}
+              overrideItemLayout={(layout, item) => {
+                layout.size = getItemHeight(item);
+              }}
+              showsVerticalScrollIndicator={false}
+              onEndReachedThreshold={0.5}
+            />
+          )}
+          {/* 群聊列表暂时显示提示，后续可替换为真实列表 */}
+          {activeTab === 'groups' && (
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-gray-500">群聊列表开发中...</Text>
+              {/* 这里可以暂时也用 FlashList 显示好友数据，或者显示其他占位符 */}
+              {/* <FlashList data={[]} renderItem={() => null} estimatedItemSize={50} /> */}
+            </View>
+          )}
+
+          {/* 字母索引侧边栏 - 改为绝对定位 */}
+          {/* 仅在好友列表 Tab 显示字母索引 */}
+          {activeTab === 'friends' && flattenedData.length > 0 && (
+            <View className="absolute bottom-0 right-0 top-0 w-12 items-center justify-center">
+              {/* 显示选中字母的气泡 */}
+              {renderLetterBubble()}
+
+              {/* 字母索引列表 */}
+              <View
+                ref={alphabetContainerRef}
+                className="items-center justify-center"
+                onLayout={() => {
+                  setTimeout(() => {
+                    alphabetContainerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+                      if (height > 0 && pageY > 0) {
+                        setAlphabetLayout({ height, y: pageY });
+                      }
+                    });
+                  }, 500);
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}>
+                {ALPHABET.map((letter) => renderLetter(letter))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 }

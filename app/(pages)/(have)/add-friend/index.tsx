@@ -16,16 +16,16 @@ export default function AddFriend() {
   const insets = useSafeAreaInsets();
   const [isSearching, setIsSearching] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
-  const searchText=useRef('');
+  const searchText = useRef('');
   const [searchResults, setSearchResults] = useState<FindFriend[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const userInfo=useUserStore((state)=>state.userInfo);
+  const userInfo = useUserStore((state) => state.userInfo);
   // 获取待处理的好友请求
   useEffect(() => {
     const fetchPendingRequests = async () => {
       try {
         const response = await friendApi.getPendingRequests();
-        console.log("response",response);
+        console.log('response', response);
         setPendingRequests(response.data);
       } catch (error) {
         console.log('获取待处理好友请求失败:', error);
@@ -51,9 +51,9 @@ export default function AddFriend() {
 
   // 处理同意好友请求
   const handleAcceptRequest = async (requestId: string) => {
-    console.log("requestId",requestId);
+    console.log('requestId', requestId);
     try {
-      await friendApi.acceptRequest({requestId,nickname:"不知道"});
+      await friendApi.acceptRequest({ requestId, nickname: '不知道' });
       setPendingRequests((prev) => prev.filter((req) => req.requestId !== requestId));
       alert('已同意好友请求');
     } catch (error) {
@@ -90,108 +90,119 @@ export default function AddFriend() {
   // - searchFriends
   // - debouncedSearch
   // - handleTextChange
-  const handSearch=(text:string)=>{
-    console.log("text",text);
-    searchText.current=text;
-  }
+  const handSearch = (text: string) => {
+    console.log('text', text);
+    searchText.current = text;
+  };
 
   interface SearchViewProps {
-      searchText: React.MutableRefObject<string>;
-      handleSubmitSearch: () => Promise<void>;
-      isLoading: boolean;
-      setIsSearching: (value: boolean) => void;
-      setSearchResults: React.Dispatch<React.SetStateAction<FindFriend[]>>;
-    }
-  
-    const SearchView = memo(({ 
-      searchText, 
-      handleSubmitSearch, 
-      isLoading, 
-      setIsSearching, 
-      setSearchResults 
-    }: SearchViewProps) => (
-    <>
-      <View className="flex-row items-center px-4 py-4">
-        <View className="flex-1 flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
-          <TextInput
-            className="ml-2 h-[30px] flex-1 text-black/40"
-            placeholder="输入用户名搜索"
-            placeholderTextColor="#666"
-            // value={searchText}
-            onChangeText={handSearch}
-            onSubmitEditing={handleSubmitSearch}
-            returnKeyType="search"
-            blurOnSubmit={false}  // 添加此属性
-          />
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#666" />
-          ) : (
-            <Ionicons name="search-outline" size={20} color="#666" />
-          )}
-        </View>
-        <Pressable
-          className="ml-2"
-          onPress={() => {
-            setIsSearching(false);
-            searchText.current='';
-            setSearchResults([]);
-          }}>
-          <Text className="text-base text-[#1687fd]">取消</Text>
-        </Pressable>
-      </View>
+    searchText: React.MutableRefObject<string>;
+    handleSubmitSearch: () => Promise<void>;
+    isLoading: boolean;
+    setIsSearching: (value: boolean) => void;
+    setSearchResults: React.Dispatch<React.SetStateAction<FindFriend[]>>;
+  }
 
-      {/* 搜索结果 */}
-      <ScrollView className="flex-1 px-4">
-        {searchResults.map((user) => (
-          <View
-            key={user.globalUserId}
-            className="mb-2 flex-row items-center justify-between rounded-[12px] bg-[#1483FD0D] px-2 py-2">
-            <View className="flex-row items-center">
-              <Image
-                source={{
-                  uri:
-                    user.avatarUrl ||
-                    `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.globalUserId}`,
-                }}
-                className="h-12 w-12 rounded-full"
-                contentFit="cover"
-              />
-              <View className="ml-3">
-                <Text className="text-base font-medium">{user.nickname}</Text>
-                <Text className="text-sm text-gray-500">ID: {user.globalUserId}</Text>
-              </View>
-            </View>
-            <LinearGradient
-              colors={['#20B4F3', '#5762FF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="w-[70px] rounded-[6px]"
-              style={{
-                boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-              }}>
-              <Pressable
-                className="h-[30px] items-center justify-center"
-                onPress={() => handleAddFriend(user.globalUserId)}>
-                <Text className="text-center text-[16px] font-semibold text-white">添加</Text>
+  const SearchView = memo(
+    ({
+      searchText,
+      handleSubmitSearch,
+      isLoading,
+      setIsSearching,
+      setSearchResults,
+    }: SearchViewProps) => (
+      <>
+        <View className="flex-row items-center px-4 py-4">
+          <View className="flex-1 flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
+            <TextInput
+              className="ml-2 h-[30px] flex-1  py-0 text-black/40"
+              placeholder="输入用户名搜索"
+              placeholderTextColor="#666"
+              // value={searchText}
+              onChangeText={handSearch}
+              onSubmitEditing={handleSubmitSearch}
+              returnKeyType="search"
+              blurOnSubmit={false} // 添加此属性
+            />
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#666" />
+            ) : (
+              <Pressable onPress={handleSubmitSearch}>
+                <Ionicons name="search-outline" size={20} color="#666" />
               </Pressable>
-            </LinearGradient>
+            )}
           </View>
-        ))}
-        {searchText && !isLoading && searchResults.length === 0 && (
-          <Text className="mt-4 text-center text-gray-500">未找到相关用户</Text>
-        )}
-      </ScrollView>
-    </>
-  ));
+          <Pressable
+            className="ml-2"
+            onPress={() => {
+              setIsSearching(false);
+              searchText.current = '';
+              setSearchResults([]);
+            }}>
+            <Text className="text-base text-[#1687fd]">取消</Text>
+          </Pressable>
+        </View>
+
+        {/* 搜索结果 */}
+        <ScrollView className="flex-1 px-4">
+          {searchResults.map((user) => (
+            <View
+              key={user.globalUserId}
+              className="mb-2 flex-row items-center justify-between rounded-[12px] bg-[#1483FD0D] px-2 py-2">
+              <View className="flex-row items-center">
+                <Image
+                  source={{
+                    uri:
+                      user.avatarUrl ||
+                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.globalUserId}`,
+                  }}
+                  className="h-12 w-12 rounded-full"
+                  contentFit="cover"
+                />
+                <View className="ml-3">
+                  <Text className="text-base font-medium">{user.nickname}</Text>
+                  <Text className="text-sm text-gray-500">ID: {user.globalUserId}</Text>
+                </View>
+              </View>
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="w-[70px] rounded-[6px]"
+                style={{
+                  boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                }}>
+                <Pressable
+                  className="h-[30px] items-center justify-center"
+                  onPress={() => handleAddFriend(user.globalUserId)}>
+                  <Text className="text-center text-[16px] font-semibold text-white">添加</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
+          ))}
+          {searchText && !isLoading && searchResults.length === 0 && (
+            <Text className="mt-4 text-center text-gray-500">未找到相关用户</Text>
+          )}
+        </ScrollView>
+      </>
+    )
+  );
 
   return (
     <View className="flex-1 bg-white">
       {/* 头部 */}
       <View className="flex-row items-center px-4 py-3">
         <Pressable
-          onPress={() => (isSearching ? setIsSearching(false) : router.back())}
-          className="absolute left-4">
-          <Ionicons name="chevron-back" size={24} color="#666" />
+          onPress={() => {
+            console.log('back');
+            router.back();
+          }}
+          className="absolute z-10 left-2 h-10 w-10 items-center justify-center rounded-full"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? 'rgba(0,0,0,0.05)' : 'transparent',
+          })}>
+          <Ionicons name="chevron-back" size={28} color="#666" />
         </Pressable>
         <Text className="flex-1 text-center text-[16px] font-semibold">
           {isSearching ? '添加好友' : '新的朋友'}
@@ -199,7 +210,7 @@ export default function AddFriend() {
       </View>
 
       {isSearching ? (
-        <SearchView 
+        <SearchView
           searchText={searchText}
           handleSubmitSearch={handleSubmitSearch}
           isLoading={isLoading}
@@ -210,7 +221,10 @@ export default function AddFriend() {
         <>
           <Pressable className="mx-4 mb-2 mt-4" onPress={() => setIsSearching(true)}>
             <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
-              <Text className="ml-2 h-[30px] flex-1 leading-[30px] text-black/40">
+              <Text
+                className="ml-2 h-[30px] flex-1 leading-[30px] text-black/40"
+                numberOfLines={1}
+                ellipsizeMode="tail">
                 输入番号+姓名
               </Text>
               <Ionicons name="search-outline" size={20} color="#666" />
@@ -235,7 +249,6 @@ export default function AddFriend() {
                 <View className="ml-3 flex-1">
                   <Text className="text-base font-medium">{request.senderName}</Text>
                   <Text className="mt-1 text-sm text-gray-500">
-                    
                     {request.requestMessage || '请求添加好友'}
                   </Text>
                   <Text className="mt-1 text-xs text-gray-400">

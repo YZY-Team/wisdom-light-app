@@ -119,9 +119,9 @@ export default function WhoIndex() {
           const randomId = Date.now().toString();
           formData.append('relatedId', randomId);
           formData.append('bucketName', 'image');
-
+          console.log('formData', formData);
           // 直接使用 fetch
-          const response = await fetch('http://192.168.1.158:8080/api/system/file/upload', {
+          const response = await fetch('http://192.168.1.158:8080/api/oss/minio/upload', {
             method: 'POST',
             body: formData,
             headers: {
@@ -130,7 +130,7 @@ export default function WhoIndex() {
               Authorization: token ? `Bearer ${token}` : '',
             },
           });
-
+          
           const uploadRes = await response.json();
           console.log('上传结果:', uploadRes);
 
