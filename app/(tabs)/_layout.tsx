@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from '~/lib/useColorScheme';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
 import { Image } from 'expo-image';
@@ -52,29 +52,7 @@ const TABS = [
 ] as const;
 
 export default function TabLayout() {
-  const { colors } = useColorScheme();
   const insets = useSafeAreaInsets();
-  const pathname = usePathname();
-
-  const hideTabBarRoutes = [
-    '/have/chat-square',
-    '/have/add-friend',
-    '/have/create-group',
-    '/have/private-chat',
-    '/have/video-meeting',
-    '/have/find-support',
-    '/who/general',
-    '/who/support',
-    '/who/membership',
-    '/who/become-mentor',
-    '/be/profile',
-    '/be/oath',
-    '/be/promise',
-    '/be/achievement',
-  ];
-
-  // const shouldHideTabBar = hideTabBarRoutes.some((route) => pathname.includes(route));
-
   return (
     <Tabs
       screenOptions={{

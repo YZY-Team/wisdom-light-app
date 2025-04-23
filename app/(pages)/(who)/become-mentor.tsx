@@ -95,7 +95,7 @@ export default function ApplySettlementScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 ">
       {/* 顶部导航栏 */}
       <View className="px-4 py-4 bg-[#FFFFFFCC]">
         <View className="flex-row items-center justify-between">

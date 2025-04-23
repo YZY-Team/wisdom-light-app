@@ -115,7 +115,7 @@ export default function AddFriend() {
         <View className="flex-row items-center px-4 py-4">
           <View className="flex-1 flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
             <TextInput
-              className="ml-2 h-[30px] flex-1  py-0 text-black/40"
+              className="ml-2 h-[30px] flex-1  py-0 "
               placeholder="输入用户名搜索"
               placeholderTextColor="#666"
               // value={searchText}
@@ -222,7 +222,7 @@ export default function AddFriend() {
           <Pressable className="mx-4 mb-2 mt-4" onPress={() => setIsSearching(true)}>
             <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 py-2">
               <Text
-                className="ml-2 h-[30px] flex-1 leading-[30px] text-black/40"
+                className="ml-2 h-[30px] flex-1 leading-[30px] "
                 numberOfLines={1}
                 ellipsizeMode="tail">
                 输入番号+姓名

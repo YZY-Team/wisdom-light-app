@@ -18,7 +18,7 @@ const CourseItem = memo(
 
     return (
       <Pressable
-        className="mb-4 overflow-hidden rounded-lg bg-white shadow-sm"
+        className="mb-4 overflow-hidden rounded-lg bg-white "
         onPress={() => setExpanded(!expanded)}
       >
         {/* 主内容 */}
@@ -38,7 +38,7 @@ const CourseItem = memo(
               <View className="flex w-full items-end justify-center rounded pr-2">
                 <Image
                   source={vip}
-                  className="h-[18px] w-[36px] rounded-lg"
+                  className="h-[18px] w-[36px] rounded-1"
                   contentFit="cover"
                   transition={200}
                   cachePolicy="memory-disk"
@@ -78,7 +78,7 @@ const CourseItem = memo(
             >
               <View className="flex-row items-center">
                 <View>
-                  <Text className="text-[#00000066]">{index}</Text>
+                  <Text className="text-[#00000066]">{index+1}</Text>
                 </View>
                 <View className="ml-2 relative w-[30%]">
                   <Image
@@ -177,7 +177,7 @@ export default function VideoCategory({
   return (
     <>
       {/* 二级分类 */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4 px-4 py-2">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-1 px-4">
         {secondaryCategories.map((category, index) => (
           <SecondaryCategory
             key={category}

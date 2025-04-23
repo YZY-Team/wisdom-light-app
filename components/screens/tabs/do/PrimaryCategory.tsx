@@ -13,7 +13,7 @@ type PrimaryCategoryProps = {
 export default function PrimaryCategory({ title, isActive, onPress }: PrimaryCategoryProps) {
   return (
     <Pressable
-      className={`mr-4 items-center ${!isActive && 'border-b-2 border-transparent hover:bg-gray-50'}`}
+      className={` h-10  items-center ${!isActive && 'border-b-2 border-transparent hover:bg-gray-50'}`}
       onPress={onPress}>
       {isActive ? (
         <LinearGradient
@@ -21,9 +21,9 @@ export default function PrimaryCategory({ title, isActive, onPress }: PrimaryCat
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{
-            boxShadow:"0px 6px 10px 0px rgba(20, 131, 253, 0.40)"
+            boxShadow:"0px  6px 10px 0px rgba(20, 131, 253, 0.40)"
           }}
-          className="w-full items-center rounded-[6px] px-4 py-2">
+          className="w-full  items-center rounded-[6px] px-4 py-2">
           <Text className="text-base font-medium  text-white">{title}</Text>
         </LinearGradient>
       ) : (

@@ -176,7 +176,7 @@ export default function ChatList() {
   };
 
   return (
-    <ScrollView className="flex-1 py-4 mt-4" style={{ backgroundColor: 'rgba(20, 131, 253, 0.05)' }}>
+    <ScrollView className="flex-1 py-4 mt-4">
       {chatList.map((chat) => (
         <ChatItem
           key={chat.id}

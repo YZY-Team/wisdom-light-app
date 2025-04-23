@@ -177,7 +177,7 @@ export default function WhoIndex() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-[#F5F8FC]">
       <LinearGradient
         colors={['#E7F2FF', '#FFF']}
         className="absolute w-full"

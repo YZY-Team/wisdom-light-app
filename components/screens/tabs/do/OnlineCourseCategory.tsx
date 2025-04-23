@@ -79,7 +79,7 @@ export default function OnlineCourseCategory({
   return (
     <>
       {/* 二级分类 */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4 py-2 px-4">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-1  px-4">
         {secondaryCategories.map((category, index) => (
           <SecondaryCategory
             key={category}

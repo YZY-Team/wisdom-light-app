@@ -21,7 +21,7 @@ export default function MembershipScreen() {
   ];
   
   return (
-    <View className='flex-1 bg-white'>{/* 顶部导航栏 */}
+    <View className='flex-1 '>{/* 顶部导航栏 */}
       <View className="px-4  py-4">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>

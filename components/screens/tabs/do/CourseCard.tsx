@@ -160,9 +160,13 @@ const CourseCard = ({
 
             <Pressable
               onPress={() => setShowModal(false)}
-              className="absolute w-6 h-6 right-2   top-2"
+              className="absolute w-4 h-4 right-4   top-4"
             >
-              <Text className="text-[24px] text-black">×</Text>
+              <Image
+                source={require('~/assets/close.png')}
+                className="w-full h-full"
+                contentFit="cover"
+              />
             </Pressable>
             {/* 弹窗标题 */}
             <View className="w-full pt-5 p-3 items-center justify-center relative">

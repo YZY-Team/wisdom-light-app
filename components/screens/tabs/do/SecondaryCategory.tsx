@@ -14,15 +14,12 @@ export default function SecondaryCategory({ title, isActive, onPress }: Secondar
   return (
     <Pressable
       onPress={onPress}
-      className={`mr-4 flex items-center rounded-[6px]`}>
+      className={`mr-4 h-[34px] flex items-center  rounded-[6px]`}>
     {isActive ? (
       <LinearGradient
         colors={['#20B4F3', '#5762FF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{
-          boxShadow:"0px 6px 10px 0px rgba(20, 131, 253, 0.40)"
-        }}
         className="w-full items-center rounded-[6px] px-4 py-2">
         <Text className="text-white">{title}</Text>
       </LinearGradient>

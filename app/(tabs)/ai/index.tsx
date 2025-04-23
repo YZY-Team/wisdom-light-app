@@ -21,26 +21,7 @@ import xunfeiIcon from '~/assets/images/ai/icons/xunfei.png';
 import { cssInterop } from 'nativewind';
 import { useRouter } from 'expo-router';
 
-const Message = ({ isAI, content, time }: { isAI: boolean; content: string; time: string }) => (
-  <View className={`flex-row ${isAI ? '' : 'flex-row-reverse'} mb-4`}>
-    {isAI && (
-      <Image
-        source={{ uri: 'https://api.dicebear.com/7.x/bottts/svg?seed=ai-assistant' }}
-        className="h-10 w-10 rounded-full bg-blue-100"
-      />
-    )}
-    <View
-      className={`mx-3 max-w-[70%] ${isAI ? 'bg-white' : 'bg-blue-500'} rounded-2xl p-4 shadow-sm`}>
-      <Text className={`text-base ${isAI ? 'text-gray-800' : 'text-white'}`}>{content}</Text>
-    </View>
-    {!isAI && (
-      <Image
-        source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user' }}
-        className="h-10 w-10 rounded-full bg-gray-100"
-      />
-    )}
-  </View>
-);
+
 
 // AI工具卡片组件
 const AiToolCard = ({ title, icon }: { title: string; icon: any }) => {
@@ -99,10 +80,9 @@ const AiToolCard = ({ title, icon }: { title: string; icon: any }) => {
 };
 
 export default function AiIndex() {
-  const insets = useSafeAreaInsets();
   return (
-    <View className="flex-1 bg-white">
-      <View className="p-4">
+    <View className="flex-1 bg-white py-4">
+      {/* <View className="p-4">
         <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4 ">
           <TextInput
             className="ml-2 flex-1 text-black/40"
@@ -111,11 +91,11 @@ export default function AiIndex() {
           />
           <Ionicons name="search-outline" size={20} color="#666" />
         </View>
-      </View>
+      </View> */}
 
       {/* AI工具箱 */}
       <View className="px-4">
-        <Text className="mb-4 px-6 text-[16px] font-[700]">AI工具箱</Text>
+        <Text className="mb-4 px-6 text-[16px] font-[6h00]">AI工具箱</Text>
         <View className="flex-row flex-wrap">
           <AiToolCard
             title="Open AI"

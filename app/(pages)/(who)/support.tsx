@@ -29,7 +29,7 @@ export default function SupportScreen() {
   ];
 
   return (
-    <View className="flex-1 p-4 bg-white">
+    <View className="flex-1 p-4 ">
       <View className="px-4  py-4">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>

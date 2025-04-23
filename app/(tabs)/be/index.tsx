@@ -51,7 +51,7 @@ export default function BeIndex() {
   };
 
   return (
-    <View className="flex-1 bg-[#F5F5F5] px-4 pt-3">
+    <View className="flex-1 bg-[#F5F8FC]  px-4 pt-3">
       {/* 导航栏 */}
       <View className="flex-row gap-[36px]  rounded-[8px] bg-[#1687fd]/10 p-2">
         <Tab
