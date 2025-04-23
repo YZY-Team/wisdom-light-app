@@ -3,7 +3,10 @@ import { useRouter } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSQLiteContext } from 'expo-sqlite';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import * as schema from '~/db/schema';
 
 cssInterop(SafeAreaView, { className: { target: 'style' } });
 cssInterop(LinearGradient, { className: { target: 'style' } });
@@ -11,6 +14,7 @@ cssInterop(LinearGradient, { className: { target: 'style' } });
 interface MessageProps {
     text: string;
     time: string;
+    
     isUser: boolean;
 }
 
@@ -51,33 +55,34 @@ const Message = ({ text, time, isUser }: MessageProps) => {
 
 export default function TutorScreen() {
     const router = useRouter();
+    const db = useSQLiteContext();
+    const drizzleDb = drizzle(db, { schema });
     const [inputText, setInputText] = useState('');
-    const [messages, setMessages] = useState<MessageProps[]>([
-        {
-            text: '你好！我是Wisdom Light的AI助手。今天我能为你提供什么帮助？',
-            time: '14:00',
-            isUser: false
-        },
-        {
-            text: '我想了解如何更好地管理我的时间',
-            time: '14:01',
-            isUser: true
-        },
-        {
-            text: '时间管理是提高效率的关键。我推荐你可以尝试以下方法：\n1. 使用番茄工作法，25分钟专注工作，然后休息5分钟\n2. 建立每日优先级清单，先完成重要且紧急的任务\n3. 减少干扰源，如手机通知等\n4. 定期回顾和调整你的时间分配方式\n\n此外，我看到我们平台有一门"高效时间管理"的课程，由王导师授课，评分很高，你可能会感兴趣。',
-            time: '14:02',
-            isUser: false
-        }
-    ]);
+    const [messages, setMessages] = useState<MessageProps[]>([]);
 
-    const handleSend = () => {
+    useEffect(() => {
+        (async () => {
+            const dbMessages = await drizzleDb.select().from(schema.messages);
+            setMessages(
+                dbMessages.map(m => ({
+                    text: m.text,
+                    time: m.time,
+                    isUser: Boolean(m.isUser)
+                }))
+            );
+        })();
+    }, []);
+
+    const handleSend = async () => {
         if (inputText.trim()) {
-            const newMessage = {
+            const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            const newMessage = { text: inputText, time: now, isUser: true };
+            await drizzleDb.insert(schema.messages).values({
                 text: inputText,
-                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-                isUser: true
-            };
-            setMessages([...messages, newMessage]);
+                time: now,
+                isUser: 1
+            });
+            setMessages(prev => [...prev, newMessage]);
             setInputText('');
         }
     };
