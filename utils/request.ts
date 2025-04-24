@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * @date 2025-02-06
  */
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { logout } from './navigationService';
 // import { toast } from "react-toastify";
 
 /**
@@ -90,7 +91,9 @@ instance.interceptors.response.use(
       const errorMessage = (() => {
         switch (error.response.status) {
           case 401:
-            return "not logged in";
+            // 清除token并导航到登录页
+            logout();
+            return "未登录或登录已过期";
           case 403:
             return "not authorized";
           case 404:

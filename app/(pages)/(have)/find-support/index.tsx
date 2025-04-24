@@ -67,13 +67,7 @@ const TeacherItem = ({ teacher, onConsult }: TeacherItemProps) => {
 
       <Text className="mt-2 text-[14px] text-black/60">{teacher.description}</Text>
 
-      <View className="mt-2 flex-row flex-wrap">
-        {teacher.expertise.map((skill, i) => (
-          <View key={i} className="mb-2 mr-2 rounded-full bg-[#F5F6FA] px-3 py-1">
-            <Text className="text-[12px] text-black/60">{skill}</Text>
-          </View>
-        ))}
-      </View>
+
 
       <View className="mt-2 rounded-[6px] bg-[rgba(20,131,253,0.05)] p-2">
         <View className="flex-row">

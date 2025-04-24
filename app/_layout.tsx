@@ -13,6 +13,8 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '~/drizzle/migrations';
+import { navigationRef } from '~/utils/navigationService';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -38,6 +40,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <WebSocketProvider>
           <Stack
+            ref={navigationRef}
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: 'red' },
