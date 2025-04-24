@@ -115,7 +115,7 @@ const ConsultModal = ({
           {/* 关闭按钮 */}
           <View className="absolute right-4 top-4 z-10">
             <Pressable onPress={onClose}>
-              <Ionicons name="close" size={24} color="black" />
+              <Image source={require('~/assets/close.png')} className="h-4 w-4" />
             </Pressable>
           </View>
 

@@ -42,9 +42,9 @@ export default function MembershipScreen() {
            <Text className=' pl-[20%] text-center text-[12px] '>未开通</Text>
            </View>
           </View>
-          <View className='absolute top-[72%] border bg-[#FFF] border-[#B0B0B0] rounded-[6px] flex items-center justify-center left-[15%] w-[48px]  aspect-[48/19]'>
+          {/* <View className='absolute top-[72%] border bg-[#FFF] border-[#B0B0B0] rounded-[6px] flex items-center justify-center left-[15%] w-[48px]  aspect-[48/19]'>
             <Text className='text-[12px] text-[#B4B4B4]'>12个月</Text>
-          </View>
+          </View> */}
         </View>
         {/* 会员选项 */}
         <View className="flex-row  mt-4 mb-12 gap-3">

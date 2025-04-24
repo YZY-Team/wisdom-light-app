@@ -408,8 +408,8 @@ export default function RelatedCourseCategory({
           <View className="w-[320px] overflow-hidden rounded-[12px] bg-white">
             {/* 关闭按钮 */}
             <View className="absolute right-4 top-4 z-10">
-              <Pressable onPress={() => setShowConsultModal(false)}>
-                <Ionicons name="close" size={24} color="black" />
+              <Pressable className=' ' onPress={() => setShowConsultModal(false)}>
+                <Image source={require('~/assets/close.png')} className="w-4 h-4" />
               </Pressable>
             </View>
 

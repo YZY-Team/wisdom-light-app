@@ -1,9 +1,10 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import * as Clipboard from 'expo-clipboard';
 
 import { Container } from '../../../components/Container';
 import copyIcon from '~/assets/images/who/copyIcon.png';
+import copyCIcon from '~/assets/images/who/copyC.png';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -12,20 +13,29 @@ import { cssInterop } from 'nativewind';
 cssInterop(Image, { className: 'style' });
 export default function SupportScreen() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const router = useRouter();
   const handleCopyId = async (id: string) => {
+    // 清除之前的定时器
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
     await Clipboard.setStringAsync(id);
     setCopiedId(id);
-    Alert.alert('复制成功', `ID: ${id} 已复制到剪贴板`);
-    // 3秒后重置状态
-    setTimeout(() => setCopiedId(null), 3000);
+    // 2秒后重置状态
+    timeoutRef.current = setTimeout(() => {
+      setCopiedId(null);
+      timeoutRef.current = null;
+    }, 2000);
   };
 
   const supportStaff = [
     { name: '客服小水', id: '124' },
-    { name: '客服依依', id: '124' },
-    { name: '客服Amiy', id: '124' },
+    { name: '客服依依', id: '125' },
+    { name: '客服Amiy', id: '126' },
   ];
 
   return (
@@ -57,11 +67,8 @@ export default function SupportScreen() {
               className="p-2"
             >
               <Image
-                source={copyIcon}
+                source={copiedId === staff.id ? copyCIcon : copyIcon}
                 className="w-6 h-6"
-                style={{
-                  tintColor: copiedId === staff.id ? '#11C900' : 'rgba(0,0,0,0.4)'
-                }}
               />
             </TouchableOpacity>
           </View>
