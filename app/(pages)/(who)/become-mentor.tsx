@@ -37,6 +37,17 @@ export default function ApplySettlementScreen() {
     service: ''
   });
 
+  // 检查所有必填字段是否已填写
+  const isFormComplete = () => {
+    // 检查基本信息字段
+    for (const field of formFields) {
+      if (!formData[field.key as keyof typeof formData]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   // 渲染文本框标签
   const renderLabel = (label: string) => {
     if (label.includes('：')) {
@@ -132,7 +143,7 @@ export default function ApplySettlementScreen() {
 
 
           {/* 团队和个人数据字段 */}
-          {pillarFields.map((field) => (
+          {/* {pillarFields.map((field) => (
             <View key={field.key} className="mt-2">
               <Text className="text-[14px] text-[#040404] mb-2">{field.label}</Text>
               <TextInput
@@ -145,10 +156,10 @@ export default function ApplySettlementScreen() {
                 onChangeText={(text) => setFormData(prev => ({ ...prev, [field.key]: text }))}
               />
             </View>
-          ))}
+          ))} */}
 
           {/* 团队和个人数据字段 */}
-          <Text className="text-[14px] text-[#040404] mt-2">三大支柱数据：（百分比，不保留小数）</Text>
+          {/* <Text className="text-[14px] text-[#040404] mt-2">三大支柱数据：（百分比，不保留小数）</Text>
           <View className='gap-2 mt-1'>{achievementFields.map((field) => (
             <View key={field.key} className="flex-row items-center h-[40px]">
               <Text className="w-[80px] text-[14px] text-[rgba(4,4,4,0.4)]">{field.label}</Text>
@@ -160,7 +171,7 @@ export default function ApplySettlementScreen() {
                 onChangeText={(text) => setFormData(prev => ({ ...prev, [field.key]: text }))}
               />
             </View>
-          ))}</View>
+          ))}</View> */}
           
           {/* 提交按钮 - 现在放在滚动区域内 */}
           <View className="mt-8 mb-10">
@@ -169,6 +180,7 @@ export default function ApplySettlementScreen() {
                 // 提交逻辑
                 console.log('提交表单', formData);
               }}
+              disabled={!isFormComplete()}
             >
               <LinearGradient
                 colors={['#20B4F3', '#5762FF']}
@@ -176,7 +188,8 @@ export default function ApplySettlementScreen() {
                 end={{ x: 1, y: 0 }}
                 className="rounded-[6px] h-[50px] justify-center items-center"
                 style={{
-                  boxShadow:"0px 6px 10px 0px rgba(20, 131, 253, 0.40)"
+                  boxShadow:"0px 6px 10px 0px rgba(20, 131, 253, 0.40)",
+                  opacity: isFormComplete() ? 1 : 0.5
                 }}
               >
                 <Text className="text-white text-[18px] font-bold">提交</Text>

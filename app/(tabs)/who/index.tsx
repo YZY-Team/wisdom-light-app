@@ -277,7 +277,7 @@ export default function WhoIndex() {
             onPress={() => setShowLogoutModal(true)}
             className="flex-row items-center px-4 py-4">
             <Image
-              source={require('~/assets/images/who/settings.png')}
+              source={require('~/assets/images/who/logout.png')}
               className="h-5 w-5"
               contentFit="contain"
             />

@@ -245,7 +245,7 @@ export default function FindSupport() {
     <View className="flex-1 ">
       {/* 顶部导航栏 */}
       <View className="flex-row items-center px-4 py-3 ">
-        <Pressable onPress={() => router.back()} className="absolute left-4">
+        <Pressable onPress={() => router.back()} className="absolute z-10 left-4">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
         <Text className="flex-1 text-center text-lg font-medium">寻找支持</Text>

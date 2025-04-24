@@ -173,12 +173,14 @@ export default function RelatedCourseCategory({
       case TabType.ORIGIN:
         return (
           <View className="px-4 pt-4">
-            <View className="overflow-hidden rounded-[12px] bg-white">
-              <Image
-                source={categoryData[TabType.ORIGIN].image}
-                className="aspect-[16/9] w-full rounded-t-[12px]"
-                contentFit="cover"
-              />
+            <View className="overflow-hidden rounded-[12px]  bg-white">
+              <View className='p-4'>
+                <Image
+                  source={categoryData[TabType.ORIGIN].image}
+                  className="aspect-[330/180]  w-full rounded-[12px]"
+                />
+              </View>
+
               <View className="p-4">
                 <Text className="text-[14px] leading-[20px] text-black">
                   {categoryData[TabType.ORIGIN].content}
@@ -199,10 +201,10 @@ export default function RelatedCourseCategory({
                     className="h-12 w-12 rounded-full"
                     contentFit="cover"
                   />
-                  <View className="ml-3 flex-1">
+                  <View className="ml-3 flex-1 gap-1">
                     <Text className="text-[16px] font-bold">{teacher.name}</Text>
                     <View className="flex-row items-center">
-                      <View className="rounded-[4px] bg-[rgba(241,131,24,0.1)] px-[5px] py-[5px]">
+                      <View className=" rounded-[4px] bg-[rgba(241,131,24,0.1)] px-[5px] py-[5px]">
                         <Text className="text-[12px] text-[#F18318]">{teacher.role}</Text>
                       </View>
                     </View>
@@ -256,7 +258,7 @@ export default function RelatedCourseCategory({
                   <View className="mt-4  overflow-hidden py-8  ">
                     <Image
                       source={course.image}
-                      className="aspect-[16/9] w-full rounded-[12px]"
+                      className="aspect-[330/180] w-full rounded-[12px]"
                       contentFit="cover"
                     />
                   </View>
@@ -267,14 +269,16 @@ export default function RelatedCourseCategory({
                     <View className="border-l-4 border-[#1483FD] pl-2">
                       <Text className="text-[16px] font-bold">报读卡</Text>
                     </View>
-                    <View className="w-full gap-5 flex-row items-center justify-between  px-4 py-5">
+                    <View className="w-full flex-row items-center justify-between gap-5  px-4 py-5">
                       <View className="aspect-[225/62]  w-[60%] ">
                         <Image
                           source={require('~/assets/images/do/baoming.png')}
                           className="h-full w-full"
                         />
                       </View>
-                      <Pressable className="w-[35%] flex items-center justify-center aspect-[90/39] rounded-[12px]" onPress={navigateToRegistration}>
+                      <Pressable
+                        className="flex aspect-[90/39] w-[35%] items-center justify-center rounded-[12px]"
+                        onPress={navigateToRegistration}>
                         <LinearGradient
                           colors={['#FFE062', '#FF9327']}
                           start={{ x: 0, y: 0 }}
@@ -377,10 +381,7 @@ export default function RelatedCourseCategory({
       {/* tab 栏 */}
       <View className="mb-4 mt-4 flex-row justify-start px-6">
         {Object.values(TabType).map((tab) => (
-          <Pressable
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            className="relative mr-8  py-1">
+          <Pressable key={tab} onPress={() => setActiveTab(tab)} className="relative mr-8  py-1">
             <Text
               className={`text-[16px] ${
                 activeTab === tab ? 'font-bold text-[#1483FD]' : 'text-black/50'
@@ -388,7 +389,7 @@ export default function RelatedCourseCategory({
               {tab}
             </Text>
             {activeTab === tab && (
-              <View className="absolute -bottom-1 left-0 flex  w-full items-center  h-1  " >
+              <View className="absolute -bottom-1 left-0 flex  h-1 w-full  items-center  ">
                 <View className="  h-1 w-[28px] bg-[#1483FD]" />
               </View>
             )}
@@ -408,8 +409,8 @@ export default function RelatedCourseCategory({
           <View className="w-[320px] overflow-hidden rounded-[12px] bg-white">
             {/* 关闭按钮 */}
             <View className="absolute right-4 top-4 z-10">
-              <Pressable className=' ' onPress={() => setShowConsultModal(false)}>
-                <Image source={require('~/assets/close.png')} className="w-4 h-4" />
+              <Pressable className=" " onPress={() => setShowConsultModal(false)}>
+                <Image source={require('~/assets/close.png')} className="h-4 w-4" />
               </Pressable>
             </View>
 
@@ -420,10 +421,10 @@ export default function RelatedCourseCategory({
                 className="h-14 w-14 rounded-full"
                 contentFit="cover"
               />
-              <View className="ml-4">
+              <View className="ml-4 flex-col  justify-center items-center">
                 <Text className="text-[18px] font-bold">{selectedTeacher?.name}</Text>
-                <View className="mt-1 rounded-[4px] bg-[rgba(241,131,24,0.1)] px-[5px] py-[2px]">
-                  <Text className="text-[12px] text-[#F18318]">{selectedTeacher?.role}</Text>
+                <View className="mt-1 w-[60px] rounded-[4px] bg-[rgba(241,131,24,0.1)]  py-[2px]">
+                  <Text className="text-[12px] text-[#F18318] text-center">{selectedTeacher?.role}</Text>
                 </View>
               </View>
             </View>
