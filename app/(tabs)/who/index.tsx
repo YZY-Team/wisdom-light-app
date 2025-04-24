@@ -262,6 +262,11 @@ export default function WhoIndex() {
             title="平台消息"
             href="/platform-message"
           />
+          <MenuItem
+            icon={require('~/assets/images/who/platform-message.png')}
+            title="测试 rtc"
+            href="/test-rtc"
+          />
           <Pressable
             onPress={() => setShowLogoutModal(true)}
             disabled={true}

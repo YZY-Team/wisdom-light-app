@@ -12,6 +12,7 @@
       "tsconfigPaths": true
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
       [
         "expo-video",
@@ -27,7 +28,8 @@
           "photosPermission": "允许访问相册以选择头像图片"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "@config-plugins/react-native-webrtc"
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
