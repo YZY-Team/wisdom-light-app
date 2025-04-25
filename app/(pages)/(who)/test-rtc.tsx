@@ -9,7 +9,6 @@ import {
 } from 'react-native-webrtc';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
-
 // 定义WebSocket和RTCPeerConnection类型，修复TypeScript错误
 type WebSocketRef = WebSocket | null;
 type RTCPeerConnectionRef = RTCPeerConnection | null;
@@ -29,6 +28,7 @@ const LocalSignalingRTC = () => {
   const peerConnection = useRef<RTCPeerConnectionRef>(null);
   const ws = useRef<WebSocketRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 处理挂断信号
   const handleHangup = () => {
     endCall(); // 调用结束通话的函数
@@ -417,7 +417,15 @@ const LocalSignalingRTC = () => {
         <Text style={styles.headerText}>王小明</Text>
       </View>
 
-      <View style={styles.profileContainer} className=" ">
+      <View
+        style={[
+          styles.profileContainer,
+          {
+            opacity: isCallActive ? 1 : 0,
+            pointerEvents: isCallActive ? 'auto' : 'none'
+          }
+        ]}
+        className=" ">
         <View style={styles.avatarBorder}>
           <Image
             source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
@@ -454,33 +462,46 @@ const LocalSignalingRTC = () => {
         </TouchableOpacity>
       </View>
 
-      {!isCallActive && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.startCallButton} onPress={makeCall}>
-            <Text style={styles.buttonText}>发起通话</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.waitCallButton} onPress={answerCall}>
-            <Text style={styles.buttonText}>等待接听</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {remoteStream && (
-        <RTCView
-          streamURL={remoteStream.toURL()}
-          style={styles.remoteVideo}
-          objectFit="cover"
-          className=""
-        />
-      )}
-      {localStream && (
-        <RTCView
-          streamURL={localStream.toURL()}
-          style={styles.localVideo}
-          objectFit="cover"
-          className=""
-        />
-      )}
+      <View 
+        style={[
+          styles.buttonContainer, 
+          { 
+            opacity: !isCallActive ? 1 : 0,
+            pointerEvents: !isCallActive ? 'auto' : 'none'
+          }
+        ]}>
+        <TouchableOpacity style={styles.startCallButton} onPress={makeCall}>
+          <Text style={styles.buttonText}>发起通话</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.waitCallButton} onPress={answerCall}>
+          <Text style={styles.buttonText}>等待接听</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <RTCView
+        streamURL={remoteStream?.toURL()}
+        style={[
+          styles.remoteVideo, 
+          { 
+            opacity: remoteStream ? 1 : 0,
+            pointerEvents: remoteStream ? 'auto' : 'none'
+          }
+        ]}
+        objectFit="cover"
+        className=""
+      />
+      <RTCView
+        streamURL={localStream?.toURL()}
+        style={[
+          styles.localVideo, 
+          { 
+            opacity: localStream ? 1 : 0,
+            pointerEvents: localStream ? 'auto' : 'none'
+          }
+        ]}
+        objectFit="cover"
+        className=""
+      />
     </SafeAreaView>
   );
 };
@@ -489,7 +510,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#040720',
-    elevation: -2, // Android 层级
     position: 'relative',
   },
   header: {
@@ -503,11 +523,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   profileContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    
+    backgroundColor: '#040720',
+    elevation: 10, // Android 平台对应最高层级
   },
+
   localVideo: {
     position: 'absolute',
     width: 120,
@@ -517,17 +543,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#2176FF',
-    elevation: 1, // Android 层级
-    zIndex: 2, // iOS 层级
+    elevation: 8,
   },
+
   remoteVideo: {
     position: 'absolute',
     width: '100%',
     height: '100%',
     bottom: 0,
     left: 0,
-    elevation: 0, // Android 层级
-    zIndex: 1, // iOS 层级
+    elevation: 1,
   },
   avatarBorder: {
     width: 200,
@@ -589,6 +614,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 40,
+    zIndex: 2, // 确保按钮在视频上层
   },
   startCallButton: {
     backgroundColor: '#2176FF',

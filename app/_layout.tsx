@@ -1,10 +1,5 @@
 import '../global.css';
-// import 'expo-dev-client';
-import { LogBox } from 'react-native';
-// 忽略Reanimated警告
-LogBox.ignoreLogs(['[Reanimated]']);
-
-import { Slot, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from '~/contexts/WebSocketContext';
 export { ErrorBoundary } from 'expo-router';
@@ -13,8 +8,6 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '~/drizzle/migrations';
-import { navigationRef } from '~/utils/navigationService';
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -42,6 +35,7 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
+              animation:"none"
             }}
           />
         </WebSocketProvider>
