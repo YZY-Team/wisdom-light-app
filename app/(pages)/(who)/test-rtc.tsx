@@ -413,24 +413,22 @@ const LocalSignalingRTC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header} className=''>
+      <View style={styles.header} className="">
         <Text style={styles.headerText}>王小明</Text>
       </View>
 
-      {!isCallActive && (
-        <View style={styles.profileContainer} className=' '>
-          <View style={styles.avatarBorder}>
-            <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
-              style={styles.avatar}
-            />
-          </View>
-          <Text style={styles.statusText}>{status}</Text>
-          <Text style={styles.timeText}>{formatCallTime(callTime)}</Text>
+      <View style={styles.profileContainer} className=" ">
+        <View style={styles.avatarBorder}>
+          <Image
+            source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+            style={styles.avatar}
+          />
         </View>
-      )}
+        <Text style={styles.statusText}>{status}</Text>
+        <Text style={styles.timeText}>{formatCallTime(callTime)}</Text>
+      </View>
 
-      <View className='' style={styles.controlsContainer}>
+      <View className="" style={styles.controlsContainer}>
         <TouchableOpacity style={styles.controlButton} onPress={toggleMute}>
           <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={24} color="white" />
           <Text style={styles.buttonText}>语音</Text>
@@ -491,6 +489,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#040720',
+    elevation: -2, // Android 层级
+    position: 'relative',
   },
   header: {
     height: 60,
@@ -506,6 +506,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   localVideo: {
     position: 'absolute',
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#2176FF',
-    elevation: 2, // Android 层级
+    elevation: 1, // Android 层级
     zIndex: 2, // iOS 层级
   },
   remoteVideo: {
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
     height: '100%',
     bottom: 0,
     left: 0,
-    elevation: 1, // Android 层级
+    elevation: 0, // Android 层级
     zIndex: 1, // iOS 层级
   },
   avatarBorder: {
@@ -555,18 +556,18 @@ const styles = StyleSheet.create({
   },
   controlsContainer: {
     position: 'absolute',
-    bottom: 100,  // 距离底部的距离
+    bottom: 100, // 距离底部的距离
     left: 0,
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 20,
-    zIndex: 3,  // 确保控件在视频上层
+    zIndex: 3, // 确保控件在视频上层
   },
   controlButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // 半透明黑色背景
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 半透明黑色背景
     padding: 10,
     borderRadius: 25,
   },

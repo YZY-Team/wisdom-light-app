@@ -40,10 +40,8 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <WebSocketProvider>
           <Stack
-            ref={navigationRef}
             screenOptions={{
               headerShown: false,
-              contentStyle: { backgroundColor: 'red' },
             }}
           />
         </WebSocketProvider>
