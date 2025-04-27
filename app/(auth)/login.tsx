@@ -12,6 +12,7 @@ import { useUserStore } from '~/store/userStore';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Keyboard, KeyboardEvent } from 'react-native';
+import { verificationApi } from '~/api/auth/verification';
 // 删除 SecureStore import
 // import * as SecureStore from 'expo-secure-store';
 
@@ -60,9 +61,25 @@ export default function Login() {
     }
   };
 
-  const handleGetVerificationCode = () => {
-    // 获取验证码逻辑
-    console.log('获取验证码', phone);
+  /**
+   * 处理获取验证码
+   * 调用验证码API发送验证码到用户手机
+   */
+  const handleGetVerificationCode = async () => {
+    if (!phone) {
+      alert('请输入手机号');
+      return;
+    }
+    try {
+      const res = await verificationApi.getCode(phone);
+      if (res.code === 200) {
+        alert('验证码已发送');
+      } else {
+        alert('获取验证码失败：' + res.message);
+      }
+    } catch (error) {
+      alert('获取验证码失败：' + error);
+    }
   };
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -91,17 +108,16 @@ export default function Login() {
       enableOnAndroid
       enableAutomaticScroll
       extraScrollHeight={20}
-      keyboardShouldPersistTaps="handled"
-    >
+      keyboardShouldPersistTaps="handled">
       <LinearGradient
         colors={['#20B4F3', '#5762FF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="min-h-screen flex">
+        className="flex min-h-screen">
         <View
           className="flex items-center   justify-center px-4"
           style={{
-            height: keyboardHeight > 0 ? '20%' : '50%'
+            height: keyboardHeight > 0 ? '20%' : '50%',
           }}>
           <Text
             className="text-[8.205vw] text-white"
@@ -116,7 +132,7 @@ export default function Login() {
         <View
           className="flex-1 rounded-t-[40px] bg-white px-4"
           style={{
-            minHeight: keyboardHeight > 0 ? '80%' : '50%'
+            minHeight: keyboardHeight > 0 ? '80%' : '50%',
           }}>
           <View className="flex-1 pt-14">
             <View className="flex flex-col gap-6">
@@ -217,7 +233,7 @@ export default function Login() {
               请勾选隐私政策与服务协议
             </Text>
 
-            <View className="items-center px-4 w-full">
+            <View className="w-full items-center px-4">
               <LinearGradient
                 colors={
                   isChecked
@@ -230,7 +246,9 @@ export default function Login() {
                 style={{
                   boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
                 }}>
-                <Pressable onPress={handleRegister} className="h-[44px] items-center justify-center">
+                <Pressable
+                  onPress={handleRegister}
+                  className="h-[44px] items-center justify-center">
                   <Text
                     className="text-center text-[5.128vw] text-white"
                     style={{
