@@ -16,6 +16,11 @@ import { FlashList } from '@shopify/flash-list';
 import type { Friend } from '~/types/have/friendType';
 import { useFriendList } from '~/queries/friend';
 import { pinyin } from 'pinyin-pro';
+import { useSQLiteContext } from 'expo-sqlite';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import * as schema from '~/db/schema';
+import { useUserStore } from '~/store/userStore';
+import { eq } from 'drizzle-orm';
 
 // 字母索引数据
 const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); // 添加 '#' 用于特殊情况
@@ -95,7 +100,16 @@ const flattenGroupedData = (groupedData: FriendGroup): Item[] => {
 
 // 好友项组件
 const FriendItem = memo(({ item }: { item: Friend }) => (
-  <Pressable className="flex-row items-center bg-white   py-3  ">
+  <Pressable
+    className="flex-row items-center bg-white py-3"
+    onPress={() => {
+      console.log('aaa');
+
+      router.push({
+        pathname: '/friend-detail',
+        params: { friendId: item.userId, friendInfo: JSON.stringify(item) },
+      });
+    }}>
     <Image
       source={{ uri: item.avatarUrl }}
       className="h-12 w-12 rounded-full"
@@ -126,10 +140,129 @@ export default function FriendList() {
   const [searchText, setSearchText] = useState('');
   const { data: friendResponse, isLoading, error } = useFriendList();
   const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends'); // 新增状态管理 active tab
+  // 获取 SQLite 数据库连接
+  const sqlite = useSQLiteContext();
+  const db = drizzle(sqlite);
+  // 获取当前用户ID
+  const currentUserId = useUserStore((state) => state.userInfo?.globalUserId);
+  // 本地存储的好友数据
+  const [localFriends, setLocalFriends] = useState<Friend[]>([]);
+
+  // 从本地数据库加载好友数据
+  useEffect(() => {
+    const loadLocalFriends = async () => {
+      if (currentUserId) {
+        try {
+          console.log('从本地数据库加载好友数据');
+          const result = await db
+            .select()
+            .from(schema.friends)
+            .where(eq(schema.friends.userId, currentUserId));
+
+          if (result && result.length > 0) {
+            console.log('本地数据库中找到好友数据', result.length);
+            setLocalFriends(
+              result.map((item) => ({
+                userId: item.friendId,
+                username: item.username || '',
+                nickname: item.nickname || '',
+                remark: item.remark,
+                avatarUrl: item.avatarUrl,
+                originalAvatarUrl: null,
+                customAvatarUrl: null,
+                isFavorite: Boolean(item.isFavorite),
+                createTime: item.createTime,
+              }))
+            );
+          } else {
+            console.log('本地数据库中没有找到好友数据');
+          }
+        } catch (error) {
+          console.error('从本地数据库加载好友数据失败:', error);
+        }
+      }
+    };
+
+    loadLocalFriends();
+  }, [currentUserId]);
 
   // 从 ApiResponse 中获取好友列表数据
-  const friends = friendResponse?.data || [];
-  console.log('好友列表原始数据:', friends);
+  const friends = friendResponse?.data || localFriends || [];
+
+  // 将好友数据同步到 SQLite 数据库
+  useEffect(() => {
+    const syncFriendsToDatabase = async () => {
+      try {
+        if (friends && friends.length > 0 && currentUserId) {
+          console.log('开始同步好友数据到本地数据库');
+
+          // 准备用户数据插入
+          const usersToInsert = friends.map((friend) => ({
+            id: friend.userId,
+            nickname: friend.nickname || null,
+            avatarLocalPath: null,
+            avatarRemoteUrl: friend.originalAvatarUrl || friend.avatarUrl,
+          }));
+
+          // 准备好友关系数据插入
+          const friendsToInsert = friends.map((friend) => ({
+            userId: currentUserId, // 使用当前用户ID
+            friendId: friend.userId, // 好友的ID
+            username: friend.username,
+            nickname: friend.nickname,
+            remark: friend.remark,
+            avatarUrl: friend.avatarUrl,
+            isFavorite: friend.isFavorite,
+            createTime: friend.createTime,
+          }));
+
+          // 先确保用户数据存在
+          for (const user of usersToInsert) {
+            try {
+              await db
+                .insert(schema.users)
+                .values(user)
+                .onConflictDoUpdate({
+                  target: schema.users.id,
+                  set: {
+                    nickname: user.nickname,
+                    avatarRemoteUrl: user.avatarRemoteUrl,
+                  },
+                });
+            } catch (err) {
+              console.error('插入用户数据出错:', err);
+            }
+          }
+
+          // 再插入好友关系
+          for (const friend of friendsToInsert) {
+            try {
+              await db
+                .insert(schema.friends)
+                .values(friend)
+                .onConflictDoUpdate({
+                  target: [schema.friends.userId, schema.friends.friendId],
+                  set: {
+                    nickname: friend.nickname,
+                    remark: friend.remark,
+                    avatarUrl: friend.avatarUrl,
+                    isFavorite: friend.isFavorite,
+                  },
+                });
+            } catch (err) {
+              console.error('插入好友数据出错:', err);
+            }
+          }
+
+          console.log('好友数据同步完成');
+        }
+      } catch (error) {
+        console.error('同步好友数据到数据库失败:', error);
+      }
+    };
+
+    syncFriendsToDatabase();
+  }, [friends]);
 
   // 根据搜索文本过滤好友
   const filteredFriends = friends.filter((friend: Friend) => {
@@ -143,9 +276,8 @@ export default function FriendList() {
 
   // 生成并展平数据
   const groupedData = groupFriendsByLetter(filteredFriends);
-  console.log('分组后的数据:', groupedData);
+
   const flattenedData = flattenGroupedData(groupedData);
-  console.log('展平后的数据:', flattenedData);
 
   // 处理字母选择，滚动到对应分组
   const handleLetterSelect = (letter: string) => {
@@ -249,56 +381,64 @@ export default function FriendList() {
   return (
     <View className="flex-1 ">
       {/* Use relative positioning on the parent and absolute on children */}
-      <View className="flex-row items-center justify-center bg-white px-4 py-3 relative">
+      <View className="relative flex-row items-center justify-center bg-white px-4 py-3">
         {/* Back Button - Absolute Left */}
-        <Pressable onPress={() => router.back()} className="absolute left-4 top-0 bottom-0 justify-center z-10">
+        <Pressable
+          onPress={() => router.back()}
+          className="absolute bottom-0 left-4 top-0 z-10 justify-center">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
         {/* Title - Centered */}
         <Text className="text-center text-lg font-medium">好友列表</Text>
         {/* Add Friend Button - Absolute Right */}
-        <Pressable onPress={() => router.push('/add-friend')} className="absolute right-4 top-0 bottom-0 justify-center z-10">
+        <Pressable
+          onPress={() => router.push('/add-friend')}
+          className="absolute bottom-0 right-4 top-0 z-10 justify-center">
           <Text className="text-[16px] text-black/50">添加朋友</Text>
         </Pressable>
       </View>
-      <View className=' bg-white'>{/* 搜索框 */}
-      <View className="mx-4 mb-1">
-        <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4 ">
-          <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
-          <TextInput
-            className="ml-2 flex-1 text-[14px] text-black"
-            placeholder="搜索"
-            placeholderTextColor="rgba(0,0,0,0.4)"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
+      <View className=" bg-white">
+        {/* 搜索框 */}
+        <View className="mx-4 mb-1">
+          <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4 ">
+            <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
+            <TextInput
+              className="ml-2 flex-1 text-[14px] text-black"
+              placeholder="搜索"
+              placeholderTextColor="rgba(0,0,0,0.4)"
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+          </View>
+        </View>
+
+        {/* Tab 栏 */}
+        <View
+          style={{
+            boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.05)',
+          }}
+          className="mx-4 mb-4 flex-row items-center justify-between  rounded-[6px] bg-[#1483FD1A] px-2 py-[6px]">
+          <TouchableOpacity
+            onPress={() => setActiveTab('friends')}
+            className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'friends' ? 'bg-white' : ''}`}>
+            <Text className={`text-[14px]  `}>好友列表</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab('groups')}
+            className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'groups' ? 'bg-white' : ''}`}>
+            <Text className={`text-[14px] `}>群聊列表</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tab 栏 */}
-      <View style={{
-        boxShadow:"0px 4px 4px 0px rgba(20, 131, 253, 0.05)"
-      }} className="mx-4 mb-4 rounded-[6px] flex-row items-center  justify-between bg-[#1483FD1A] px-2 py-[6px]">
-        <TouchableOpacity
-          onPress={() => setActiveTab('friends')}
-          className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'friends' ? 'bg-white' : ''}`}>
-          <Text className={`text-[14px]  `}>好友列表</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab('groups')}
-          className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'groups' ? 'bg-white' : ''}`}>
-          <Text className={`text-[14px] `}>群聊列表</Text>
-        </TouchableOpacity>
-      </View></View>
-      
-
-      {isLoading ? (
+      {isLoading && localFriends.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-500">加载中...</Text>
         </View>
-      ) : error ? (
+      ) : error && localFriends.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-red-500">加载失败，请重试</Text>
+          <Text className="text-gray-500">使用本地缓存数据时，需要先至少连接一次网络</Text>
         </View>
       ) : flattenedData.length === 0 ? (
         <View className="flex-1 items-center justify-center">

@@ -1,4 +1,5 @@
-import { View, Text, FlatList } from 'react-native';
+import { View, Text } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import WeeklyDeclarationItem from './WeeklyDeclarationItem';
 import { useWeeklyDeclarationList, useCurrentWeeklyDeclaration } from '~/queries/weeklyDeclaration';
@@ -58,11 +59,12 @@ export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListP
 
   return (
     <View className="flex-1">
-      <FlatList
+      <FlashList
         data={declarations}
         contentContainerStyle={{
           paddingBottom: 160,
         }}
+        estimatedItemSize={200}
         renderItem={({ item }) => (
           <View 
             className="mb-6"

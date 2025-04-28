@@ -1,5 +1,6 @@
 // 导入必要的React Native组件和钩子
-import { View, Text, FlatList, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import MorningDeclaration from './MorningDeclaration';
@@ -337,7 +338,7 @@ export default function DailyDeclaration() {
           <Text className="text-gray-500">加载中...</Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={[
             ...(todayDeclarationRes?.data
               ? [
@@ -382,6 +383,8 @@ export default function DailyDeclaration() {
                           weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
                           totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
                         })) || [],
+                      weeklyProgress: '0/0',
+                      monthlyProgress: '0/0',
                     },
                   },
                 ]
@@ -393,6 +396,7 @@ export default function DailyDeclaration() {
           )}
           keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
+          estimatedItemSize={200}
           contentContainerStyle={{
             paddingBottom: 160,
           }}

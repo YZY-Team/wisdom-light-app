@@ -12,7 +12,9 @@ export const conversations = sqliteTable('conversations', {
 
 export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(), // 消息的唯一标识符
-  dialogId: text('dialog_id').notNull().references(() => conversations.dialogId), // 所属对话的ID
+  dialogId: text('dialog_id')
+    .notNull()
+    .references(() => conversations.dialogId), // 所属对话的ID
   senderId: text('sender_id').notNull(), // 发送者的ID
   receiverId: text('receiver_id'), // 接收者的ID（私聊时使用）
   textContent: text('text_content'), // 消息内容
@@ -35,14 +37,43 @@ export const groups = sqliteTable('groups', {
   avatarRemoteUrl: text('avatar_remote_url'), // 群组头像远程URL
 });
 
-export const groupMembers = sqliteTable('group_members', {
-    groupId: text('group_id').notNull().references(() => groups.id), // 群组ID
-    userId: text('user_id').notNull().references(() => users.id), // 用户ID
+export const groupMembers = sqliteTable(
+  'group_members',
+  {
+    groupId: text('group_id')
+      .notNull()
+      .references(() => groups.id), // 群组ID
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id), // 用户ID
     role: text('role').default('member'), // 成员角色：'admin'（管理员）, 'member'（普通成员）
     nickname: text('nickname'), // 群内昵称
-  }, (table) => ({
-    pk: primaryKey({ columns: [table.groupId, table.userId] }), // 复合主键
-  }));
+  },
+  (table) => [
+    primaryKey({ columns: [table.groupId, table.userId] }), // 复合主键
+  ]
+);
+
+export const friends = sqliteTable(
+  'friends',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id), // 用户ID
+    friendId: text('friend_id')
+      .notNull()
+      .references(() => users.id), // 好友ID
+    username: text('username'), // 用户名（可能用于搜索）
+    nickname: text('nickname'), // 显示名称（优先用于界面展示）
+    remark: text('remark'), // 用户备注（可能为空）
+    avatarUrl: text('avatar_url'), // 当前显示的头像URL
+    isFavorite: integer('is_favorite', { mode: 'boolean' }).default(false), // 是否收藏
+    createTime: text('create_time').notNull(), // 好友关系建立时间
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.friendId] }), // 复合主键
+  ]
+);
 
 // Export types for use in the app
 export type Conversation = typeof conversations.$inferSelect;
@@ -50,3 +81,4 @@ export type Message = typeof messages.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
+export type Friend = typeof friends.$inferSelect;

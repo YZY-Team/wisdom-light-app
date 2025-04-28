@@ -57,15 +57,6 @@ export default function PrivateChat() {
 
   const chatMessages = messages[String(dialogId)] || [];
 
-  // 添加消息更新时的自动滚动
-  // useEffect(() => {
-  //   if (scrollViewRef.current) {
-  //     setTimeout(() => {
-  //       scrollViewRef.current?.scrollToEnd({ animated: true });
-  //     }, 100);
-  //   }
-  // }, [chatMessages]);
-
   // WebSocket 上下文
   const { sendMessage } = useWebSocketContext();
 
