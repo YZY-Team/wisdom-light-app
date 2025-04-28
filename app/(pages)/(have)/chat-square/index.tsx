@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useState, useCallback, useEffect } from 'react';
-
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 type MessageProps = {
   content: string;
   time: string;
@@ -90,7 +90,6 @@ export default function ChatSquare() {
         console.log('WebSocket 错误:', error);
       },
       onMessage: (event) => {
-
         // try {
         //   const data = JSON.parse(event.data);
         //   setMessages((prev) => [...prev, {
@@ -126,10 +125,10 @@ export default function ChatSquare() {
 
     sendMessage(
       JSON.stringify({
-        "type": "GROUP_CHAT",
-        "dialogId": 888888,
-        "textContent": "你好，这是一条消息",
-        "clientMessageId": "client-msg-123"
+        type: 'GROUP_CHAT',
+        dialogId: 888888,
+        textContent: '你好，这是一条消息',
+        clientMessageId: 'client-msg-123',
       })
     );
 
@@ -137,51 +136,56 @@ export default function ChatSquare() {
   }, [inputMessage, sendMessage]);
 
   return (
-    <View className="flex-1 bg-[#1483fd]/10">
-      {/* 头部 */}
-      <View className="flex-row items-center px-4 py-3">
-        <Pressable onPress={() => router.back()} className="absolute z-10 left-4">
-          <Ionicons name="chevron-back" size={24} color="#666" />
-        </Pressable>
-        <Text className="flex-1 text-center text-lg font-medium">聊天广场</Text>
-      </View>
+    <KeyboardAvoidingView
+      behavior={'padding'}
+      keyboardVerticalOffset={0}
+      style={{ flex: 1 }}>
+      <View className="flex-1 bg-[#f5f8fc]">
+        {/* 头部 */}
+        <View className="flex-row items-center px-4 py-3">
+          <Pressable onPress={() => router.back()} className="absolute left-4 z-10">
+            <Ionicons name="chevron-back" size={24} color="#666" />
+          </Pressable>
+          <Text className="flex-1 text-center text-lg font-medium">聊天广场</Text>
+        </View>
 
-      {/* 消息区域 */}
-      <View className="flex-1">
-        <Text className="px-4 py-2 text-center text-sm text-[#757575]">
-          欢迎来到聊天广场，请文明发言！
-        </Text>
-        <ScrollView className="flex-1 p-4">
-          {messages.map((msg, index) => (
-            <MessageItem key={index} {...msg} />
-          ))}
-        </ScrollView>
-      </View>
+        {/* 消息区域 */}
+        <View className="flex-1">
+          <Text className="px-4 py-2 text-center text-sm text-[#757575]">
+            欢迎来到聊天广场，请文明发言！
+          </Text>
+          <ScrollView className="flex-1 p-4">
+            {messages.map((msg, index) => (
+              <MessageItem key={index} {...msg} />
+            ))}
+          </ScrollView>
+        </View>
 
-      {/* 底部输入框 */}
-      <View style={{ paddingBottom: insets.bottom + 20 || 20 }} className="p-4">
-        <View className="flex-row items-center">
-          <View
-            style={{
-              boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
-            }}
-            className="flex-1 flex-row items-center rounded-[12px] bg-gray-100 px-6 py-3">
-            <TextInput
-              className="flex-1"
-              placeholder="请输入消息..."
-              placeholderTextColor="#999"
-              value={inputMessage}
-              onChangeText={setInputMessage}
-              onSubmitEditing={handleSendMessage}
-            />
-            <Pressable onPress={handleSendMessage}>
-              <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
-                <Ionicons name="arrow-up" size={20} color="#fff" />
-              </View>
-            </Pressable>
+        {/* 底部输入框 */}
+        <View style={{ paddingBottom: insets.bottom + 20 || 20 }} className="p-4 ">
+          <View className="flex-row items-center ">
+            <View
+              style={{
+                boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
+              }}
+              className="flex-1 flex-row items-center rounded-[12px] bg-white px-6 py-3">
+              <TextInput
+                className="flex-1"
+                placeholder="请输入消息..."
+                placeholderTextColor="#999"
+                value={inputMessage}
+                onChangeText={setInputMessage}
+                onSubmitEditing={handleSendMessage}
+              />
+              <Pressable onPress={handleSendMessage}>
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
+                  <Ionicons name="arrow-up" size={20} color="#fff" />
+                </View>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

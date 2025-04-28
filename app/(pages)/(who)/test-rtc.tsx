@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import {
   RTCPeerConnection,
@@ -422,8 +422,8 @@ const LocalSignalingRTC = () => {
           styles.profileContainer,
           {
             opacity: isCallActive ? 1 : 0,
-            pointerEvents: isCallActive ? 'auto' : 'none'
-          }
+            pointerEvents: isCallActive ? 'auto' : 'none',
+          },
         ]}
         className=" ">
         <View style={styles.avatarBorder}>
@@ -462,13 +462,13 @@ const LocalSignalingRTC = () => {
         </TouchableOpacity>
       </View>
 
-      <View 
+      <View
         style={[
-          styles.buttonContainer, 
-          { 
+          styles.buttonContainer,
+          {
             opacity: !isCallActive ? 1 : 0,
-            pointerEvents: !isCallActive ? 'auto' : 'none'
-          }
+            pointerEvents: !isCallActive ? 'auto' : 'none',
+          },
         ]}>
         <TouchableOpacity style={styles.startCallButton} onPress={makeCall}>
           <Text style={styles.buttonText}>发起通话</Text>
@@ -477,15 +477,15 @@ const LocalSignalingRTC = () => {
           <Text style={styles.buttonText}>等待接听</Text>
         </TouchableOpacity>
       </View>
-      
+
       <RTCView
         streamURL={remoteStream?.toURL()}
         style={[
-          styles.remoteVideo, 
-          { 
+          styles.remoteVideo,
+          {
             opacity: remoteStream ? 1 : 0,
-            pointerEvents: remoteStream ? 'auto' : 'none'
-          }
+            pointerEvents: remoteStream ? 'auto' : 'none',
+          },
         ]}
         objectFit="cover"
         className=""
@@ -493,11 +493,11 @@ const LocalSignalingRTC = () => {
       <RTCView
         streamURL={localStream?.toURL()}
         style={[
-          styles.localVideo, 
-          { 
+          styles.localVideo,
+          {
             opacity: localStream ? 1 : 0,
-            pointerEvents: localStream ? 'auto' : 'none'
-          }
+            pointerEvents: localStream ? 'auto' : 'none',
+          },
         ]}
         objectFit="cover"
         className=""

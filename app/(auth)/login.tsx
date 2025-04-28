@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loginApi } from '~/api/auth/login';
@@ -9,7 +9,7 @@ import Checkbox from 'expo-checkbox';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useHeaderHeight } from '@react-navigation/elements';
 import { Keyboard, KeyboardEvent } from 'react-native';
 import { verificationApi } from '~/api/auth/verification';
@@ -102,166 +102,169 @@ export default function Login() {
   }, []);
 
   return (
-    <KeyboardAwareScrollView
+    <KeyboardAvoidingView
       className="flex-1"
-      contentContainerStyle={{ flexGrow: 1 }}
-      enableOnAndroid
-      enableAutomaticScroll
-      extraScrollHeight={20}
-      keyboardShouldPersistTaps="handled">
-      <LinearGradient
-        colors={['#20B4F3', '#5762FF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        className="flex min-h-screen">
-        <View
-          className="flex items-center   justify-center px-4"
-          style={{
-            height: keyboardHeight > 0 ? '20%' : '50%',
-          }}>
-          <Text
-            className="text-[8.205vw] text-white"
+      behavior={"padding"}
+      style={{ flex: 1 }}>
+        
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled">
+        <LinearGradient
+          colors={['#20B4F3', '#5762FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          className="flex min-h-screen">
+          <View
+            className="flex items-center   justify-center px-4"
             style={{
-              fontFamily: 'Inter',
-              fontWeight: '700',
+              height: keyboardHeight > 0 ? '20%' : '50%',
             }}>
-            Wisdom Light
-          </Text>
-        </View>
+            <Text
+              className="text-[8.205vw] text-white"
+              style={{
+                fontFamily: 'Inter',
+                fontWeight: '700',
+              }}>
+              Wisdom Light
+            </Text>
+          </View>
 
-        <View
-          className="flex-1 rounded-t-[40px] bg-white px-4"
-          style={{
-            minHeight: keyboardHeight > 0 ? '80%' : '50%',
-          }}>
-          <View className="flex-1 pt-14">
-            <View className="flex flex-col gap-6">
-              <View>
-                <Text
-                  className="mb-2 text-black"
-                  style={{
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: '700',
-                  }}>
-                  手机号
-                </Text>
-                <TextInput
-                  className="h-[48px] rounded-[6px] px-4"
-                  style={{
-                    backgroundColor: 'rgba(20, 131, 253, 0.05)',
-                  }}
-                  placeholder="+86  请输入您的手机号"
-                  placeholderTextColor="#999999"
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View className="">
-                <Text
-                  className="mb-2 text-black"
-                  style={{
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: '700',
-                  }}>
-                  验证码
-                </Text>
-                <View className="relative">
+          <View
+            className="flex-1 rounded-t-[40px] bg-white px-4"
+            style={{
+              minHeight: keyboardHeight > 0 ? '80%' : '50%',
+            }}>
+            <View className="flex-1 pt-14">
+              <View className="flex flex-col gap-6">
+                <View>
+                  <Text
+                    className="mb-2 text-black"
+                    style={{
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: '700',
+                    }}>
+                    手机号
+                  </Text>
                   <TextInput
-                    className="h-[48px] rounded-[6px] px-4 pr-24"
+                    className="h-[48px] rounded-[6px] px-4"
                     style={{
                       backgroundColor: 'rgba(20, 131, 253, 0.05)',
                     }}
-                    placeholder="请输入验证码"
+                    placeholder="+86  请输入您的手机号"
                     placeholderTextColor="#999999"
-                    value={verificationCode}
-                    onChangeText={setVerificationCode}
-                    keyboardType="number-pad"
+                    value={phone}
+                    onChangeText={setPhone}
+                    keyboardType="phone-pad"
                   />
-                  <View className="absolute right-2 top-[6px]">
-                    <LinearGradient
-                      colors={['#20B4F3', '#5762FF']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      className="rounded-[6px]"
+                </View>
+
+                <View className="">
+                  <Text
+                    className="mb-2 text-black"
+                    style={{
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: '700',
+                    }}>
+                    验证码
+                  </Text>
+                  <View className="relative">
+                    <TextInput
+                      className="h-[48px] rounded-[6px] px-4 pr-24"
                       style={{
-                        boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-                      }}>
-                      <Pressable
-                        onPress={handleGetVerificationCode}
-                        className="h-[36px] items-center justify-center px-4">
-                        <Text className="text-[14px] text-white">获取验证码</Text>
-                      </Pressable>
-                    </LinearGradient>
+                        backgroundColor: 'rgba(20, 131, 253, 0.05)',
+                      }}
+                      placeholder="请输入验证码"
+                      placeholderTextColor="#999999"
+                      value={verificationCode}
+                      onChangeText={setVerificationCode}
+                      keyboardType="number-pad"
+                    />
+                    <View className="absolute right-2 top-[6px]">
+                      <LinearGradient
+                        colors={['#20B4F3', '#5762FF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        className="rounded-[6px]"
+                        style={{
+                          boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                        }}>
+                        <Pressable
+                          onPress={handleGetVerificationCode}
+                          className="h-[36px] items-center justify-center px-4">
+                          <Text className="text-[14px] text-white">获取验证码</Text>
+                        </Pressable>
+                      </LinearGradient>
+                    </View>
                   </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          <View
-            className="flex flex-col items-center gap-1 "
-            style={{
-              paddingBottom: insets.bottom + 33 || 33,
-            }}>
-            <View className="flex-row items-center">
-              <Checkbox
-                className="mr-2 h-4 w-4 rounded border-none bg-[#D9D9D9]"
-                value={isChecked}
-                onValueChange={(value) => {
-                  setChecked(value);
-                  setShowError(false);
-                }}
-              />
-
-              <Text className="text-sm text-gray-500">
-                <Text className="text-[#1687FD]">《隐私政策》</Text>
-                <Text className="text-gray-500">与</Text>
-                <Text className="text-[#1687FD]">《服务协议》</Text>
-                同意选项
-              </Text>
-            </View>
-
-            <Text
-              className="h-5 text-sm text-red-500"
+            <View
+              className="flex flex-col items-center gap-1 "
               style={{
-                opacity: showError ? 1 : 0,
+                paddingBottom: insets.bottom + 33 || 33,
               }}>
-              请勾选隐私政策与服务协议
-            </Text>
+              <View className="flex-row items-center">
+                <Checkbox
+                  className="mr-2 h-4 w-4 rounded border-none bg-[#D9D9D9]"
+                  value={isChecked}
+                  onValueChange={(value) => {
+                    setChecked(value);
+                    setShowError(false);
+                  }}
+                />
 
-            <View className="w-full items-center px-4">
-              <LinearGradient
-                colors={
-                  isChecked
-                    ? ['#20B4F3', '#5762FF']
-                    : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                className="w-full rounded-[6px]"
+                <Text className="text-sm text-gray-500">
+                  <Text className="text-[#1687FD]">《隐私政策》</Text>
+                  <Text className="text-gray-500">与</Text>
+                  <Text className="text-[#1687FD]">《服务协议》</Text>
+                  同意选项
+                </Text>
+              </View>
+
+              <Text
+                className="h-5 text-sm text-red-500"
                 style={{
-                  boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                  opacity: showError ? 1 : 0,
                 }}>
-                <Pressable
-                  onPress={handleRegister}
-                  className="h-[44px] items-center justify-center">
-                  <Text
-                    className="text-center text-[5.128vw] text-white"
-                    style={{
-                      fontWeight: '700',
-                    }}>
-                    登录
-                  </Text>
-                </Pressable>
-              </LinearGradient>
+                请勾选隐私政策与服务协议
+              </Text>
+
+              <View className="w-full items-center px-4">
+                <LinearGradient
+                  colors={
+                    isChecked
+                      ? ['#20B4F3', '#5762FF']
+                      : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="w-full rounded-[6px]"
+                  style={{
+                    boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                  }}>
+                  <Pressable
+                    onPress={handleRegister}
+                    className="h-[44px] items-center justify-center">
+                    <Text
+                      className="text-center text-[5.128vw] text-white"
+                      style={{
+                        fontWeight: '700',
+                      }}>
+                      登录
+                    </Text>
+                  </Pressable>
+                </LinearGradient>
+              </View>
             </View>
           </View>
-        </View>
-      </LinearGradient>
-    </KeyboardAwareScrollView>
+        </LinearGradient>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

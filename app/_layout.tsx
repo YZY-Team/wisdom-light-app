@@ -8,6 +8,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '~/drizzle/migrations';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -29,15 +30,17 @@ export default function RootLayout() {
   }
   useDrizzleStudio(expoDb);
   return (
-    <SQLiteProvider databaseName={'tasks'} options={{ enableChangeListener: true }} >
+    <SQLiteProvider databaseName={'tasks'} options={{ enableChangeListener: true }}>
       <QueryClientProvider client={queryClient}>
         <WebSocketProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation:"none"
-            }}
-          />
+          <KeyboardProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: 'none',
+              }}
+            />
+          </KeyboardProvider>
         </WebSocketProvider>
       </QueryClientProvider>
     </SQLiteProvider>

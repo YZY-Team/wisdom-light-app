@@ -30,6 +30,7 @@
       ],
       "expo-sqlite",
       "@config-plugins/react-native-webrtc"
+
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,9 +40,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anjiuwenhua.chengxinwangluoapp"
@@ -52,9 +51,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anjiuwenhua.chengxinwangluoapp",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "extra": {
       "router": {

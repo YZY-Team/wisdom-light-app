@@ -1,5 +1,4 @@
-import { View, TouchableOpacity } from 'react-native';
-import { Text } from '../../../components/nativewindui/Text';
+import { View, TouchableOpacity,Text } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
