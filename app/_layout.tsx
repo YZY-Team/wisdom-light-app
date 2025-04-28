@@ -3,12 +3,10 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from '~/contexts/WebSocketContext';
 export { ErrorBoundary } from 'expo-router';
-import { SQLiteProvider, openDatabaseSync } from 'expo-sqlite';
-import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
-import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import migrations from '~/drizzle/migrations';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { DatabaseProvider } from '~/contexts/DatabaseContext';
+import { useDatabase } from '~/contexts/DatabaseContext';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -18,22 +16,23 @@ const queryClient = new QueryClient({
   },
 });
 
+// DrizzleStudio组件
+const DrizzleStudioComponent = () => {
+  const { useDrizzleStudio, isInitialized } = useDatabase();
+  
+  // 始终调用hook，但只在初始化后才会有效果
+  const studioInstance = useDrizzleStudio();
+  
+  return studioInstance;
+};
+
 export default function RootLayout() {
-  const expoDb = openDatabaseSync('tasks');
-  const db = drizzle(expoDb);
-  const { success, error } = useMigrations(db, migrations);
-  if (error) {
-    console.error(error);
-  }
-  if (success) {
-    console.log('Migrations successful');
-  }
-  useDrizzleStudio(expoDb);
   return (
-    <SQLiteProvider databaseName={'tasks'} options={{ enableChangeListener: true }}>
+    <DatabaseProvider>
       <QueryClientProvider client={queryClient}>
         <WebSocketProvider>
           <KeyboardProvider>
+            <DrizzleStudioComponent />
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -43,6 +42,6 @@ export default function RootLayout() {
           </KeyboardProvider>
         </WebSocketProvider>
       </QueryClientProvider>
-    </SQLiteProvider>
+    </DatabaseProvider>
   );
 }

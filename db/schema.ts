@@ -67,6 +67,8 @@ export const friends = sqliteTable(
     nickname: text('nickname'), // 显示名称（优先用于界面展示）
     remark: text('remark'), // 用户备注（可能为空）
     avatarUrl: text('avatar_url'), // 当前显示的头像URL
+    originalAvatarUrl: text('original_avatar_url'), // 原始头像URL
+    customAvatarUrl: text('custom_avatar_url'), // 自定义头像URL
     isFavorite: integer('is_favorite', { mode: 'boolean' }).default(false), // 是否收藏
     createTime: text('create_time').notNull(), // 好友关系建立时间
   },

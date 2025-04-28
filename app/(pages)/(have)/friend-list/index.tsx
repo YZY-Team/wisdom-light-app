@@ -16,11 +16,10 @@ import { FlashList } from '@shopify/flash-list';
 import type { Friend } from '~/types/have/friendType';
 import { useFriendList } from '~/queries/friend';
 import { pinyin } from 'pinyin-pro';
-import { useSQLiteContext } from 'expo-sqlite';
-import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '~/db/schema';
 import { useUserStore } from '~/store/userStore';
 import { eq } from 'drizzle-orm';
+import { useDatabase } from '~/contexts/DatabaseContext';
 
 // 字母索引数据
 const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); // 添加 '#' 用于特殊情况
@@ -140,9 +139,10 @@ export default function FriendList() {
   const [searchText, setSearchText] = useState('');
   const { data: friendResponse, isLoading, error } = useFriendList();
   const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends'); // 新增状态管理 active tab
-  // 获取 SQLite 数据库连接
-  const sqlite = useSQLiteContext();
-  const db = drizzle(sqlite);
+  
+  // 使用DatabaseContext
+  const { drizzleDb, isInitialized } = useDatabase();
+  
   // 获取当前用户ID
   const currentUserId = useUserStore((state) => state.userInfo?.globalUserId);
   // 本地存储的好友数据
@@ -151,10 +151,10 @@ export default function FriendList() {
   // 从本地数据库加载好友数据
   useEffect(() => {
     const loadLocalFriends = async () => {
-      if (currentUserId) {
+      if (currentUserId && drizzleDb) {
         try {
           console.log('从本地数据库加载好友数据');
-          const result = await db
+          const result = await drizzleDb
             .select()
             .from(schema.friends)
             .where(eq(schema.friends.userId, currentUserId));
@@ -168,8 +168,8 @@ export default function FriendList() {
                 nickname: item.nickname || '',
                 remark: item.remark,
                 avatarUrl: item.avatarUrl,
-                originalAvatarUrl: null,
-                customAvatarUrl: null,
+                originalAvatarUrl: item.originalAvatarUrl,
+                customAvatarUrl: item.customAvatarUrl,
                 isFavorite: Boolean(item.isFavorite),
                 createTime: item.createTime,
               }))
@@ -184,7 +184,7 @@ export default function FriendList() {
     };
 
     loadLocalFriends();
-  }, [currentUserId]);
+  }, [currentUserId, drizzleDb]);
 
   // 从 ApiResponse 中获取好友列表数据
   const friends = friendResponse?.data || localFriends || [];
@@ -193,7 +193,7 @@ export default function FriendList() {
   useEffect(() => {
     const syncFriendsToDatabase = async () => {
       try {
-        if (friends && friends.length > 0 && currentUserId) {
+        if (friends && friends.length > 0 && currentUserId && drizzleDb) {
           console.log('开始同步好友数据到本地数据库');
 
           // 准备用户数据插入
@@ -212,6 +212,8 @@ export default function FriendList() {
             nickname: friend.nickname,
             remark: friend.remark,
             avatarUrl: friend.avatarUrl,
+            originalAvatarUrl: friend.originalAvatarUrl,
+            customAvatarUrl: friend.customAvatarUrl,
             isFavorite: friend.isFavorite,
             createTime: friend.createTime,
           }));
@@ -219,7 +221,12 @@ export default function FriendList() {
           // 先确保用户数据存在
           for (const user of usersToInsert) {
             try {
-              await db
+              if (!user.id) {
+                console.warn('跳过插入缺少ID的用户数据');
+                continue;
+              }
+              
+              await drizzleDb
                 .insert(schema.users)
                 .values(user)
                 .onConflictDoUpdate({
@@ -237,7 +244,12 @@ export default function FriendList() {
           // 再插入好友关系
           for (const friend of friendsToInsert) {
             try {
-              await db
+              if (!friend.userId || !friend.friendId || !friend.createTime) {
+                console.warn('跳过插入不完整的好友数据');
+                continue;
+              }
+              
+              await drizzleDb
                 .insert(schema.friends)
                 .values(friend)
                 .onConflictDoUpdate({
@@ -246,6 +258,8 @@ export default function FriendList() {
                     nickname: friend.nickname,
                     remark: friend.remark,
                     avatarUrl: friend.avatarUrl,
+                    originalAvatarUrl: friend.originalAvatarUrl,
+                    customAvatarUrl: friend.customAvatarUrl,
                     isFavorite: friend.isFavorite,
                   },
                 });
@@ -262,7 +276,7 @@ export default function FriendList() {
     };
 
     syncFriendsToDatabase();
-  }, [friends]);
+  }, [friends, currentUserId, drizzleDb]);
 
   // 根据搜索文本过滤好友
   const filteredFriends = friends.filter((friend: Friend) => {

@@ -13,6 +13,8 @@ import { fileApi } from '~/api/who/file';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { cssInterop } from 'nativewind';
+import { clearDatabase } from '~/services/database';
+import { useDatabase } from '~/contexts/DatabaseContext';
 
 cssInterop(Image, { className: 'style' });
 type MenuItemProps = {
@@ -45,6 +47,8 @@ export default function WhoIndex() {
   const [editValue, setEditValue] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const { initialize, isInitializing } = useDatabase();
 
   useEffect(() => {
     userApi.me().then((res) => {
@@ -165,19 +169,33 @@ export default function WhoIndex() {
   // 添加退出登录处理函数
   const handleLogout = async () => {
     try {
+      setLoggingOut(true);
       await AsyncStorage.removeItem('token');
       // 清除用户信息
       setUserInfo(null);
+      // 清除数据库连接
+      await clearDatabase();
+      // 初始化默认数据库
+      await initialize();
       // 跳转到登录页
       router.replace('(auth)/login');
     } catch (error) {
       console.log('退出登录失败:', error);
       alert('退出登录失败，请重试');
+    } finally {
+      setLoggingOut(false);
     }
   };
 
   return (
     <View className="flex-1 bg-[#F5F8FC]">
+      {(loggingOut || isInitializing) && (
+        <View className="absolute inset-0 z-50 items-center justify-center bg-black/30">
+          <ActivityIndicator color="#fff" size="large" />
+          <Text className="mt-2 text-white">正在处理，请稍候...</Text>
+        </View>
+      )}
+      
       <LinearGradient
         colors={['#E7F2FF', '#FFF']}
         className="absolute w-full"

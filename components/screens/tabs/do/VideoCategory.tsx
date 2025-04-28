@@ -25,7 +25,6 @@ const CourseItem = memo(
     const { data: videos, isLoading } = useCourseVideos(courseId); // 使用新的查询钩子
     const router = useRouter(); // 引入 useRouter
     const videoList = videos?.data ?? [];
-    console.log('videos', videos);
 
     // 预加载图片（可选，参考前文方案 3）
     useEffect(() => {

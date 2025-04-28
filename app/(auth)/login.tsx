@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, TextInput, View, ScrollView } from 'react-native';
+import { Pressable, Text, TextInput, View, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loginApi } from '~/api/auth/login';
@@ -10,22 +10,23 @@ import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { useHeaderHeight } from '@react-navigation/elements';
 import { Keyboard, KeyboardEvent } from 'react-native';
 import { verificationApi } from '~/api/auth/verification';
-// 删除 SecureStore import
-// import * as SecureStore from 'expo-secure-store';
+import { useDatabase } from '~/contexts/DatabaseContext';
 
 export default function Login() {
   const insets = useSafeAreaInsets();
-  // 移除 headerHeight
 
   const [isChecked, setChecked] = useState(false);
   const [phone, setPhone] = useState('+8619232040670');
   const [verificationCode, setVerificationCode] = useState('123456');
   const [showError, setShowError] = useState(false); // 添加错误状态
   const wsContext = useWebSocketContext();
+
   const setUserInfo = useUserStore((state) => state.setUserInfo);
+  const { initialize, isInitializing } = useDatabase();
+
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     console.log('注册');
@@ -35,6 +36,8 @@ export default function Login() {
       return;
     }
     setShowError(false);
+    setLoading(true);
+    
     try {
       console.log('注册信息：', { phone, verificationCode });
       const loginRes = await loginApi.login({ phone, code: verificationCode });
@@ -48,6 +51,10 @@ export default function Login() {
         if (userRes.code === 200 && userRes.data) {
           // 存储用户ID
           await AsyncStorage.setItem('globalUserId', userRes.data.globalUserId);
+          
+          // 使用用户ID初始化数据库
+          await initialize(userRes.data.globalUserId);
+          
           // 建立WebSocket连接
           setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
@@ -58,6 +65,8 @@ export default function Login() {
     } catch (error) {
       router.replace('(tabs)/do');
       alert('登录失败暂时跳转：' + error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,6 +81,7 @@ export default function Login() {
     }
     try {
       const res = await verificationApi.getCode(phone);
+
       if (res.code === 200) {
         alert('验证码已发送');
       } else {
@@ -107,6 +117,13 @@ export default function Login() {
       behavior={"padding"}
       style={{ flex: 1 }}>
         
+      {(loading || isInitializing) && (
+        <View className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
+          <ActivityIndicator size="large" color="#1483FD" />
+          <Text className="mt-2 text-white">正在处理，请稍候...</Text>
+        </View>
+      )}
+    
       <ScrollView 
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}

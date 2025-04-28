@@ -7,19 +7,20 @@ export enum DialogType {
 
 // 对话信息
 export interface Dialog {
-  dialogId: number;
+  dialogId: string;
   dialogType: DialogType;
   title?: string;
   avatarUrl?: string;
   createdAt: string; // ISO 日期时间格式
   lastMessageId?: number;
   lastMessageContent?: string;
-  lastMessageSenderId?: number;
+  lastMessageSenderId?: string;
   lastMessageSenderName?: string;
   lastMessageTime?: string; // ISO 日期时间格式
   unreadCount?: number;
   isMuted?: boolean;
   memberCount?: number;
-  creatorId: number;
+  creatorId: string;
+  targetUserId?: string; // 添加目标用户ID字段
 }
 

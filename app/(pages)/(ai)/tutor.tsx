@@ -4,9 +4,9 @@ import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, useEffect } from 'react';
-import { useSQLiteContext } from 'expo-sqlite';
-import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '~/db/schema';
+import { nanoid } from 'nanoid/non-secure';
+import { useDatabase } from '~/contexts/DatabaseContext';
 
 cssInterop(SafeAreaView, { className: { target: 'style' } });
 cssInterop(LinearGradient, { className: { target: 'style' } });
@@ -14,7 +14,6 @@ cssInterop(LinearGradient, { className: { target: 'style' } });
 interface MessageProps {
     text: string;
     time: string;
-    
     isUser: boolean;
 }
 
@@ -55,35 +54,90 @@ const Message = ({ text, time, isUser }: MessageProps) => {
 
 export default function TutorScreen() {
     const router = useRouter();
-    const db = useSQLiteContext();
-    const drizzleDb = drizzle(db, { schema });
+    const { db, drizzleDb, isInitialized } = useDatabase();
     const [inputText, setInputText] = useState('');
     const [messages, setMessages] = useState<MessageProps[]>([]);
 
     useEffect(() => {
-        (async () => {
-            const dbMessages = await drizzleDb.select().from(schema.messages);
-            setMessages(
-                dbMessages.map(m => ({
-                    text: m.text,
-                    time: m.time,
-                    isUser: Boolean(m.isUser)
-                }))
-            );
-        })();
-    }, []);
+        if (!isInitialized || !db) return;
+        
+        // 获取消息
+        const fetchMessages = async () => {
+            try {
+                // 使用原生SQL查询
+                const result = await db.getAllSync('SELECT * FROM messages ORDER BY timestamp DESC LIMIT 50');
+                
+                setMessages(
+                    result.map((m: any) => ({
+                        text: m.text_content || m.textContent || '',
+                        time: m.time || new Date(m.timestamp || Date.now()).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                        isUser: Boolean(m.isUser === 1 || m.senderId === 'user')
+                    }))
+                );
+            } catch (error) {
+                console.error('获取消息失败:', error);
+            }
+        };
+        
+        fetchMessages();
+    }, [db, isInitialized]);
 
     const handleSend = async () => {
-        if (inputText.trim()) {
-            const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-            const newMessage = { text: inputText, time: now, isUser: true };
-            await drizzleDb.insert(schema.messages).values({
-                text: inputText,
-                time: now,
-                isUser: 1
-            });
-            setMessages(prev => [...prev, newMessage]);
-            setInputText('');
+        console.log("发送消息");
+        
+        if (inputText.trim() && drizzleDb) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            const timestamp = now.getTime();
+            const messageId = nanoid();
+            
+            const newMessage = { 
+                text: inputText, 
+                time: timeString, 
+                isUser: true 
+            };
+            
+            try {
+                // 创建会话ID
+                const dialogId = 'ai-tutor-chat';
+                
+                // 检查会话是否存在
+                try {
+                    await drizzleDb.insert(schema.conversations).values({
+                        dialogId: dialogId,
+                        type: 'AI_CHAT',
+                        participantId: 'ai-tutor',
+                        lastMessageContent: inputText,
+                        lastMessageTime: timestamp,
+                    }).onConflictDoUpdate({
+                        target: schema.conversations.dialogId,
+                        set: {
+                            lastMessageContent: inputText,
+                            lastMessageTime: timestamp,
+                        }
+                    });
+                } catch (err) {
+                    console.log('对话创建/更新出错，继续插入消息', err);
+                }
+                
+                // 插入消息
+                await drizzleDb.insert(schema.messages).values({
+                    id: messageId,
+                    dialogId: dialogId,
+                    senderId: 'user',
+                    receiverId: 'ai-tutor',
+                    textContent: inputText,
+                    type: 'AI_CHAT',
+                    timestamp: timestamp,
+                    status: 'sent'
+                });
+                
+                setMessages(prev => [...prev, newMessage]);
+                setInputText('');
+            } catch (error) {
+                console.error('发送消息错误:', error);
+                alert('发送消息失败：' + error);
+            }
         }
     };
 
