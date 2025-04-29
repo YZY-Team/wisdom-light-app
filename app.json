@@ -29,8 +29,21 @@
         }
       ],
       "expo-sqlite",
-      "@config-plugins/react-native-webrtc"
-
+      "@config-plugins/react-native-webrtc",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -51,7 +64,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anjiuwenhua.chengxinwangluoapp",
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.INTERNET"]
     },
     "extra": {
       "router": {

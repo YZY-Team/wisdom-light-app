@@ -6,43 +6,49 @@ import { cssInterop } from 'nativewind';
 import { useEffect, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import { useFriendRequestStore } from '~/store/friendRequestStore';
-
-// 动态引入所有图片
-const tabImages = {
-  添加好友: require('~/assets/images/have/tabs/添加好友.png'),
-  发起群聊: require('~/assets/images/have/tabs/发起群聊.png'),
-  聊天广场: require('~/assets/images/have/tabs/聊天广场.png'),
-  视频会议: require('~/assets/images/have/tabs/视频会议.png'),
-  寻找支持: require('~/assets/images/have/tabs/寻找支持.png'),
-  好友列表: require('~/assets/images/have/tabs/好友列表.png'),
-};
+import addFriendIcon from '~/assets/images/have/tabs/添加好友.png';
+import createGroupIcon from '~/assets/images/have/tabs/发起群聊.png';
+import chatSquareIcon from '~/assets/images/have/tabs/聊天广场.png';
+import videoMeetingIcon from '~/assets/images/have/tabs/视频会议.png';
+import findSupportIcon from '~/assets/images/have/tabs/寻找支持.png';
+import friendListIcon from '~/assets/images/have/tabs/好友列表.png';
 
 cssInterop(Image, { className: 'style' });
 
-const Tab = ({ title, icon, href, badge }: TabProps & { badge?: number }) => (
-  <Link href={href} asChild>
-    <Pressable className="flex-1 items-center transition-all duration-200">
-      <View className="relative w-full items-center py-2">
-        <Image
-          className="h-8 w-8"
-          source={tabImages[title as keyof typeof tabImages]}
-          contentFit="contain"
-        />
-        {badge ? (
-          <View className="absolute right-[25%] top-0 h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1">
-            <Text className="text-[10px] font-bold text-white">{badge > 99 ? '99+' : badge}</Text>
-          </View>
-        ) : null}
-        <Text className="mt-1 text-xs font-medium text-gray-600">{title}</Text>
-      </View>
-    </Pressable>
-  </Link>
-);
-
-type TabProps = {
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  href: Href;
+const Tab = ({ title, href, badge }: { title: string; href: Href; badge?: number }) => {
+  const getIcon = () => {
+    switch (title) {
+      case '添加好友':
+        return addFriendIcon;
+      case '发起群聊':
+        return createGroupIcon;
+      case '聊天广场':
+        return chatSquareIcon;
+      case '视频会议':
+        return videoMeetingIcon;
+      case '寻找支持':
+        return findSupportIcon;
+      case '好友列表':
+        return friendListIcon;
+      default:
+        return addFriendIcon;
+    }
+  };
+  return (
+    <Link href={href} asChild>
+      <Pressable className="flex-1 items-center transition-all duration-200">
+        <View className="relative w-full items-center py-2">
+          <Image className="h-8 w-8" source={getIcon()} contentFit="contain" />
+          {badge ? (
+            <View className="absolute right-[25%] top-0 h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1">
+              <Text className="text-[10px] font-bold text-white">{badge > 99 ? '99+' : badge}</Text>
+            </View>
+          ) : null}
+          <Text className="mt-1 text-xs font-medium text-gray-600">{title}</Text>
+        </View>
+      </Pressable>
+    </Link>
+  );
 };
 
 export default function TabBar() {
@@ -81,16 +87,11 @@ export default function TabBar() {
       }
       className="rounded-[8px] bg-white p-2">
       <View className="flex-row">
-        <Tab
-          title="添加好友"
-          icon="person-add-outline"
-          href="/add-friend"
-          badge={pendingRequestCount}
-        />
-        <Tab title="聊天广场" icon="chatbubbles-outline" href="/chat-square" />
-        <Tab title="视频会议" icon="videocam-outline" href="/video-meeting" />
-        <Tab title="寻找支持" icon="help-circle-outline" href="/find-support" />
-        <Tab title="好友列表" icon="help-circle-outline" href="/friend-list" />
+        <Tab title="添加好友" href="/add-friend" badge={pendingRequestCount} />
+        <Tab title="聊天广场" href="/chat-square" />
+        <Tab title="视频会议" href="/video-meeting" />
+        <Tab title="寻找支持" href="/find-support" />
+        <Tab title="好友列表" href="/friend-list" />
       </View>
     </View>
   );
