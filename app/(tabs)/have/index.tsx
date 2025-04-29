@@ -15,7 +15,7 @@ export default function HaveIndex() {
         <View className="px-4 py-4">
           <View className="flex-row items-center rounded-full  bg-[#1687fd]/5 px-4  ">
             <TextInput
-              className="ml-2 flex-1 "
+              className="ml-2 flex-1 h-[30px] py-0"
               placeholder="搜索用户,对话或群聊"
               placeholderTextColor="#666"
             />

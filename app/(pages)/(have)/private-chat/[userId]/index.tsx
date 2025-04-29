@@ -4,9 +4,9 @@ import {
   TextInput,
   Pressable,
   Platform,
-  KeyboardAvoidingView,
   FlatList,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,10 @@ import { usePathname } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
+import * as ImagePicker from 'expo-image-picker';
+import { Audio } from 'expo-av';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { initiateCall } from '~/api/have/dialog';
 type MessageProps = {
   content: string;
   time: string;
@@ -28,20 +32,80 @@ type MessageProps = {
     avatar: string;
   };
   isSelf?: boolean;
+  imageUrl?: string;
+  audioUrl?: string;
 };
 
-const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
-  <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
-    <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
-    <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
-      {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
-      <View className={`max-w-[70%] rounded-2xl p-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}>
-        <Text className={isSelf ? 'text-white' : 'text-gray-800'}>{content}</Text>
+const MessageItem = ({ content, time, user, isSelf, imageUrl, audioUrl }: MessageProps) => {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const playSound = async () => {
+    if (!audioUrl) return;
+
+    try {
+      if (sound) {
+        if (isPlaying) {
+          await sound.stopAsync();
+          setIsPlaying(false);
+        } else {
+          await sound.playAsync();
+          setIsPlaying(true);
+        }
+      } else {
+        const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUrl });
+        setSound(newSound);
+
+        newSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
+            setIsPlaying(false);
+          }
+        });
+
+        await newSound.playAsync();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('播放语音消息失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
+
+  return (
+    <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
+      <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
+      <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
+        {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
+        <View className={`max-w-[70%] rounded-2xl p-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} className="h-40 w-40 rounded-md" contentFit="cover" />
+          ) : audioUrl ? (
+            <TouchableOpacity onPress={playSound} className="flex-row items-center">
+              <Ionicons
+                name={isPlaying ? 'pause-circle' : 'play-circle'}
+                size={24}
+                color={isSelf ? '#fff' : '#333'}
+              />
+              <Text className={`ml-2 ${isSelf ? 'text-white' : 'text-gray-800'}`}>
+                {isPlaying ? '正在播放语音...' : '点击播放语音'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <Text className={isSelf ? 'text-white' : 'text-gray-800'}>{content}</Text>
+          )}
+        </View>
+        <Text className="mt-1 text-xs text-gray-400">{time}</Text>
       </View>
-      <Text className="mt-1 text-xs text-gray-400">{time}</Text>
     </View>
-  </View>
-);
+  );
+};
 
 export default function PrivateChat() {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -51,6 +115,14 @@ export default function PrivateChat() {
   const [inputMessage, setInputMessage] = useState('');
   const headerHeight = useHeaderHeight();
   console.log('对方id', targetUserId);
+
+  // 新增的状态
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false);
 
   // 从 Zustand store 获取消息
   const messages = useWebSocketStore((stats) => stats.messages);
@@ -158,9 +230,11 @@ export default function PrivateChat() {
           avatar: getAvatarUrl(msg.senderId),
         },
         isSelf,
+        imageUrl: msg.imageUrl,
+        audioUrl: msg.audioUrl,
       };
     });
-  }, [visibleMessages, userInfo?.globalUserId, userName]);
+  }, [visibleMessages, userInfo?.globalUserId, userName, formatTime, getAvatarUrl]);
   // 处理加载更多
   const handleLoadMore = useCallback(() => {
     if (loading) return;
@@ -187,15 +261,147 @@ export default function PrivateChat() {
     prevMessagesCount.current = formattedMessages.length;
   }, [formattedMessages]);
 
-  const renderItem = useCallback(({ item: msg }) => <MessageItem {...msg} />, []);
+  const renderItem = useCallback(
+    ({ item }: { item: MessageProps }) => <MessageItem {...item} />,
+    []
+  );
 
   const keyExtractor = useCallback((item: any, index: number) => `${item.time}-${index}`, []);
 
+  // 图片选择器
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      // 处理图片发送
+      const newMessage: Message = {
+        type: 'PRIVATE_CHAT',
+        senderId: userInfo!.globalUserId,
+        receiverId: targetUserId as string,
+        dialogId: dialogId as string,
+        textContent: '[图片消息]',
+        timestamp: String(Date.now()),
+        imageUrl: result.assets[0].uri,
+      };
+
+      // 发送消息
+      sendMessage(JSON.stringify(newMessage));
+      // 存储消息
+      addMessage({ ...newMessage, status: 'READ' });
+    }
+  };
+
+  // 语音录制
+  const startRecording = async () => {
+    try {
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      setRecording(recording);
+      setIsRecording(true);
+    } catch (err) {
+      console.error('开始录音失败:', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    try {
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+      setIsRecording(false);
+
+      // 处理语音消息发送
+      if (uri) {
+        const newMessage: Message = {
+          type: 'PRIVATE_CHAT',
+          senderId: userInfo!.globalUserId,
+          receiverId: targetUserId as string,
+          dialogId: dialogId as string,
+          textContent: '[语音消息]',
+          timestamp: String(Date.now()),
+          audioUrl: uri,
+        };
+
+        // 发送消息
+        sendMessage(JSON.stringify(newMessage));
+        // 存储消息
+        addMessage({ ...newMessage, status: 'READ' });
+      }
+    } catch (err) {
+      console.error('停止录音失败:', err);
+    }
+  };
+
+  // 语音通话
+  const handleVoiceCall = () => {
+    // 处理语音通话逻辑
+    setShowVoiceCallModal(true);
+
+    // 调用语音通话API
+    initiateCall({
+      callerId: userInfo?.globalUserId,
+      receiverId:targetUserId,
+      callType: 'AUDIO',
+    });
+
+    const newMessage: Message = {
+      type: 'PRIVATE_CHAT',
+      senderId: userInfo!.globalUserId,
+      receiverId: targetUserId as string,
+      dialogId: dialogId as string,
+      textContent: '[发起了语音通话]',
+      timestamp: String(Date.now()),
+    };
+
+    // 发送消息
+    sendMessage(JSON.stringify(newMessage));
+    // 存储消息
+    addMessage({ ...newMessage, status: 'READ' });
+  };
+
+  // 视频通话
+  const handleVideoCall = () => {
+    // 处理视频通话逻辑
+    setShowVideoCallModal(true);
+
+    // 调用视频通话API
+    initiateCall({
+      callerId: userInfo?.globalUserId,
+      receiverId: targetUserId,
+      callType: 'VIDEO',
+    });
+
+    const newMessage: Message = {
+      type: 'PRIVATE_CHAT',
+      senderId: userInfo!.globalUserId,
+      receiverId: targetUserId as string,
+      dialogId: dialogId as string,
+      textContent: '[发起了视频通话]',
+      timestamp: String(Date.now()),
+    };
+
+    // 发送消息
+    sendMessage(JSON.stringify(newMessage));
+    // 存储消息
+    addMessage({ ...newMessage, status: 'READ' });
+  };
+
   return (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={headerHeight}>
+    <KeyboardAvoidingView className="flex-1" behavior={'padding'} keyboardVerticalOffset={0}>
       <View className="flex-1 bg-[#1483fd]/10 py-3">
         {/* 头部 */}
         <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>
@@ -229,7 +435,7 @@ export default function PrivateChat() {
               style={{
                 boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
               }}
-              className="flex-1 flex-row items-center rounded-[12px] bg-gray-100 px-6 py-3">
+              className="flex-1 flex-row items-center rounded-[12px] bg-white px-6 py-3">
               <TextInput
                 className="flex-1"
                 placeholder="请输入消息..."
@@ -239,6 +445,10 @@ export default function PrivateChat() {
                 onSubmitEditing={handleSendMessage}
                 returnKeyType="send"
                 multiline={false}
+                onFocus={() => {
+                  setIsKeyboardVisible(true);
+                  setShowToolbar(false);
+                }}
               />
               <Pressable onPress={handleSendMessage}>
                 <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
@@ -246,7 +456,114 @@ export default function PrivateChat() {
                 </View>
               </Pressable>
             </View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowToolbar(!showToolbar);
+                setIsKeyboardVisible(false);
+              }}
+              className="ml-2">
+              <Ionicons name="add-circle" size={32} color="#1483FD" />
+            </TouchableOpacity>
           </View>
+
+          {/* 工具栏 */}
+          {showToolbar && (
+            <View className="mt-2 flex-row justify-around rounded-lg bg-white p-4">
+              <TouchableOpacity onPress={pickImage} className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="image" size={24} color="#1483FD" />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">图片</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={isRecording ? stopRecording : startRecording}
+                className="items-center">
+                <View
+                  className={`h-12 w-12 items-center justify-center rounded-full ${isRecording ? 'bg-red-100' : 'bg-blue-100'}`}>
+                  <Ionicons
+                    name={isRecording ? 'mic' : 'mic-outline'}
+                    size={24}
+                    color={isRecording ? '#FF0000' : '#1483FD'}
+                  />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">
+                  {isRecording ? '松开结束' : '按住说话'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleVoiceCall} className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="call" size={24} color="#1483FD" />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">语音聊天</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleVideoCall} className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="videocam" size={24} color="#1483FD" />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">视频聊天</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* 语音通话模态框 */}
+          {showVoiceCallModal && (
+            <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center bg-black/70">
+              <View className="w-4/5 rounded-lg bg-white p-6">
+                <Text className="mb-4 text-center text-lg font-medium">语音通话中...</Text>
+                <View className="mb-6 items-center">
+                  <Image
+                    source={{ uri: getAvatarUrl(targetUserId as string) }}
+                    className="h-20 w-20 rounded-full"
+                    contentFit="cover"
+                  />
+                  <Text className="mt-2 text-gray-600">{userName}</Text>
+                  <Text className="mt-1 text-sm text-gray-400">通话时间: 00:00</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowVoiceCallModal(false)}
+                  className="items-center rounded-full bg-red-500 p-3">
+                  <Ionicons name="call" size={32} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 视频通话模态框 */}
+          {showVideoCallModal && (
+            <View className="absolute bottom-0 left-0 right-0 top-0 bg-black">
+              <View className="absolute right-4 top-4 h-32 w-24 overflow-hidden rounded-lg bg-gray-300">
+                <Image
+                  source={{ uri: getAvatarUrl(userInfo?.globalUserId || '') }}
+                  className="h-full w-full"
+                  contentFit="cover"
+                />
+              </View>
+              <View className="h-full w-full items-center justify-center">
+                <Image
+                  source={{ uri: getAvatarUrl(targetUserId as string) }}
+                  className="h-full w-full"
+                  contentFit="cover"
+                  style={{ opacity: 0.8 }}
+                />
+                <View className="absolute bottom-16 w-full flex-row justify-center space-x-8">
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
+                    <Ionicons name="mic-off" size={28} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowVideoCallModal(false)}
+                    className="items-center rounded-full bg-red-500 p-3">
+                    <Ionicons name="call" size={28} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
+                    <Ionicons name="camera-reverse" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     </KeyboardAvoidingView>

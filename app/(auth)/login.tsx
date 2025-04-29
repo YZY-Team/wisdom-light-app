@@ -9,17 +9,20 @@ import Checkbox from 'expo-checkbox';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Keyboard, KeyboardEvent } from 'react-native';
 import { verificationApi } from '~/api/auth/verification';
 import { useDatabase } from '~/contexts/DatabaseContext';
+import { cssInterop } from 'nativewind';
+
+cssInterop(LinearGradient, { className: { target: 'style' } });
 
 export default function Login() {
   const insets = useSafeAreaInsets();
 
   const [isChecked, setChecked] = useState(false);
-  const [phone, setPhone] = useState('+8619232040670');
-  const [verificationCode, setVerificationCode] = useState('123456');
+  const [phone, setPhone] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [showError, setShowError] = useState(false); // 添加错误状态
   const wsContext = useWebSocketContext();
 
@@ -27,6 +30,21 @@ export default function Login() {
   const { initialize, isInitializing } = useDatabase();
 
   const [loading, setLoading] = useState(false);
+
+  // 组件加载时检查保存的手机号码
+  useEffect(() => {
+    const loadSavedPhone = async () => {
+      try {
+        const savedPhone = await AsyncStorage.getItem('savedPhone');
+        if (savedPhone) {
+          setPhone(savedPhone);
+        }
+      } catch (error) {
+        console.error('加载保存的手机号码失败:', error);
+      }
+    };
+    loadSavedPhone();
+  }, []);
 
   const handleRegister = async () => {
     console.log('注册');
@@ -37,7 +55,7 @@ export default function Login() {
     }
     setShowError(false);
     setLoading(true);
-    
+
     try {
       console.log('注册信息：', { phone, verificationCode });
       const loginRes = await loginApi.login({ phone, code: verificationCode });
@@ -51,10 +69,12 @@ export default function Login() {
         if (userRes.code === 200 && userRes.data) {
           // 存储用户ID
           await AsyncStorage.setItem('globalUserId', userRes.data.globalUserId);
-          
+          // 保存手机号码
+          await AsyncStorage.setItem('savedPhone', phone);
+
           // 使用用户ID初始化数据库
           await initialize(userRes.data.globalUserId);
-          
+
           // 建立WebSocket连接
           setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
@@ -63,8 +83,8 @@ export default function Login() {
         router.replace('/do');
       }
     } catch (error) {
-      router.replace('(tabs)/do');
-      alert('登录失败暂时跳转：' + error);
+      // router.replace('(tabs)/do');
+      alert('登录失败：' + error);
     } finally {
       setLoading(false);
     }
@@ -112,19 +132,15 @@ export default function Login() {
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={"padding"}
-      style={{ flex: 1 }}>
-        
+    <KeyboardAvoidingView className="flex-1" behavior={'padding'} style={{ flex: 1 }}>
       {(loading || isInitializing) && (
         <View className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
           <ActivityIndicator size="large" color="#1483FD" />
           <Text className="mt-2 text-white">正在处理，请稍候...</Text>
         </View>
       )}
-    
-      <ScrollView 
+
+      <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled">
@@ -170,7 +186,7 @@ export default function Login() {
                     style={{
                       backgroundColor: 'rgba(20, 131, 253, 0.05)',
                     }}
-                    placeholder="+86  请输入您的手机号"
+                    placeholder="请输入您的手机号"
                     placeholderTextColor="#999999"
                     value={phone}
                     onChangeText={setPhone}
@@ -261,9 +277,11 @@ export default function Login() {
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  className="w-full rounded-[6px]"
+                  className="w-full"
                   style={{
                     boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                    borderRadius: 6,
+                    overflow: 'hidden',
                   }}>
                   <Pressable
                     onPress={handleRegister}

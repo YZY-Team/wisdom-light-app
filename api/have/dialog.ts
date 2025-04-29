@@ -29,6 +29,11 @@ export const dialogApi = {
   },
 };
 
+// post /friends/calls/initiate
+export const initiateCall = ({ callerId, receiverId, callType }: { callerId: number; receiverId: number; callType: string }) => {
+  return request.post('/friends/calls/initiate', { callerId, receiverId, callType });
+};
+
 export const verificationApi = {
   getCode: (phone: string) => {
     return request.post('/api/auth/verification-code', { phone });

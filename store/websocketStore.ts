@@ -11,6 +11,8 @@ export type Message = {
   textContent: string;
   status ?: 'CREATED' | 'SENT' | 'DELIVERED' | 'READ'; // 根据需要扩展状态
   timestamp: string;
+  imageUrl?: string; // 图片消息URL
+  audioUrl?: string; // 音频消息URL
 };
 
 // Store 的状态和方法

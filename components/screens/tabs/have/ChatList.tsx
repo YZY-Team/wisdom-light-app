@@ -135,7 +135,7 @@ export default function ChatList() {
   // 格式化时间
   const formatTime = (timestamp: string | null) => {
     if (!timestamp) return '';
-    
+
     try {
       const date = new Date(timestamp);
       return date.toLocaleTimeString('zh-CN', {
@@ -152,7 +152,7 @@ export default function ChatList() {
   const chatList = dialogs.map((dialog) => {
     // 查找对应的好友信息
     const friend = localFriends.find((friend) => friend.userId === dialog.targetUserId);
-    
+
     // 如果没有对应好友信息，使用基本信息
     if (!friend) {
       return {
@@ -182,66 +182,11 @@ export default function ChatList() {
       });
 
     const lastMessage = dialogMessages.at(0);
-    
+
     // 使用服务器的数据，没有则使用WebSocket的数据
     const lastMessageContent = lastMessage?.textContent || dialog.lastMessageContent || '暂无消息';
-    const lastMessageTime = lastMessage?.timestamp 
+    const lastMessageTime = lastMessage?.timestamp
       ? (() => {
-        try {
-          const timestamp = Number(lastMessage.timestamp);
-          if (isNaN(timestamp)) {
-            console.warn('无效的时间戳:', lastMessage.timestamp);
-            return '';
-          }
-          return new Date(timestamp).toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit',
-          });
-        } catch (error) {
-          console.warn('时间格式化错误:', error);
-          return '';
-        }
-      })()
-      : formatTime(dialog.lastMessageTime || '');
-
-    const unreadCount = dialog.unreadCount || 
-      dialogMessages.filter(msg =>
-        msg.senderId === friend.userId && msg.status !== 'READ'
-      ).length;
-
-    return {
-      id: friend.userId,
-      dialogId: dialog.dialogId,
-      avatar: getAvatarSource(friend),
-      name: friend.remark ?? friend.nickname ?? friend.username ?? '未知用户',
-      lastMessage: lastMessageContent,
-      time: lastMessageTime,
-      unreadCount,
-    };
-  });
-
-  // 如果没有服务器对话，或者WebSocket有额外消息，添加本地对话
-  const localChatList = localFriends
-    .filter(friend => !dialogs.some(dialog => dialog.targetUserId === friend.userId))
-    .map((friend) => {
-      // 找到所有与该好友相关的消息
-      const dialogMessages = Object.entries(messages)
-        .filter(([dialogId]) => dialogId !== 'undefined')
-        .flatMap(([_, msgs]) =>
-          msgs.filter(msg =>
-            msg.senderId === friend.userId || msg.receiverId === friend.userId
-          )
-        )
-        .sort((a, b) => {
-          const timestampA = BigInt(a.timestamp);
-          const timestampB = BigInt(b.timestamp);
-          return timestampB > timestampA ? 1 : timestampB < timestampA ? -1 : 0;
-        });
-
-      const lastMessage = dialogMessages.at(0);
-
-      const time = lastMessage?.timestamp
-        ? (() => {
           try {
             const timestamp = Number(lastMessage.timestamp);
             if (isNaN(timestamp)) {
@@ -257,6 +202,59 @@ export default function ChatList() {
             return '';
           }
         })()
+      : formatTime(dialog.lastMessageTime || '');
+
+    const unreadCount =
+      dialog.unreadCount ||
+      dialogMessages.filter((msg) => msg.senderId === friend.userId && msg.status !== 'READ')
+        .length;
+
+    return {
+      id: friend.userId,
+      dialogId: dialog.dialogId,
+      avatar: getAvatarSource(friend),
+      name: friend.remark ?? friend.nickname ?? friend.username ?? '未知用户',
+      lastMessage: lastMessageContent,
+      time: lastMessageTime,
+      unreadCount,
+    };
+  });
+
+  // 如果没有服务器对话，或者WebSocket有额外消息，添加本地对话
+  const localChatList = localFriends
+    .filter((friend) => !dialogs.some((dialog) => dialog.targetUserId === friend.userId))
+    .map((friend) => {
+      // 找到所有与该好友相关的消息
+      const dialogMessages = Object.entries(messages)
+        .filter(([dialogId]) => dialogId !== 'undefined')
+        .flatMap(([_, msgs]) =>
+          msgs.filter((msg) => msg.senderId === friend.userId || msg.receiverId === friend.userId)
+        )
+        .sort((a, b) => {
+          const timestampA = BigInt(a.timestamp);
+          const timestampB = BigInt(b.timestamp);
+          return timestampB > timestampA ? 1 : timestampB < timestampA ? -1 : 0;
+        });
+
+      const lastMessage = dialogMessages.at(0);
+
+      const time = lastMessage?.timestamp
+        ? (() => {
+            try {
+              const timestamp = Number(lastMessage.timestamp);
+              if (isNaN(timestamp)) {
+                console.warn('无效的时间戳:', lastMessage.timestamp);
+                return '';
+              }
+              return new Date(timestamp).toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+            } catch (error) {
+              console.warn('时间格式化错误:', error);
+              return '';
+            }
+          })()
         : '';
 
       return {
@@ -266,41 +264,29 @@ export default function ChatList() {
         name: friend.remark ?? friend.nickname ?? friend.username,
         lastMessage: lastMessage?.textContent ?? '暂无消息',
         time,
-        unreadCount: dialogMessages.filter(msg =>
-          msg.senderId === friend.userId && msg.status !== 'READ'
+        unreadCount: dialogMessages.filter(
+          (msg) => msg.senderId === friend.userId && msg.status !== 'READ'
         ).length,
       };
     })
-    .filter(chat => chat.lastMessage !== '暂无消息'); // 只显示有消息的聊天
+    .filter((chat) => chat.lastMessage !== '暂无消息'); // 只显示有消息的聊天
 
   // 合并服务器对话和本地对话
-  const combinedChatList = [...chatList, ...localChatList]
-    .filter(chat => chat.lastMessage !== '暂无消息' || chat.dialogId); // 只显示有消息或有对话ID的聊天
+  const combinedChatList = [...chatList, ...localChatList].filter(
+    (chat) => chat.lastMessage !== '暂无消息' || chat.dialogId
+  ); // 只显示有消息或有对话ID的聊天
 
-  const handleChatPress = async (userName: string, targetUserId: string) => {
+  const handleChatPress = async (userName: string, targetUserId: string, dialogId: string) => {
     const startTime = performance.now();
     try {
-      // 总是尝试创建对话
-      const createStart = performance.now();
-      const res = await dialogApi.createDialog(targetUserId);
-      console.log('创建对话耗时:', performance.now() - createStart, 'ms');
-
-      let finalDialogId: string;
-      if (res.code === 200 && res.data) {
-        finalDialogId = res.data;
-      } else {
-        console.log('创建对话失败');
-        return;
-      }
-
       // 标记该对话的消息为已读
-      console.log('标记消息为已读开始', finalDialogId, targetUserId);
-      markMessagesAsRead(finalDialogId, targetUserId);
+      console.log('标记消息为已读开始', dialogId, targetUserId);
+      markMessagesAsRead(dialogId, targetUserId);
 
       const routeStart = performance.now();
       router.push({
-        pathname: `/private-chat/${finalDialogId}`,
-        params: { userName, dialogId: finalDialogId, targetUserId },
+        pathname: `/private-chat/${dialogId}`,
+        params: { userName, dialogId, targetUserId },
       });
       console.log('路由跳转耗时:', performance.now() - routeStart, 'ms');
 
@@ -319,12 +305,12 @@ export default function ChatList() {
   }
 
   return (
-    <ScrollView className="flex-1 py-4 mt-4">
+    <ScrollView className="mt-4 flex-1 py-4">
       {combinedChatList.map((chat) => (
         <ChatItem
           key={chat.id + chat.dialogId}
           {...chat}
-          onPress={() => handleChatPress(chat.name, chat.id)}
+          onPress={() => handleChatPress(chat.name, chat.id, chat.dialogId)}
         />
       ))}
     </ScrollView>

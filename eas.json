@@ -6,12 +6,18 @@
   "build": {
     "development": {
       "developmentClient": false,
-      "distribution": "internal",
-      "android": {
-        "credentialsSource": "local"
-      }
+      "distribution": "internal"
     },
     "preview": {
+      "cache": {
+        "key": "android-local-v1",
+        "paths": [
+          "node_modules/.cache",
+          "./android/.gradle",
+          "./android/app/build/intermediates",
+          "./android/app/build/outputs"
+        ]
+      },
       "distribution": "internal",
       "android": {
         "buildType": "apk",

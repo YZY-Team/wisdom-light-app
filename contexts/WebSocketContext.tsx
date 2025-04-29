@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useWebSocketStore } from '~/store/websocketStore';
 import { useFriendRequestStore } from '~/store/friendRequestStore';
+import { useWebRTC } from './WebRTCContext';
+
 type WebSocketContextType = {
   sendMessage: (message: string) => void;
   lastMessage: MessageEvent | null;
@@ -16,6 +18,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const { setShouldRefresh } = useFriendRequestStore();
   const { addMessage } = useWebSocketStore();
+  const { showCallModal } = useWebRTC();
   
   const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
     onOpen: () => {
@@ -36,6 +39,20 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         setShouldRefresh(true);
       }
       
+      // 处理视频通话请求
+
+      console.log("处理后的消息",data,data.type,data.textContent);
+      
+      if (data.type === 'PRIVATE_CHAT' && data.textContent === '[发起了视频通话]') {
+        const callerId = data.content.match(/用户ID: (\d+)/)?.[1];
+        const callId = data.content.match(/通话ID: ([^,\s]+)/)?.[1];
+        console.log('callerId', callerId);
+        console.log('callId', callId);
+        if (callerId) {
+          showCallModal(callerId, callerId);
+        }
+      }
+      
       await addMessage(event.data);
     },
     shouldReconnect: (closeEvent) => true,
@@ -45,7 +62,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   });
 
   const connect = useCallback((userId: string) => {
-    setSocketUrl(`ws://192.168.1.158:8080/ws/message?userId=${userId}`);
+    setSocketUrl(`ws://119.29.188.102:8080/ws/message?userId=${userId}`);
   }, []);
 
   const disconnect = useCallback(() => {

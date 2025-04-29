@@ -84,6 +84,8 @@ export default function ChatSquare() {
       isSelf: true,
     },
   ]);
+  const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false);
 
   const { sendMessage, lastMessage, readyState } = useWebSocket(
     'ws://192.168.1.158:8108/ws/message?userId=123',
@@ -232,6 +234,38 @@ export default function ChatSquare() {
     }
   };
 
+  const handleVoiceCall = () => {
+    // 处理语音通话逻辑
+    setShowVoiceCallModal(true);
+    // 示例：添加一条语音通话消息
+    const newMessage = {
+      content: '发起了语音通话',
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      user: {
+        name: 'Rhea',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
+      },
+      isSelf: true,
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
+
+  const handleVideoCall = () => {
+    // 处理视频通话逻辑
+    setShowVideoCallModal(true);
+    // 示例：添加一条视频通话消息
+    const newMessage = {
+      content: '发起了视频通话',
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      user: {
+        name: 'Rhea',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
+      },
+      isSelf: true,
+    };
+    setMessages(prev => [...prev, newMessage]);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={'padding'}
@@ -323,6 +357,81 @@ export default function ChatSquare() {
                   {isRecording ? '松开结束' : '按住说话'}
                 </Text>
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={handleVoiceCall}
+                className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="call" size={24} color="#1483FD" />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">语音聊天</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                onPress={handleVideoCall}
+                className="items-center">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="videocam" size={24} color="#1483FD" />
+                </View>
+                <Text className="mt-1 text-xs text-gray-600">视频聊天</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* 语音通话模态框 */}
+          {showVoiceCallModal && (
+            <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center bg-black/70">
+              <View className="w-4/5 rounded-lg bg-white p-6">
+                <Text className="mb-4 text-center text-lg font-medium">语音通话中...</Text>
+                <View className="mb-6 items-center">
+                  <Image 
+                    source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea' }} 
+                    className="h-20 w-20 rounded-full" 
+                    contentFit="cover" 
+                  />
+                  <Text className="mt-2 text-gray-600">Rhea</Text>
+                  <Text className="mt-1 text-sm text-gray-400">通话时间: 00:00</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => setShowVoiceCallModal(false)}
+                  className="items-center rounded-full bg-red-500 p-3">
+                  <Ionicons name="call" size={32} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 视频通话模态框 */}
+          {showVideoCallModal && (
+            <View className="absolute bottom-0 left-0 right-0 top-0 bg-black">
+              <View className="absolute right-4 top-4 h-32 w-24 overflow-hidden rounded-lg bg-gray-300">
+                <Image 
+                  source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea' }} 
+                  className="h-full w-full" 
+                  contentFit="cover" 
+                />
+              </View>
+              <View className="h-full w-full items-center justify-center">
+                <Image 
+                  source={{ uri: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kitty' }} 
+                  className="h-full w-full" 
+                  contentFit="cover" 
+                  style={{ opacity: 0.8 }}
+                />
+                <View className="absolute bottom-16 w-full flex-row justify-center space-x-8">
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
+                    <Ionicons name="mic-off" size={28} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => setShowVideoCallModal(false)}
+                    className="items-center rounded-full bg-red-500 p-3">
+                    <Ionicons name="call" size={28} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
+                    <Ionicons name="camera-reverse" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           )}
         </View>

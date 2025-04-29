@@ -417,7 +417,7 @@ export default function FriendList() {
           <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4 ">
             <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
             <TextInput
-              className="ml-2 flex-1 text-[14px] text-black"
+              className="ml-2 flex-1 h-[30px] py-0 text-[14px] text-black"
               placeholder="搜索"
               placeholderTextColor="rgba(0,0,0,0.4)"
               value={searchText}
