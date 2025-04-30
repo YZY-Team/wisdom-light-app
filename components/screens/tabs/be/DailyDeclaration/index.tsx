@@ -16,6 +16,8 @@ import {
 } from '~/queries/dailyDeclaration';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
 import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
+import { useUserStore } from '~/store/userStore';
+import NoMemberTip from '../NoMemberTip';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -182,8 +184,17 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
 
 // 主组件：每日宣告列表
 export default function DailyDeclaration() {
+  const { userInfo } = useUserStore();
   const bookId = '1911671090439000066'; // 这里需要从上下文获取实际的bookId
   const createDeclaration = useCreateDeclaration();
+
+  if (!userInfo?.isMember) {
+    return (
+      <NoMemberTip 
+        tipText="充值会员之后才能拥有日宣告哦～"
+      />
+    );
+  }
 
   // 获取今日宣告
   const { data: todayDeclarationRes, isLoading: isTodayLoading, refetch: refetchToday } = useTodayDeclaration(bookId);

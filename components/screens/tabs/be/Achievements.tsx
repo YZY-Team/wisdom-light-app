@@ -5,61 +5,67 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { achievementBookApi } from '~/api/be/achievementBook';
-
+import { useActiveAchievementBook } from '~/queries/achievement';
+import { useUserStore } from '~/store/userStore';
+import { Image } from 'expo-image';
+import NoMemberTip from './NoMemberTip';
 cssInterop(LinearGradient, { className: 'style' });
-
+cssInterop(Image, { className: 'style' });
 export default function Achievements() {
-  const [achievementBook, setAchievementBook] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { userInfo } = useUserStore();
+  const { data: achievementBookResponse, isLoading } = useActiveAchievementBook();
+  const achievementBook = achievementBookResponse?.data;
   const [achievementStatus, setAchievementStatus] = useState({
     profile: '未完成',
     oath: '未完成',
     promise: '未完成',
-    achievement: '未完成'
+    achievement: '未完成',
   });
 
+  if (!userInfo?.isMember) {
+    return (
+      <NoMemberTip
+        tipText="充值会员之后才能拥有成就书哦～"
+      />
+    );
+  }
+
   useEffect(() => {
-    const fetchAchievementBook = async () => {
-      try {
-        setLoading(true);
-        const response = await achievementBookApi.getActiveAchievementBook();
-        console.log('成就书响应:', response);
+    if (achievementBook) {
+      // 解析成就书内容并更新状态
+      const profileStatus = checkProfileStatus(achievementBook);
+      const oathStatus = checkOathStatus(achievementBook);
+      const promiseStatus = checkPromiseStatus(achievementBook);
+      const achievementStatus = checkAchievementStatus(achievementBook);
 
-        if (response.code === 200) {
-          setAchievementBook(response.data);
-          // 解析成就书内容并更新状态
-          const data = response.data;
-          const profileStatus = checkProfileStatus(data);
-          const oathStatus = checkOathStatus(data);
-          const promiseStatus = checkPromiseStatus(data);
-          const achievementStatus = checkAchievementStatus(data);
-
-          setAchievementStatus({
-            profile: profileStatus,
-            oath: oathStatus,
-            promise: promiseStatus,
-            achievement: achievementStatus
-          });
-        }
-
-      } catch (error) {
-        console.log('获取成就书失败:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAchievementBook();
-  }, []);
+      setAchievementStatus({
+        profile: profileStatus,
+        oath: oathStatus,
+        promise: promiseStatus,
+        achievement: achievementStatus,
+      });
+    }
+  }, [achievementBook]);
 
   // 检查个人资料完成状态
   const checkProfileStatus = (data: any) => {
     // 检查个人资料字段是否已填写
     const profileFields = [
-      'name', 'nickname', 'gender', 'age', 'maritalStatus',
-      'childrenStatus', 'phone', 'email', 'companyName',
-      'position', 'companySize', 'annualIncome', 'companyAddress',
-      'emergencyContact', 'homeAddress'
+      'name',
+      'nickname',
+      'gender',
+      'age',
+      'maritalStatus',
+      'childrenStatus',
+      'phone',
+      'email',
+      'companyName',
+      'position',
+      'companySize',
+      'annualIncome',
+      'companyAddress',
+      'emergencyContact',
+      'homeAddress',
     ];
 
     // 如果没有数据，返回未完成
@@ -84,10 +90,9 @@ export default function Achievements() {
     }
 
     // 检查关键字段是否填写（至少需要填写50%的字段）
-    const filledFields = profileFields.filter(field =>
-      profileData[field] !== undefined &&
-      profileData[field] !== null &&
-      profileData[field] !== ''
+    const filledFields = profileFields.filter(
+      (field) =>
+        profileData[field] !== undefined && profileData[field] !== null && profileData[field] !== ''
     );
     const completion = filledFields.length / profileFields.length;
 
@@ -119,11 +124,15 @@ export default function Achievements() {
         const parsedContent = JSON.parse(data.content);
         if (typeof parsedContent === 'object') {
           hasOath = hasOath || (parsedContent.oath && parsedContent.oath.trim() !== '');
-          hasCoach = hasCoach || (parsedContent.coachIds && Array.isArray(parsedContent.coachIds) && parsedContent.coachIds.length > 0);
+          hasCoach =
+            hasCoach ||
+            (parsedContent.coachIds &&
+              Array.isArray(parsedContent.coachIds) &&
+              parsedContent.coachIds.length > 0);
         }
       } catch (e) {
         // 如果content不是JSON，可能是纯文本形式的誓约
-        hasOath = hasOath || (data.content.trim() !== '');
+        hasOath = hasOath || data.content.trim() !== '';
       }
     }
 
@@ -150,8 +159,6 @@ export default function Achievements() {
     if (data.promise) {
       hasPromise = data.promise.trim() !== '';
     }
-
-
 
     console.log('承诺状态:', hasPromise);
 
@@ -210,9 +217,9 @@ export default function Achievements() {
   // 计算目标达成率
   const calculateCompletionRate = () => {
     const statusMap: Record<string, number> = {
-      '已完成': 1,
-      '进行中': 0.5,
-      '未完成': 0
+      已完成: 1,
+      进行中: 0.5,
+      未完成: 0,
     };
 
     const profileScore = statusMap[achievementStatus.profile] || 0;
@@ -229,7 +236,7 @@ export default function Achievements() {
 
   // 获取已完成项目总数
   const getCompletedCount = () => {
-    return Object.values(achievementStatus).filter(status => status === '已完成').length;
+    return Object.values(achievementStatus).filter((status) => status === '已完成').length;
   };
 
   return (
@@ -261,8 +268,9 @@ export default function Achievements() {
                 elevation: 2,
                 zIndex: 1,
               }}
-              className={`${index < 2 ? 'mb-4' : ''
-                } flex h-24 w-[48%] items-center justify-center rounded-xl bg-white`}>
+              className={`${
+                index < 2 ? 'mb-4' : ''
+              } flex h-24 w-[48%] items-center justify-center rounded-xl bg-white`}>
               <View className=" flex h-[80%] w-full items-center justify-center   ">
                 <Text
                   className="text-center text-[#1483FD]"
@@ -307,7 +315,7 @@ export default function Achievements() {
               title: '个人资料',
               status: achievementStatus.profile,
               date: getCreateDate(),
-              href: '/profile'
+              href: '/profile',
             },
             {
               icon: 'star',
@@ -315,7 +323,7 @@ export default function Achievements() {
               title: '我的约誓',
               status: achievementStatus.oath,
               date: getCreateDate(),
-              href: '/oath'
+              href: '/oath',
             },
             {
               icon: 'book',
@@ -323,7 +331,7 @@ export default function Achievements() {
               title: '我的承诺',
               status: achievementStatus.promise,
               date: getCreateDate(),
-              href: '/promise'
+              href: '/promise',
             },
             {
               icon: 'rocket',
@@ -331,7 +339,7 @@ export default function Achievements() {
               title: '创造成果',
               status: achievementStatus.achievement,
               date: getCreateDate(),
-              href: '/achievement'
+              href: '/achievement',
             },
           ].map((item) => (
             <Link

@@ -9,6 +9,7 @@ export type UserInfo = {
   phone: string | null;
   email: string | null;
   platformName: string;
+  isMember: boolean;
   platformUserId: string;
   platformUsername: string;
   firstName: string | null;

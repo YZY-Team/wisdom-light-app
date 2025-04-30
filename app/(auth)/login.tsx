@@ -14,11 +14,14 @@ import { Keyboard, KeyboardEvent } from 'react-native';
 import { verificationApi } from '~/api/auth/verification';
 import { useDatabase } from '~/contexts/DatabaseContext';
 import { cssInterop } from 'nativewind';
+import { friendApi } from '~/api/have/friend';
+import * as schema from '~/db/schema';
 
 cssInterop(LinearGradient, { className: { target: 'style' } });
 
 export default function Login() {
   const insets = useSafeAreaInsets();
+  const { initialize, isInitializing, drizzleDb } = useDatabase();
 
   const [isChecked, setChecked] = useState(false);
   const [phone, setPhone] = useState('');
@@ -27,8 +30,6 @@ export default function Login() {
   const wsContext = useWebSocketContext();
 
   const setUserInfo = useUserStore((state) => state.setUserInfo);
-  const { initialize, isInitializing } = useDatabase();
-
   const [loading, setLoading] = useState(false);
 
   // 组件加载时检查保存的手机号码
@@ -78,6 +79,78 @@ export default function Login() {
           // 建立WebSocket连接
           setUserInfo(userRes.data);
           wsContext.connect(userRes.data.globalUserId);
+
+          // 确保数据库初始化完成后再拉取好友列表
+          if (!drizzleDb) {
+            console.error('数据库未正确初始化');
+            return;
+          }
+
+          // 登录成功后立即拉取好友列表
+          try {
+            const friendRes = await friendApi.getFriends();
+            if (friendRes.code === 200 && friendRes.data) {
+              console.log('成功拉取好友列表，准备缓存');
+              const friends = friendRes.data;
+              
+              if (friends && friends.length > 0 && userRes.data.globalUserId && drizzleDb) {
+                console.log('开始同步好友数据到本地数据库');
+                
+                // 同步用户数据
+                for (const friend of friends) {
+                  if (!friend.userId) continue;
+                  
+                  await drizzleDb
+                    .insert(schema.users)
+                    .values({
+                      id: friend.userId,
+                      nickname: friend.nickname || null,
+                      avatarLocalPath: null,
+                      avatarRemoteUrl: friend.originalAvatarUrl || friend.avatarUrl,
+                    })
+                    .onConflictDoUpdate({
+                      target: schema.users.id,
+                      set: {
+                        nickname: friend.nickname || null,
+                        avatarRemoteUrl: friend.originalAvatarUrl || friend.avatarUrl,
+                      },
+                    });
+
+                  // 同步好友关系
+                  if (!friend.createTime) continue;
+                  
+                  await drizzleDb
+                    .insert(schema.friends)
+                    .values({
+                      userId: userRes.data.globalUserId,
+                      friendId: friend.userId,
+                      username: friend.username,
+                      nickname: friend.nickname,
+                      remark: friend.remark,
+                      avatarUrl: friend.avatarUrl,
+                      originalAvatarUrl: friend.originalAvatarUrl,
+                      customAvatarUrl: friend.customAvatarUrl,
+                      isFavorite: friend.isFavorite,
+                      createTime: friend.createTime,
+                    })
+                    .onConflictDoUpdate({
+                      target: [schema.friends.userId, schema.friends.friendId],
+                      set: {
+                        nickname: friend.nickname,
+                        remark: friend.remark,
+                        avatarUrl: friend.avatarUrl,
+                        originalAvatarUrl: friend.originalAvatarUrl,
+                        customAvatarUrl: friend.customAvatarUrl,
+                        isFavorite: friend.isFavorite,
+                      },
+                    });
+                }
+                console.log('好友数据同步完成');
+              }
+            }
+          } catch (error) {
+            console.error('拉取好友列表失败:', error);
+          }
         }
         console.log('用户信息：', userRes);
         router.replace('/do');

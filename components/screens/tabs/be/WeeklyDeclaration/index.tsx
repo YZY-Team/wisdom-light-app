@@ -9,6 +9,8 @@ import { Image } from 'react-native';
 import saveIcon from '~/assets/saveIcon.png';
 import { cssInterop } from 'nativewind';
 import { BlurView } from 'expo-blur';
+import { useUserStore } from '~/store/userStore';
+import NoMemberTip from '../NoMemberTip';
 cssInterop(Image, { className: 'style' });
 cssInterop(BlurView, { className: 'style' });
 const BOOK_ID = '1911671090439000066'; // TODO: 从路由或者props中获取
@@ -16,6 +18,16 @@ const BOOK_ID = '1911671090439000066'; // TODO: 从路由或者props中获取
 export default function WeeklyDeclaration() {
   const { data: currentDeclaration, isLoading, error } = useCurrentWeeklyDeclaration(BOOK_ID);
   const createMutation = useCreateWeeklyDeclaration();
+  const { userInfo } = useUserStore();
+
+  if (!userInfo?.isMember) {
+    return (
+      <NoMemberTip
+        tipText="充值会员之后才能拥有周宣告哦～"
+      />
+    );
+  }
+
   // 添加保存处理函数
   const handleSave = () => {};
 
@@ -74,7 +86,6 @@ export default function WeeklyDeclaration() {
             className="h-12 w-12 flex-col items-center justify-center rounded-full bg-[#1483FD0D]"
             experimentalBlurMethod="dimezisBlurView"
             intensity={10}>
-
             <Image source={saveIcon} className="h-5 w-5" />
             <Text className="text-[12px] font-[600] text-[#1483FD]">保存</Text>
           </BlurView>
