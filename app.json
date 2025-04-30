@@ -3,7 +3,7 @@
     "name": "诚信网络",
     "slug": "chengxinwangluoapp",
     "version": "1.0.0",
-    "scheme": "chengxinwangluoapp",
+    "scheme": "wx5544421face5824b",
     "newArchEnabled": true,
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,7 +43,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "expo-native-wechat"
     ],
     "orientation": "portrait",
     "icon": "./assets/adaptive.png",
@@ -53,7 +54,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anjiuwenhua.chengxinwangluoapp"
@@ -64,7 +67,10 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anjiuwenhua.chengxinwangluoapp",
-      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.INTERNET"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET"
+      ]
     },
     "extra": {
       "router": {

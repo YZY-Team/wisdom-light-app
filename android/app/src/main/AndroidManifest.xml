@@ -17,6 +17,12 @@
       <data android:scheme="https"/>
     </intent>
   </queries>
+  <queries>
+    <package android:name="com.tencent.mm"/>
+  </queries>
+  <queries>
+    <package android:name="com.tencent.mm"/>
+  </queries>
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:usesCleartextTraffic="true" android:fullBackupContent="@xml/secure_store_backup_rules" android:dataExtractionRules="@xml/secure_store_data_extraction_rules">
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
@@ -33,7 +39,12 @@
         <data android:scheme="chengxinwangluoapp"/>
         <data android:scheme="com.anjiuwenhua.chengxinwangluoapp"/>
         <data android:scheme="exp+chengxinwangluoapp"/>
+        <data android:scheme="wx5544421face5824b"/>
       </intent-filter>
     </activity>
+    <activity android:name=".wxapi.WXEntryActivity" android:label="@string/app_name" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:exported="true" android:taskAffinity="com.anjiuwenhua.chengxinwangluoapp" android:launchMode="singleTask"/>
+    <activity android:name=".wxapi.WXPayEntryActivity" android:exported="true" android:label="@string/app_name"/>
+    <activity android:name=".wxapi.WXEntryActivity" android:label="@string/app_name" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:exported="true" android:taskAffinity="com.anjiuwenhua.chengxinwangluoapp" android:launchMode="singleTask"/>
+    <activity android:name=".wxapi.WXPayEntryActivity" android:exported="true" android:label="@string/app_name"/>
   </application>
 </manifest>

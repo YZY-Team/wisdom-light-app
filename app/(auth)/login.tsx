@@ -31,6 +31,7 @@ export default function Login() {
 
   const setUserInfo = useUserStore((state) => state.setUserInfo);
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0); // 添加倒计时状态
 
   // 组件加载时检查保存的手机号码
   useEffect(() => {
@@ -50,6 +51,19 @@ export default function Login() {
   const handleRegister = async () => {
     console.log('注册');
 
+    // 验证手机号
+    if (!phone) {
+      alert('请输入手机号');
+      return;
+    }
+
+    // 验证验证码
+    if (!verificationCode) {
+      alert('请输入验证码');
+      return;
+    }
+
+    // 验证隐私协议
     if (!isChecked) {
       setShowError(true);
       return;
@@ -177,6 +191,20 @@ export default function Login() {
 
       if (res.code === 200) {
         alert('验证码已发送');
+        // 开始倒计时
+        setCountdown(60);
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        // 保存定时器ID以便清理
+        return () => clearInterval(timer);
       } else {
         alert('获取验证码失败：' + res.message);
       }
@@ -184,6 +212,14 @@ export default function Login() {
       alert('获取验证码失败：' + error);
     }
   };
+
+  // 添加清理定时器的useEffect
+  useEffect(() => {
+    return () => {
+      // 组件卸载时重置倒计时
+      setCountdown(0);
+    };
+  }, []);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -291,7 +327,11 @@ export default function Login() {
                     />
                     <View className="absolute right-2 top-[6px]">
                       <LinearGradient
-                        colors={['#20B4F3', '#5762FF']}
+                        colors={
+                          countdown > 0
+                            ? ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']
+                            : ['#20B4F3', '#5762FF']
+                        }
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         className="rounded-[6px]"
@@ -300,8 +340,11 @@ export default function Login() {
                         }}>
                         <Pressable
                           onPress={handleGetVerificationCode}
+                          disabled={countdown > 0}
                           className="h-[36px] items-center justify-center px-4">
-                          <Text className="text-[14px] text-white">获取验证码</Text>
+                          <Text className="text-[14px] text-white">
+                            {countdown > 0 ? `${countdown}秒后重试` : '获取验证码'}
+                          </Text>
                         </Pressable>
                       </LinearGradient>
                     </View>
@@ -344,7 +387,7 @@ export default function Login() {
               <View className="w-full items-center px-4">
                 <LinearGradient
                   colors={
-                    isChecked
+                    isChecked && phone && verificationCode
                       ? ['#20B4F3', '#5762FF']
                       : ['rgba(32, 180, 243, 0.50)', 'rgba(87, 98, 255, 0.50)']
                   }
@@ -358,6 +401,7 @@ export default function Login() {
                   }}>
                   <Pressable
                     onPress={handleRegister}
+                    disabled={!isChecked || !phone || !verificationCode}
                     className="h-[44px] items-center justify-center">
                     <Text
                       className="text-center text-[5.128vw] text-white"

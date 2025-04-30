@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, Pressable, Modal } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Modal, Linking } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
@@ -24,13 +24,23 @@ import { useRouter } from 'expo-router';
 
 
 // AI工具卡片组件
-const AiToolCard = ({ title, icon }: { title: string; icon: any }) => {
+const AiToolCard = ({ title, icon, websiteUrl }: { title: string; icon: any; websiteUrl: string }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setModalVisible(false);
-    router.push('/ai/chat');
+    try {
+      // 检查URL是否可以打开
+      const canOpen = await Linking.canOpenURL(websiteUrl);
+      if (canOpen) {
+        await Linking.openURL(websiteUrl);
+      } else {
+        console.log(`无法打开URL: ${websiteUrl}`);
+      }
+    } catch (error) {
+      console.error(`打开链接出错: ${error}`);
+    }
   };
 
   return (
@@ -100,46 +110,57 @@ export default function AiIndex() {
           <AiToolCard
             title="Open AI"
             icon={openAiIcon}
+            websiteUrl="https://openai.com"
           />
           <AiToolCard
             title="Deep Seek"
             icon={deepSeekIcon}
+            websiteUrl="https://deepseek.com"
           />
           <AiToolCard
             title="Midjourney"
             icon={midjourneyIcon}
+            websiteUrl="https://midjourney.com"
           />
           <AiToolCard
             title="Grammarly"
             icon={grammarlyIcon}
+            websiteUrl="https://www.grammarly.com"
           />
           <AiToolCard
             title="Canva"
             icon={canvaIcon}
+            websiteUrl="https://www.canva.com"
           />
           <AiToolCard
             title="Hailuo"
             icon={hailuoIcon}
+            websiteUrl="https://www.hailuo.ai"
           />
           <AiToolCard
             title="可灵AI"
             icon={kelingIcon}
+            websiteUrl="https://app.klingai.com/cn/"
           />
           <AiToolCard
             title="即创AI"
             icon={jichuangIcon}
+            websiteUrl="https://jichuang.ai"
           />
           <AiToolCard
             title="即梦AI"
             icon={jimengIcon}
+            websiteUrl="https://jimeng.jianying.com"
           />
           <AiToolCard
             title="Soul Machines"
             icon={soulIcon}
+            websiteUrl="https://www.soulmachines.com"
           />
           <AiToolCard
             title="科大讯飞"
             icon={xunfeiIcon}
+            websiteUrl="https://www.xfyun.cn"
           />
         </View>
       </View>
