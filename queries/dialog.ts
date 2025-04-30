@@ -7,3 +7,10 @@ export const useDialogList = () => {
     queryFn: dialogApi.getDialogs,
   });
 };
+
+export const useGroupDialogList = () => {
+  return useQuery({
+    queryKey: ["groupDialogList"],
+    queryFn: dialogApi.getGroupDialogs,
+  });
+};

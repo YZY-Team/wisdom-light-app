@@ -15,6 +15,26 @@ import { router } from 'expo-router';
 import { cssInterop } from 'nativewind';
 import { clearDatabase } from '~/services/database';
 import { useDatabase } from '~/contexts/DatabaseContext';
+import { dialogApi } from '~/api/have/dialog';
+
+const testCreateGroupDialog = ({
+  title,
+  avatarUrl,
+  memberIds,
+  description,
+}: {
+  title: string;
+  avatarUrl: string;
+  memberIds: string[];
+  description: string;
+}) => {
+  dialogApi.createGroupDialog({
+    title,
+    avatarUrl,
+    memberIds,
+    description,
+  });
+};
 
 cssInterop(Image, { className: 'style' });
 type MenuItemProps = {
@@ -25,13 +45,13 @@ type MenuItemProps = {
   width?: number;
 };
 
-const MenuItem = ({ icon, title, href,width }: MenuItemProps) => (
+const MenuItem = ({ icon, title, href, width }: MenuItemProps) => (
   <Link href={href} asChild>
     <Pressable className="flex-row items-center px-4 py-4">
-      <Image 
-        source={icon} 
-        className={width ? `w-${width} h-${width}` : 'h-5 w-5'} 
-        contentFit="contain" 
+      <Image
+        source={icon}
+        className={width ? `w-${width} h-${width}` : 'h-5 w-5'}
+        contentFit="contain"
       />
       <Text className="ml-4 flex-1 text-[#333]">{title}</Text>
       <Ionicons name="chevron-forward" size={20} color="rgba(0, 0, 0, 0.3)" />
@@ -48,9 +68,16 @@ export default function WhoIndex() {
   const [uploading, setUploading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [groupTitle, setGroupTitle] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
   const { initialize, isInitializing } = useDatabase();
 
   useEffect(() => {
+    AsyncStorage.getItem('token').then((token) => {
+      console.log("token",token);
+      
+    })
     userApi.me().then((res) => {
       if (res.code === 200 && res.data) {
         console.log('用户信息', res.data);
@@ -134,7 +161,7 @@ export default function WhoIndex() {
               Authorization: token ? `Bearer ${token}` : '',
             },
           });
-          
+
           const uploadRes = await response.json();
           console.log('上传结果:', uploadRes);
 
@@ -187,6 +214,33 @@ export default function WhoIndex() {
     }
   };
 
+  // 处理创建群聊
+  const handleCreateGroup = async () => {
+    try {
+      if (!groupTitle.trim()) {
+        alert('请输入群聊名称');
+        return;
+      }
+
+      const res = await dialogApi.createGroupDialog({
+        title: groupTitle.trim(),
+        avatarUrl: userInfo?.avatarUrl || '',
+        memberIds: [userInfo?.globalUserId || ''],
+        description: groupDescription.trim(),
+      });
+
+      if (res.code === 200) {
+        alert('创建群聊成功');
+        setShowCreateGroupModal(false);
+        setGroupTitle('');
+        setGroupDescription('');
+      }
+    } catch (error) {
+      console.log('创建群聊失败:', error);
+      alert('创建群聊失败，请重试');
+    }
+  };
+
   return (
     <View className="flex-1 bg-[#F5F8FC]">
       {(loggingOut || isInitializing) && (
@@ -195,7 +249,7 @@ export default function WhoIndex() {
           <Text className="mt-2 text-white">正在处理，请稍候...</Text>
         </View>
       )}
-      
+
       <LinearGradient
         colors={['#E7F2FF', '#FFF']}
         className="absolute w-full"
@@ -254,7 +308,6 @@ export default function WhoIndex() {
             boxShadow: '0px 4px 30px 0px rgba(20, 131, 253, 0.25)',
           }}
           className="mx-4 mt-8 overflow-hidden rounded-xl bg-white">
-
           <MenuItem
             icon={require('~/assets/images/who/vip.png')}
             title="会员充值"
@@ -286,6 +339,16 @@ export default function WhoIndex() {
             href="/test-rtc"
           />
           <Pressable
+            onPress={() => setShowCreateGroupModal(true)}
+            className="flex-row items-center px-4 py-4">
+            <Image
+              source={require('~/assets/images/who/update.png')}
+              className="h-5 w-5"
+              contentFit="contain"
+            />
+            <Text className="ml-4 flex-1">测试创建群聊</Text>
+          </Pressable>
+          <Pressable
             onPress={() => setShowLogoutModal(true)}
             disabled={true}
             className="flex-row items-center px-4 py-4">
@@ -309,9 +372,7 @@ export default function WhoIndex() {
         </View>
 
         {/* 版本信息 */}
-        <Text className="mb-4 mt-[120px] text-center text-xs text-[#999]">
-          Wisdom Light v1.0.0
-        </Text>
+        <Text className="mb-4 mt-[120px] text-center text-xs text-[#999]">Wisdom Light v1.0.0</Text>
       </ScrollView>
 
       {/* 编辑弹窗 */}
@@ -358,11 +419,11 @@ export default function WhoIndex() {
         animationType="fade"
         onRequestClose={() => setShowLogoutModal(false)}>
         <View className="flex-1 items-center justify-center bg-black/50 px-10">
-          <View className="w-full h-[200px] rounded-lg bg-white py-6">
+          <View className="h-[200px] w-full rounded-lg bg-white py-6">
             <View className="flex-1 items-center justify-center">
               <Text className="text-center text-[16px]">确认退出登录?</Text>
             </View>
-            <View className="flex-row h-[50px] justify-between px-4 ">
+            <View className="h-[50px] flex-row justify-between px-4 ">
               <Pressable
                 onPress={() => setShowLogoutModal(false)}
                 className="h-full w-[45%] items-center justify-center rounded-lg border border-gray-200">
@@ -375,6 +436,53 @@ export default function WhoIndex() {
                 }}
                 className="h-full w-[45%] items-center justify-center rounded-lg border border-gray-200">
                 <Text className="">确认</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+       {/* 创建群聊弹窗 */}
+      <Modal
+        visible={showCreateGroupModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCreateGroupModal(false)}>
+        <View className="flex-1 items-center justify-center bg-black/50 px-10">
+          <View className="w-full rounded-lg bg-white p-6">
+            <Text className="mb-4 text-center text-lg font-medium">创建群聊</Text>
+            <View className="mb-4">
+              <Text className="mb-2 text-gray-600">群聊名称</Text>
+              <TextInput
+                value={groupTitle}
+                onChangeText={setGroupTitle}
+                className="rounded-lg border border-gray-200 p-3"
+                placeholder="请输入群聊名称"
+                maxLength={20}
+              />
+            </View>
+            <View className="mb-4">
+              <Text className="mb-2 text-gray-600">群聊描述</Text>
+              <TextInput
+                value={groupDescription}
+                onChangeText={setGroupDescription}
+                className="rounded-lg border border-gray-200 p-3"
+                placeholder="请输入群聊描述"
+                maxLength={100}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+            <View className="flex-row justify-between space-x-4">
+              <Pressable
+                onPress={() => setShowCreateGroupModal(false)}
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2">
+                <Text className="text-center">取消</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCreateGroup}
+                className="flex-1 rounded-lg bg-blue-500 px-4 py-2">
+                <Text className="text-center text-white">创建</Text>
               </Pressable>
             </View>
           </View>

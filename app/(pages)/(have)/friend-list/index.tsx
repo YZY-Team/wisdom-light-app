@@ -20,6 +20,8 @@ import * as schema from '~/db/schema';
 import { useUserStore } from '~/store/userStore';
 import { eq } from 'drizzle-orm';
 import { useDatabase } from '~/contexts/DatabaseContext';
+import FriendTab from '~/components/screens/tabs/have/FriendTab';
+import GroupTab from '~/components/screens/tabs/have/GroupTab';
 
 // 字母索引数据
 const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); // 添加 '#' 用于特殊情况
@@ -131,14 +133,9 @@ const GroupHeader = memo(({ letter }: { letter: string }) => (
 ));
 
 export default function FriendList() {
-  const flashListRef = useRef<FlashList<Item>>(null);
-  const [activeLetter, setActiveLetter] = useState<string | null>(null);
-  const alphabetContainerRef = useRef<View>(null);
-  const [alphabetLayout, setAlphabetLayout] = useState({ height: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends');
   const { data: friendResponse, isLoading, error } = useFriendList();
-  const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends'); // 新增状态管理 active tab
   
   // 使用DatabaseContext
   const { drizzleDb, isInitialized } = useDatabase();
@@ -278,143 +275,30 @@ export default function FriendList() {
     syncFriendsToDatabase();
   }, [friends, currentUserId, drizzleDb]);
 
-  // 根据搜索文本过滤好友
-  const filteredFriends = friends.filter((friend: Friend) => {
-    const searchLower = searchText.toLowerCase();
-    return (
-      friend.nickname?.toLowerCase().includes(searchLower) ||
-      friend.username?.toLowerCase().includes(searchLower) ||
-      friend.remark?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  // 生成并展平数据
-  const groupedData = groupFriendsByLetter(filteredFriends);
-
-  const flattenedData = flattenGroupedData(groupedData);
-
-  // 处理字母选择，滚动到对应分组
-  const handleLetterSelect = (letter: string) => {
-    setActiveLetter(letter);
-    const index = flattenedData.findIndex(
-      (item) => item.type === 'header' && item.title === letter
-    );
-    if (index !== -1 && flashListRef.current) {
-      flashListRef.current.scrollToIndex({
-        index,
-        animated: true,
-        viewPosition: 0,
-      });
-    }
-  };
-
-  // 测量字母索引容器的布局
-  useEffect(() => {
-    if (alphabetContainerRef.current) {
-      setTimeout(() => {
-        alphabetContainerRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          setAlphabetLayout({ height, y: pageY });
-        });
-      }, 500);
-    }
-  }, []);
-
-  // 根据触摸位置找到对应的字母
-  const findLetterAtPosition = (touchY: number) => {
-    if (alphabetLayout.height <= 0) return;
-
-    const relativeY = touchY - alphabetLayout.y;
-    const letterHeight = alphabetLayout.height / ALPHABET.length;
-    const index = Math.min(Math.max(Math.floor(relativeY / letterHeight), 0), ALPHABET.length - 1);
-    const letter = ALPHABET[index];
-
-    if (letter && letter !== activeLetter) {
-      handleLetterSelect(letter);
-    }
-  };
-
-  // 处理触摸事件
-  const handleTouchStart = (e: GestureResponderEvent) => {
-    setIsDragging(true);
-    findLetterAtPosition(e.nativeEvent.pageY);
-  };
-
-  const handleTouchMove = (e: GestureResponderEvent) => {
-    if (isDragging) {
-      findLetterAtPosition(e.nativeEvent.pageY);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-    setActiveLetter(null);
-  };
-
-  // 渲染字母气泡提示
-  const renderLetterBubble = () => {
-    if (!activeLetter) return null;
-
-    return (
-      <View className="absolute right-12 items-center justify-center" style={{ top: '40%' }}>
-        <View className="h-16 w-16 items-center justify-center rounded-full bg-blue-500 shadow-lg">
-          <Text className="text-2xl font-bold text-white">{activeLetter}</Text>
-        </View>
-      </View>
-    );
-  };
-
-  // 渲染字母索引项
-  const renderLetter = (letter: string) => (
-    <TouchableOpacity
-      key={letter}
-      className="h-5 items-center justify-center"
-      onPress={() => handleLetterSelect(letter)}>
-      <Text
-        className={`text-[12px] ${activeLetter === letter ? 'font-bold text-white' : 'text-gray-300'}`}>
-        {letter}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  // 渲染列表项
-  const renderItem = ({ item }: { item: Item }) => {
-    if (item.type === 'header') {
-      return <GroupHeader letter={item.title || ''} />;
-    }
-    return (
-      <View>{item.friends?.map((friend) => <FriendItem key={friend.userId} item={friend} />)}</View>
-    );
-  };
-
-  // 估算每项高度
-  const getItemHeight = (item: Item) => {
-    if (item.type === 'header') return 32;
-    return 72; // 好友项高度
-  };
-
   return (
-    <View className="flex-1 ">
-      {/* Use relative positioning on the parent and absolute on children */}
+    <View className="flex-1">
+      {/* 顶部导航栏 */}
       <View className="relative flex-row items-center justify-center bg-white px-4 py-3">
-        {/* Back Button - Absolute Left */}
+        {/* 返回按钮 */}
         <Pressable
           onPress={() => router.back()}
           className="absolute bottom-0 left-4 top-0 z-10 justify-center">
           <Ionicons name="chevron-back" size={24} color="#666" />
         </Pressable>
-        {/* Title - Centered */}
+        {/* 标题 */}
         <Text className="text-center text-lg font-medium">好友列表</Text>
-        {/* Add Friend Button - Absolute Right */}
+        {/* 添加好友按钮 */}
         <Pressable
           onPress={() => router.push('/add-friend')}
           className="absolute bottom-0 right-4 top-0 z-10 justify-center">
           <Text className="text-[16px] text-black/50">添加朋友</Text>
         </Pressable>
       </View>
-      <View className=" bg-white">
+
+      <View className="bg-white">
         {/* 搜索框 */}
         <View className="mx-4 mb-1">
-          <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4 ">
+          <View className="flex-row items-center rounded-[20px] bg-[#1483FD0D] px-4">
             <Ionicons name="search-outline" size={20} color="rgba(0,0,0,0.4)" />
             <TextInput
               className="ml-2 flex-1 h-[30px] py-0 text-[14px] text-black"
@@ -431,20 +315,25 @@ export default function FriendList() {
           style={{
             boxShadow: '0px 4px 4px 0px rgba(20, 131, 253, 0.05)',
           }}
-          className="mx-4 mb-4 flex-row items-center justify-between  rounded-[6px] bg-[#1483FD1A] px-2 py-[6px]">
+          className="mx-4 mb-4 flex-row items-center justify-between rounded-[6px] bg-[#1483FD1A] px-2 py-[6px]">
           <TouchableOpacity
             onPress={() => setActiveTab('friends')}
-            className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'friends' ? 'bg-white' : ''}`}>
-            <Text className={`text-[14px]  `}>好友列表</Text>
+            className={`h-10 w-[45%] items-center justify-center rounded-lg ${
+              activeTab === 'friends' ? 'bg-white' : ''
+            }`}>
+            <Text className="text-[14px]">好友列表</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab('groups')}
-            className={`h-10 w-[45%] items-center  justify-center rounded-lg ${activeTab === 'groups' ? 'bg-white' : ''}`}>
-            <Text className={`text-[14px] `}>群聊列表</Text>
+            className={`h-10 w-[45%] items-center justify-center rounded-lg ${
+              activeTab === 'groups' ? 'bg-white' : ''
+            }`}>
+            <Text className="text-[14px]">群聊列表</Text>
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* 内容区域 */}
       {isLoading && localFriends.length === 0 ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-500">加载中...</Text>
@@ -454,63 +343,12 @@ export default function FriendList() {
           <Text className="text-red-500">加载失败，请重试</Text>
           <Text className="text-gray-500">使用本地缓存数据时，需要先至少连接一次网络</Text>
         </View>
-      ) : flattenedData.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-500">暂无好友</Text>
-        </View>
       ) : (
         <View className="flex-1">
-          {/* FlashList 渲染分组列表 - 根据 activeTab 决定显示内容 */}
-          {activeTab === 'friends' && (
-            <FlashList
-              ref={flashListRef}
-              data={flattenedData}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.key}
-              estimatedItemSize={72}
-              getItemType={(item) => item.type}
-              overrideItemLayout={(layout, item) => {
-                layout.size = getItemHeight(item);
-              }}
-              showsVerticalScrollIndicator={false}
-              onEndReachedThreshold={0.5}
-            />
-          )}
-          {/* 群聊列表暂时显示提示，后续可替换为真实列表 */}
-          {activeTab === 'groups' && (
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-gray-500">群聊列表开发中...</Text>
-              {/* 这里可以暂时也用 FlashList 显示好友数据，或者显示其他占位符 */}
-              {/* <FlashList data={[]} renderItem={() => null} estimatedItemSize={50} /> */}
-            </View>
-          )}
-
-          {/* 字母索引侧边栏 - 改为绝对定位 */}
-          {/* 仅在好友列表 Tab 显示字母索引 */}
-          {activeTab === 'friends' && flattenedData.length > 0 && (
-            <View className="absolute bottom-0 right-0 top-0 w-12 items-center justify-center">
-              {/* 显示选中字母的气泡 */}
-              {renderLetterBubble()}
-
-              {/* 字母索引列表 */}
-              <View
-                ref={alphabetContainerRef}
-                className="items-center justify-center"
-                onLayout={() => {
-                  setTimeout(() => {
-                    alphabetContainerRef.current?.measure((x, y, width, height, pageX, pageY) => {
-                      if (height > 0 && pageY > 0) {
-                        setAlphabetLayout({ height, y: pageY });
-                      }
-                    });
-                  }, 500);
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}>
-                {ALPHABET.map((letter) => renderLetter(letter))}
-              </View>
-            </View>
+          {activeTab === 'friends' ? (
+            <FriendTab friends={friends} searchText={searchText} />
+          ) : (
+            <GroupTab searchText={searchText} />
           )}
         </View>
       )}

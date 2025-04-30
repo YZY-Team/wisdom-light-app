@@ -7,9 +7,14 @@ export const dialogApi = {
     return request.get<Dialog[]>('/dialogs');
   },
 
+  // 获取群聊列表
+  getGroupDialogs: () => {
+    return request.get<Dialog[]>('/dialogs/group');
+  },
+
   // 获取单个对话详情
-  getDialog: (id: string) => {
-    return request.get<Dialog>(`/api/dialogs/${id}`);
+  getDialogInfo: (id: string) => {
+    return request.get<Dialog>(`/dialogs/${id}`);
   },
 
   // 创建私聊
@@ -23,9 +28,29 @@ export const dialogApi = {
     });
   },
 
+  // 创建群聊
+  createGroupDialog: (data: {
+    title: string;
+    avatarUrl: string;
+    memberIds: string[];
+    description: string;
+  }) => {
+    return request.post<string>('/dialogs/group', data);
+  },
+
   // 删除对话
   deleteDialog: (id: string) => {
     return request.delete(`/api/dialogs/${id}`);
+  },
+
+  // 获取群聊成员信息
+  getGroupMembers: (dialogId: string) => {
+    return request.get(`/dialogs/group/${dialogId}/members`);
+  },
+
+  // 添加群聊成员
+  addGroupMembers: (dialogId: string, memberIds: string[]) => {
+    return request.post(`/dialogs/group/${dialogId}/members`, memberIds);
   },
 };
 
@@ -33,6 +58,9 @@ export const dialogApi = {
 export const initiateCall = ({ callerId, receiverId, callType }: { callerId: number; receiverId: number; callType: string }) => {
   return request.post('/friends/calls/initiate', { callerId, receiverId, callType });
 };
+
+
+
 
 export const verificationApi = {
   getCode: (phone: string) => {

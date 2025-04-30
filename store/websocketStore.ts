@@ -4,12 +4,13 @@ import { useUserStore } from './userStore';
 
 // 定义消息类型
 export type Message = {
-  type: string;
-  dialogId: string; // 支持字符串或数字类型
-  receiverId: string;
+  type: 'PRIVATE_CHAT' | 'GROUP_CHAT' | 'SYSTEM';
+  dialogId?: string; // 私聊时使用
+  groupId?: string; // 群聊时使用
+  receiverId?: string; // 私聊时使用
   senderId: string;
   textContent: string;
-  status ?: 'CREATED' | 'SENT' | 'DELIVERED' | 'READ'; // 根据需要扩展状态
+  status?: 'CREATED' | 'SENT' | 'DELIVERED' | 'READ';
   timestamp: string;
   imageUrl?: string; // 图片消息URL
   audioUrl?: string; // 音频消息URL
@@ -17,10 +18,10 @@ export type Message = {
 
 // Store 的状态和方法
 type WebSocketState = {
-  messages: Record<string, Message[]>; // 按 dialogId 存储消息
+  messages: Record<string, Message[]>; // 按 dialogId 或 groupId 存储消息
   addMessage: (message: Message) => void;
   clearMessages: (dialogId: string) => void;
-  markMessagesAsRead: (dialogId: string, userId: string) => void; // 新增方法
+  markMessagesAsRead: (dialogId: string, userId: string) => void;
 };
 
 const MESSAGES_STORAGE_KEY = '@messages';
@@ -46,8 +47,13 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
       if (typeof message === 'string') {
         try {
           parsedMessage = JSON.parse(message);
-          parsedMessage.dialogId = String(parsedMessage.dialogId);
-          parsedMessage.receiverId = String(parsedMessage.receiverId);
+          // 根据消息类型设置正确的ID
+          if (parsedMessage.type === 'GROUP_CHAT') {
+            parsedMessage.groupId = String(parsedMessage.groupId);
+          } else {
+            parsedMessage.dialogId = String(parsedMessage.dialogId);
+            parsedMessage.receiverId = String(parsedMessage.receiverId);
+          }
           parsedMessage.senderId = String(parsedMessage.senderId);
           parsedMessage.status = parsedMessage.senderId === currentUserId ? 'READ' : 'CREATED';
         } catch (e) {
@@ -57,17 +63,28 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
       } else {
         parsedMessage = {
           ...message,
-          dialogId: String(message.dialogId),
-          receiverId: String(message.receiverId),
+          // 根据消息类型设置正确的ID
+          ...(message.type === 'GROUP_CHAT'
+            ? { groupId: String(message.groupId) }
+            : {
+                dialogId: String(message.dialogId),
+                receiverId: String(message.receiverId),
+              }),
           senderId: String(message.senderId),
           status: message.senderId === currentUserId ? 'READ' : 'CREATED',
         };
       }
 
-      const dialogId = parsedMessage.dialogId;
+      // 使用正确的ID作为消息存储的key
+      const messageKey = parsedMessage.type === 'GROUP_CHAT' ? parsedMessage.groupId : parsedMessage.dialogId;
+      if (!messageKey) {
+        console.error('消息缺少必要的ID');
+        return state;
+      }
+
       const newMessages = {
         ...state.messages,
-        [dialogId]: [...(state.messages[dialogId] || []), parsedMessage],
+        [messageKey]: [...(state.messages[messageKey] || []), parsedMessage],
       };
 
       // 持久化更新

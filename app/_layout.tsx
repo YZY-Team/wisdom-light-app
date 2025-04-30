@@ -10,6 +10,8 @@ import * as React from 'react';
 import { useIsLogin } from '~/queries/auth';
 import WebRTCDialog, { WebRtcDialog } from '~/components/WebRtcDialog';
 import { WebRTCProvider } from '~/contexts/WebRTCContext';
+import { loginApi } from '~/api/auth/login';
+import { useUserStore } from '~/store/userStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,44 +32,35 @@ const DrizzleStudioComponent = () => {
   return studioInstance;
 };
 
-// 路由检查组件
-function RouteGuard() {
-  const router = useRouter();
-  const { data: isLoggedIn, isLoading } = useIsLogin();
 
-  React.useEffect(() => {
-    if (isLoading) return;
-
-    // 不使用window.location.pathname，直接跳转到对应页面
-    if (isLoggedIn?.code === 200) {
-      router.replace('/(tabs)/be');
-    } else {
-      router.replace('/(auth)/login');
-    }
-  }, [router, isLoggedIn, isLoading]);
-
-  return null;
-}
 
 export default function RootLayout() {
+  const userInfo=useUserStore(sorte=>sorte.userInfo)
+  const router=useRouter()
+  React.useEffect(()=>{
+    if(userInfo){
+      router.replace('/(tabs)/be')
+    }else{
+      router.replace('/(auth)/login')
+    }
+  },[userInfo])
   return (
     <DatabaseProvider>
       <QueryClientProvider client={queryClient}>
-      <WebRTCProvider>
-        <WebSocketProvider>
-          <KeyboardProvider>
-            <DrizzleStudioComponent />
-            <RouteGuard />
-            
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'default',
-                }}
-              />
-          
-          </KeyboardProvider>
-        </WebSocketProvider>
+        <WebRTCProvider>
+          <WebSocketProvider>
+            <KeyboardProvider>
+              <>
+                <DrizzleStudioComponent />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: 'none',
+                  }}
+                />
+              </>
+            </KeyboardProvider>
+          </WebSocketProvider>
         </WebRTCProvider>
       </QueryClientProvider>
     </DatabaseProvider>
