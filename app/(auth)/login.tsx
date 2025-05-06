@@ -90,8 +90,7 @@ export default function Login() {
           // 使用用户ID初始化数据库
           await initialize(userRes.data.globalUserId);
 
-          // 建立WebSocket连接
-          setUserInfo(userRes.data);
+          
           wsContext.connect(userRes.data.globalUserId);
 
           // 确保数据库初始化完成后再拉取好友列表
@@ -167,7 +166,8 @@ export default function Login() {
           }
         }
         console.log('用户信息：', userRes);
-        router.replace('/do');
+       // 建立WebSocket连接
+       setUserInfo(userRes.data);
       }
     } catch (error) {
       // router.replace('(tabs)/do');

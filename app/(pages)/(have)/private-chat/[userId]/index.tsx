@@ -24,6 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { initiateCall } from '~/api/have/dialog';
+import { cancelCall } from '~/api/have/dialog';
 type MessageProps = {
   content: string;
   time: string;
@@ -123,6 +124,7 @@ export default function PrivateChat() {
   const [isRecording, setIsRecording] = useState(false);
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
   const [showVideoCallModal, setShowVideoCallModal] = useState(false);
+  const [currentCallId, setCurrentCallId] = useState<string>('');
 
   // 从 Zustand store 获取消息
   const messages = useWebSocketStore((stats) => stats.messages);
@@ -353,24 +355,15 @@ export default function PrivateChat() {
 
     // 调用语音通话API
     initiateCall({
-      callerId: userInfo?.globalUserId,
-      receiverId:targetUserId,
+      callerId: Number(userInfo?.globalUserId),
+      receiverId: Number(targetUserId),
       callType: 'AUDIO',
+    }).then(res => {
+      if (res.code === 200) {
+        console.log('语音通话', res);
+        setCurrentCallId(res.data.callId);
+      }
     });
-
-    const newMessage: Message = {
-      type: 'PRIVATE_CHAT',
-      senderId: userInfo!.globalUserId,
-      receiverId: targetUserId as string,
-      dialogId: dialogId as string,
-      textContent: '[发起了语音通话]',
-      timestamp: String(Date.now()),
-    };
-
-    // 发送消息
-    sendMessage(JSON.stringify(newMessage));
-    // 存储消息
-    addMessage({ ...newMessage, status: 'READ' });
   };
 
   // 视频通话
@@ -380,24 +373,34 @@ export default function PrivateChat() {
 
     // 调用视频通话API
     initiateCall({
-      callerId: userInfo?.globalUserId,
-      receiverId: targetUserId,
-      callType: 'VIDEO',
-    });
-
-    const newMessage: Message = {
-      type: 'PRIVATE_CHAT',
-      senderId: userInfo!.globalUserId,
+      callerId: userInfo!.globalUserId,
       receiverId: targetUserId as string,
-      dialogId: dialogId as string,
-      textContent: '[发起了视频通话]',
-      timestamp: String(Date.now()),
-    };
+      callType: 'VIDEO',
+    }).then(res => {
+      if (res.code === 200) {
+        setCurrentCallId(res.data.callId);
+        console.log('视频通话', res);
+      }
+    }).catch(err=>{
+      console.log('视频通话失败',err);
+    });
+  };
 
-    // 发送消息
-    sendMessage(JSON.stringify(newMessage));
-    // 存储消息
-    addMessage({ ...newMessage, status: 'READ' });
+  // 处理挂断通话
+  const handleEndCall = async () => {
+    if (currentCallId) {
+      try {
+        await cancelCall(currentCallId);
+        setShowVoiceCallModal(false);
+        setShowVideoCallModal(false);
+        setCurrentCallId('');
+      } catch (error) {
+        console.error('挂断通话失败:', error);
+      }
+    } else {
+      setShowVoiceCallModal(false);
+      setShowVideoCallModal(false);
+    }
   };
 
   return (
@@ -510,23 +513,31 @@ export default function PrivateChat() {
 
           {/* 语音通话模态框 */}
           {showVoiceCallModal && (
-            <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center bg-black/70">
-              <View className="w-4/5 rounded-lg bg-white p-6">
-                <Text className="mb-4 text-center text-lg font-medium">语音通话中...</Text>
-                <View className="mb-6 items-center">
+            <View className="absolute bottom-0 left-0 right-0 top-0 items-center justify-center bg-black">
+              <View className="h-full w-full items-center justify-center">
+                <View className="items-center">
                   <Image
                     source={{ uri: getAvatarUrl(targetUserId as string) }}
-                    className="h-20 w-20 rounded-full"
+                    className="h-32 w-32 rounded-full"
                     contentFit="cover"
                   />
-                  <Text className="mt-2 text-gray-600">{userName}</Text>
-                  <Text className="mt-1 text-sm text-gray-400">通话时间: 00:00</Text>
+                  <Text className="mt-4 text-2xl font-medium text-white">{userName}</Text>
+                  <Text className="mt-2 text-base text-white/70">语音通话中...</Text>
+                  <Text className="mt-1 text-sm text-white/50">通话时间: 00:00</Text>
                 </View>
-                <TouchableOpacity
-                  onPress={() => setShowVoiceCallModal(false)}
-                  className="items-center rounded-full bg-red-500 p-3">
-                  <Ionicons name="call" size={32} color="#fff" />
-                </TouchableOpacity>
+                <View className="absolute bottom-20 w-full flex-row justify-center space-x-8">
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-4">
+                    <Ionicons name="mic-off" size={32} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleEndCall}
+                    className="items-center rounded-full bg-red-500 p-4">
+                    <Ionicons name="call" size={32} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-4">
+                    <Ionicons name="volume-high" size={32} color="#fff" />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
@@ -534,7 +545,7 @@ export default function PrivateChat() {
           {/* 视频通话模态框 */}
           {showVideoCallModal && (
             <View className="absolute bottom-0 left-0 right-0 top-0 bg-black">
-              <View className="absolute right-4 top-4 h-32 w-24 overflow-hidden rounded-lg bg-gray-300">
+              <View className="absolute right-4 top-12 h-48 w-36 overflow-hidden rounded-2xl bg-gray-300">
                 <Image
                   source={{ uri: getAvatarUrl(userInfo?.globalUserId || '') }}
                   className="h-full w-full"
@@ -546,19 +557,23 @@ export default function PrivateChat() {
                   source={{ uri: getAvatarUrl(targetUserId as string) }}
                   className="h-full w-full"
                   contentFit="cover"
-                  style={{ opacity: 0.8 }}
+                  style={{ opacity: 0.9 }}
                 />
-                <View className="absolute bottom-16 w-full flex-row justify-center space-x-8">
-                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
-                    <Ionicons name="mic-off" size={28} color="#fff" />
+                <View className="absolute top-16 w-full items-center">
+                  <Text className="text-2xl font-medium text-white">{userName}</Text>
+                  <Text className="mt-2 text-base text-white/70">视频通话中...</Text>
+                </View>
+                <View className="absolute bottom-20 w-full flex-row justify-center space-x-8">
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-4">
+                    <Ionicons name="mic-off" size={32} color="#fff" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => setShowVideoCallModal(false)}
-                    className="items-center rounded-full bg-red-500 p-3">
-                    <Ionicons name="call" size={28} color="#fff" />
+                    onPress={handleEndCall}
+                    className="items-center rounded-full bg-red-500 p-4">
+                    <Ionicons name="call" size={32} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-3">
-                    <Ionicons name="camera-reverse" size={28} color="#fff" />
+                  <TouchableOpacity className="items-center rounded-full bg-white/20 p-4">
+                    <Ionicons name="camera-reverse" size={32} color="#fff" />
                   </TouchableOpacity>
                 </View>
               </View>

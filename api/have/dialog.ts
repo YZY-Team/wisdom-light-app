@@ -54,12 +54,32 @@ export const dialogApi = {
   },
 };
 
+// 定义通话响应类型
+interface CallResponse {
+  code: number;
+  data: {
+    callId: string;
+    callType: 'VIDEO' | 'AUDIO';
+    callerId: string;
+    iceServers: string;
+    receiverId: string;
+    sessionId: string;
+    signalingServer: string;
+    startTime: string;
+    status: string;
+  };
+  message: string;
+}
+
 // post /friends/calls/initiate
-export const initiateCall = ({ callerId, receiverId, callType }: { callerId: number; receiverId: number; callType: string }) => {
-  return request.post('/friends/calls/initiate', { callerId, receiverId, callType });
+export const initiateCall = ({ callerId, receiverId, callType }: { callerId: string; receiverId: string; callType: string }) => {
+  return request.post<CallResponse>('/friends/calls/initiate', { callerId, receiverId, callType });
 };
 
-
+// put /friends/calls/{callId}/cancel
+export const cancelCall = (callId: string) => {
+  return request.put(`/friends/calls/${callId}/cancel`);
+};
 
 
 export const verificationApi = {

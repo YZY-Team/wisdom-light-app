@@ -31,7 +31,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log('WebSocket 错误:', error);
     },
     onMessage: async (event) => {
-      console.log('收到消息:', event.data);
+      // console.log('收到消息:', event.data);
       const data = JSON.parse(event.data);
       
       // 处理好友请求相关的系统消息
@@ -40,18 +40,18 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       }
       
       // 处理视频通话请求
-
-      console.log("处理后的消息",data,data.type,data.textContent);
-      
-      if (data.type === 'PRIVATE_CHAT' && data.textContent === '[发起了视频通话]') {
+      if (data.type === 'SYSTEM' && data.title === '视频通话请求') {
         const callerId = data.content.match(/用户ID: (\d+)/)?.[1];
         const callId = data.content.match(/通话ID: ([^,\s]+)/)?.[1];
-        console.log('callerId', callerId);
-        console.log('callId', callId);
+        console.log('系统通话请求 - callerId:', callerId);
+        console.log('系统通话请求 - callId:', callId);
         if (callerId) {
-          showCallModal(callerId, callerId);
+          showCallModal(callerId, callId);
         }
       }
+      
+      console.log("处理后的消息",data.type ==='SYSTEM',data.title === '视频通话请求');
+
       
       await addMessage(event.data);
     },
