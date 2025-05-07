@@ -324,11 +324,6 @@ export default function WhoIndex() {
             title="平台消息"
             href="/platform-message"
           />
-          <MenuItem
-            icon={require('~/assets/images/who/platform-message.png')}
-            title="测试 rtc"
-            href="/test-rtc"
-          />
           <Pressable
             onPress={() => setShowCreateGroupModal(true)}
             className="flex-row items-center px-4 py-4">
@@ -339,7 +334,7 @@ export default function WhoIndex() {
             />
             <Text className="ml-4 flex-1">测试创建群聊</Text>
           </Pressable>
-          <Pressable
+          {/* <Pressable
             onPress={() => onButtonClicked()}
             // disabled={true}
             className="flex-row items-center px-4 py-4">
@@ -349,7 +344,7 @@ export default function WhoIndex() {
               contentFit="contain"
             />
             <Text className="ml-4 flex-1">检测更新</Text>
-          </Pressable>
+          </Pressable> */}
           <Pressable
             onPress={() => setShowLogoutModal(true)}
             className="flex-row items-center px-4 py-4">

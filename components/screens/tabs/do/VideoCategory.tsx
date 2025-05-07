@@ -168,6 +168,7 @@ export default function VideoCategory({
     size: pageSize,
     type: secondaryCategories[activeSecondaryIndex],
   });
+  console.log('data', data);
   const courses = data?.data.records || [];
   console.log('courses', courses);
 
@@ -225,7 +226,7 @@ export default function VideoCategory({
             key={index}
             title={course.title}
             description={course.description}
-            episodeCount={course.episodeCount}
+            episodeCount={course.episodeCount ?? 0}
             courseId={course.id} // 新增 courseId 参数
           />
         )) || <Text className="text-center text-gray-500">暂无课程</Text>}

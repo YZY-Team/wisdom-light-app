@@ -13,7 +13,7 @@ enum TeacherCategory {
   CHIEF = '首席导师',
   MENTOR = '导师',
   HEAD_COACH = '总教练',
-  COACH_TEAM = '教练团队',
+  COACH_TEAM = '教练团长',
   COACH = '教练',
   COMPANY_TEAM = '公司团队',
 }
