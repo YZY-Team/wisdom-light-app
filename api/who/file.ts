@@ -15,11 +15,6 @@ export const fileApi = {
     
     console.log('formData:', Object.fromEntries(formData as any));
     
-    return request.post('/system/file/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept': 'application/json',
-      },
-    });
+    return request.post('/system/file/upload', formData);
   },
 };

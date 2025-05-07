@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, SafeAreaView, Modal } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Image, SafeAreaView, Modal, Dimensions } from 'react-native';
 import {
   RTCPeerConnection,
   RTCView,
@@ -20,9 +20,25 @@ interface WebRTCDialogProps {
   onClose: () => void;
   callerName: string;
   callerId: string;
+  isHost?: boolean;
+  maxParticipants?: number;
+  groupId?: string;
 }
 
-const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogProps) => {
+interface VideoSize {
+  width: number;
+  height: number;
+}
+
+const WebRTCDialog = ({ 
+  visible, 
+  onClose, 
+  callerName, 
+  callerId,
+  isHost = false,
+  maxParticipants = 4,
+  groupId = ''
+}: WebRTCDialogProps) => {
   const [localStream, setLocalStream] = useState<MediaStreamType>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStreamType>(null);
   const [isCaller, setIsCaller] = useState(false);
@@ -32,27 +48,56 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isLeaderMode, setIsLeaderMode] = useState(false);
+  const [leaderId, setLeaderId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<Array<any>>([]);
+  const [windowDimensions, setWindowDimensions] = useState(Dimensions.get('window'));
 
   const peerConnection = useRef<RTCPeerConnectionRef>(null);
-  const ws = useRef<WebSocketRef>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const callAudioRef = useRef<Audio.Sound | null>(null);
+  
+  // 使用WebSocket Context
+  const { sendMessage, lastMessage } = useWebSocketContext();
+
+  // 计算视频窗口尺寸
+  const calculateVideoSize = (): VideoSize => {
+    const { width, height } = windowDimensions;
+    const count = participants.length;
+    
+    if (!width || !height || !count) return { width: 150, height: 150 };
+
+    const availableHeight = height - 200; // 减去控制栏高度
+
+    if (isLeaderMode) {
+      return {
+        width: width,
+        height: availableHeight - (width / 3)
+      };
+    } else {
+      const row = Math.ceil(Math.sqrt(count));
+      const col = Math.ceil(count / row);
+      const vw = width / row;
+      const vh = availableHeight / col;
+      
+      return {
+        width: vw,
+        height: Math.min(vh, vw * 1.2) // 保持长宽比不超过1:1.2
+      };
+    }
+  };
+
   // 处理挂断信号
   const handleHangup = () => {
     endCall(); // 调用结束通话的函数
     setStatus('对方已挂断');
   };
-  // 初始化WebSocket
+  // 修改WebSocket相关的useEffect
   useEffect(() => {
-    // 使用电脑的本地IP地址，确保设备在同一网络
-    ws.current = new WebSocket('ws://192.168.1.103:8080'); // 替换为你的电脑IP
-
-    if (ws.current) {
-      ws.current.onopen = () => setStatus('已连接到信令服务器');
-      ws.current.onclose = () => setStatus('与信令服务器断开');
-
-      ws.current.onmessage = (event: MessageEvent) => {
-        const message = JSON.parse(event.data);
-
+    if (lastMessage) {
+      try {
+        const message = JSON.parse(lastMessage.data);
+        
         switch (message.type) {
           case 'offer':
             handleOffer(message.offer);
@@ -64,22 +109,25 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
             handleCandidate(message.candidate);
             break;
           case 'hangup':
-            // 处理挂断消息
             handleHangup();
             break;
         }
-      };
+      } catch (err) {
+        console.error('解析WebSocket消息失败:', err);
+      }
     }
 
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, [lastMessage]);
+
+  // 修改所有发送WebSocket消息的地方
+  const sendWebSocketMessage = (data: any) => {
+    sendMessage(JSON.stringify(data));
+  };
 
   // 获取本地媒体流
   const getLocalStream = async () => {
@@ -122,18 +170,15 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
     peerConnection.current = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        // 可以添加更多STUN/TURN服务器
       ],
     });
 
-    // 添加本地流
     stream.getTracks().forEach((track: any) => {
       if (peerConnection.current) {
         peerConnection.current.addTrack(track, stream);
       }
     });
 
-    // 监听远程流
     if (peerConnection.current) {
       peerConnection.current.ontrack = (event: any) => {
         console.log('收到远程流');
@@ -141,20 +186,17 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
         setRemoteStream(event.streams[0]);
       };
 
-      // 监听ICE候选
       peerConnection.current.onicecandidate = (event: any) => {
-        if (event.candidate && ws.current) {
+        if (event.candidate) {
           console.log('发送ICE候选');
-          ws.current.send(
-            JSON.stringify({
-              type: 'candidate',
-              candidate: {
-                candidate: event.candidate.candidate,
-                sdpMid: event.candidate.sdpMid,
-                sdpMLineIndex: event.candidate.sdpMLineIndex,
-              },
-            })
-          );
+          sendWebSocketMessage({
+            type: 'candidate',
+            candidate: {
+              candidate: event.candidate.candidate,
+              sdpMid: event.candidate.sdpMid,
+              sdpMLineIndex: event.candidate.sdpMLineIndex,
+            },
+          });
         }
       };
     }
@@ -169,23 +211,21 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
     const stream = await getLocalStream();
     const pc = initPeerConnection(stream);
 
-    // 开始计时器
     startCallTimer();
     setIsCallActive(true);
 
     try {
       if (pc) {
-        const offer = await pc.createOffer();
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        });
         await pc.setLocalDescription(offer);
 
-        if (ws.current) {
-          ws.current.send(
-            JSON.stringify({
-              type: 'offer',
-              offer: offer,
-            })
-          );
-        }
+        sendWebSocketMessage({
+          type: 'offer',
+          offer: offer,
+        });
       }
     } catch (err) {
       console.error('创建Offer失败:', err);
@@ -231,15 +271,10 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
       console.log('本地描述设置成功');
 
       // 发送answer
-      if (ws.current) {
-        ws.current.send(
-          JSON.stringify({
-            type: 'answer',
-            answer: answer,
-          })
-        );
-        console.log('answer发送成功');
-      }
+      sendWebSocketMessage({
+        type: 'answer',
+        answer: answer,
+      });
 
       setStatus('已接通');
       startCallTimer();
@@ -296,14 +331,10 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
           });
           await peerConnection.current.setLocalDescription(newOffer);
 
-          if (ws.current) {
-            ws.current.send(
-              JSON.stringify({
-                type: 'offer',
-                offer: newOffer,
-              })
-            );
-          }
+          sendWebSocketMessage({
+            type: 'offer',
+            offer: newOffer,
+          });
         } catch (renegError) {
           console.error('重新协商失败:', renegError);
         }
@@ -356,21 +387,16 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
       clearInterval(timerRef.current);
     }
 
-    // 向服务器发送挂断信号
-    if (ws.current) {
-      ws.current.send(
-        JSON.stringify({
-          type: 'hangup',
-          sender: 'user1',
-        })
-      );
-    }
+    sendWebSocketMessage({
+      type: 'hangup',
+      sender: callerId,
+    });
 
     setLocalStream(null);
     setRemoteStream(null);
     setIsCallActive(false);
     setStatus('通话已结束');
-    onClose(); // 关闭模态框
+    onClose();
   };
   // 切换麦克风
   const toggleMute = () => {
@@ -419,6 +445,43 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
     }
   };
 
+  // 切换大小屏模式
+  const toggleLeaderMode = (userId: string) => {
+    if (leaderId === userId) {
+      setLeaderId(null);
+      setIsLeaderMode(false);
+    } else {
+      setLeaderId(userId);
+      setIsLeaderMode(true);
+    }
+  };
+
+  // 拒绝通话
+  const onReject = () => {
+    sendWebSocketMessage({ type: 'reject', groupId });
+    onClose();
+  };
+
+  // 接受通话
+  const onAccept = async () => {
+    try {
+      const stream = await getLocalStream();
+      if (stream) {
+        setLocalStream(stream);
+        sendWebSocketMessage({ type: 'accept', groupId });
+        setIsCallActive(true);
+      }
+    } catch (err) {
+      console.error('接受通话失败:', err);
+    }
+  };
+
+  // 取消通话
+  const onCancel = () => {
+    sendWebSocketMessage({ type: 'cancel', groupId });
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -426,33 +489,67 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
       transparent={true}
       onRequestClose={endCall}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>{callerName}</Text>
-        </View>
 
-        <View
-          style={[
-            styles.profileContainer,
-            {
-              opacity: isCallActive ? 1 : 0,
-              pointerEvents: isCallActive ? 'auto' : 'none',
-            },
-          ]}
-          className=" ">
-          <View style={styles.avatarBorder}>
-            <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
-              style={styles.avatar}
-            />
+        {!isCallActive && !isHost && (
+          <View style={styles.callBox}>
+            <View style={styles.avatarContainer}>
+              <Image
+                source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+                style={styles.largeAvatar}
+              />
+              <Text style={styles.callerName}>{callerName}</Text>
+            </View>
+            <Text style={styles.inviteText}>邀请你加入多人通话</Text>
+            {participants.length > 0 && (
+              <>
+                <Text style={styles.participantsText}>参与通话的还有:</Text>
+                <View style={styles.participantsList}>
+                  {participants.map((participant) => (
+                    <Image
+                      key={participant.id}
+                      source={{ uri: participant.avatar }}
+                      style={styles.smallAvatar}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
           </View>
-          <Text style={styles.statusText}>{status}</Text>
-          <Text style={styles.timeText}>{formatCallTime(callTime)}</Text>
+        )}
+
+        <View style={[styles.videoContainer, isLeaderMode && styles.leaderModeContainer]}>
+          {isLeaderMode ? (
+            <>
+              <RTCView
+                streamURL={leaderId === 'local' ? localStream?.toURL() : remoteStream?.toURL()}
+                style={[styles.leaderVideo, calculateVideoSize()]}
+                objectFit="cover"
+              />
+              <View style={styles.followerContainer}>
+                {/* 其他参与者的小窗口视频 */}
+              </View>
+            </>
+          ) : (
+            <View style={styles.gridContainer}>
+              <RTCView
+                streamURL={localStream?.toURL()}
+                style={[styles.videoGrid, calculateVideoSize()]}
+                objectFit="cover"
+              />
+              <RTCView
+                streamURL={remoteStream?.toURL()}
+                style={[styles.videoGrid, calculateVideoSize()]}
+                objectFit="cover"
+              />
+              {/* 可以添加更多参与者的视频窗口 */}
+            </View>
+          )}
         </View>
 
-        <View className="" style={styles.controlsContainer}>
+        <View style={styles.controlsContainer}>
           <TouchableOpacity style={styles.controlButton} onPress={toggleMute}>
             <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={24} color="white" />
-            <Text style={styles.buttonText}>语音</Text>
+            <Text style={styles.buttonText}>麦克风</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.controlButton} onPress={toggleVideo}>
@@ -471,50 +568,28 @@ const WebRTCDialog = ({ visible, onClose, callerName, callerId }: WebRTCDialogPr
 
           <TouchableOpacity style={styles.controlButton}>
             <Ionicons name="camera-reverse" size={24} color="white" />
-            <Text style={styles.buttonText}>反转镜头</Text>
+            <Text style={styles.buttonText}>翻转</Text>
           </TouchableOpacity>
         </View>
 
-        <View
-          style={[
-            styles.buttonContainer,
-            {
-              opacity: !isCallActive ? 1 : 0,
-              pointerEvents: !isCallActive ? 'auto' : 'none',
-            },
-          ]}>
-          <TouchableOpacity style={styles.startCallButton} onPress={makeCall}>
-            <Text style={styles.buttonText}>发起通话</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.waitCallButton} onPress={answerCall}>
-            <Text style={styles.buttonText}>等待接听</Text>
-          </TouchableOpacity>
-        </View>
-
-        <RTCView
-          streamURL={remoteStream?.toURL()}
-          style={[
-            styles.remoteVideo,
-            {
-              opacity: remoteStream ? 1 : 0,
-              pointerEvents: remoteStream ? 'auto' : 'none',
-            },
-          ]}
-          objectFit="cover"
-          className=""
-        />
-        <RTCView
-          streamURL={localStream?.toURL()}
-          style={[
-            styles.localVideo,
-            {
-              opacity: localStream ? 1 : 0,
-              pointerEvents: localStream ? 'auto' : 'none',
-            },
-          ]}
-          objectFit="cover"
-          className=""
-        />
+        {!isCallActive && (
+          <View style={styles.bottomBar}>
+            {!isHost ? (
+              <>
+                <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={onReject}>
+                  <Ionicons name="close-circle" size={40} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionButton, styles.acceptButton]} onPress={onAccept}>
+                  <Ionicons name="checkmark-circle" size={40} color="white" />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={onCancel}>
+                <Ionicons name="close-circle" size={40} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -524,125 +599,141 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#040720',
-    position: 'relative',
   },
   header: {
-    height: 60,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  profileContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#040720',
-    elevation: 10, // Android 平台对应最高层级
-  },
-
-  localVideo: {
-    position: 'absolute',
-    width: 120,
-    height: 160,
-    top: 80,
-    right: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#2176FF',
-    elevation: 8,
-  },
-
-  remoteVideo: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    bottom: 0,
-    left: 0,
-    elevation: 1,
-  },
-  avatarBorder: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 2,
-    borderColor: '#2176FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  avatar: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-  },
   statusText: {
-    color: 'white',
-    fontSize: 18,
-    marginBottom: 20,
+    color: '#999',
+    fontSize: 14,
+    marginTop: 4,
   },
   timeText: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginTop: 4,
+  },
+  callBox: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+  },
+  largeAvatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#2176FF',
+  },
+  callerName: {
+    color: 'white',
+    fontSize: 24,
+    marginTop: 16,
+  },
+  inviteText: {
+    color: '#999',
+    fontSize: 16,
+    marginTop: 24,
+  },
+  participantsText: {
+    color: '#999',
+    fontSize: 14,
+    marginTop: 40,
+  },
+  participantsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  smallAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 4,
+  },
+  videoContainer: {
+    flex: 1,
+  },
+  leaderModeContainer: {
+    flexDirection: 'column',
+  },
+  gridContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  videoGrid: {
+    flex: 1,
+    backgroundColor: '#000',
+    minHeight: 150,
+  },
+  leaderVideo: {
+    flex: 0.8,
+    backgroundColor: '#000',
+    minHeight: 200,
+  },
+  followerContainer: {
+    flex: 0.2,
+    flexDirection: 'row',
+    backgroundColor: '#111',
   },
   controlsContainer: {
-    position: 'absolute',
-    bottom: 100, // 距离底部的距离
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    zIndex: 3, // 确保控件在视频上层
+    paddingVertical: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   controlButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 半透明黑色背景
-    padding: 10,
-    borderRadius: 25,
+    padding: 12,
   },
   hangupButton: {
+    backgroundColor: '#FF3B30',
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
     transform: [{ rotate: '135deg' }],
   },
   buttonText: {
     color: 'white',
-    marginTop: 5,
     fontSize: 12,
+    marginTop: 4,
   },
-  buttonContainer: {
+  bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 40,
-    zIndex: 2, // 确保按钮在视频上层
+    alignItems: 'center',
+    paddingVertical: 30,
   },
-  startCallButton: {
-    backgroundColor: '#2176FF',
-    padding: 15,
-    borderRadius: 10,
+  actionButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  waitCallButton: {
-    backgroundColor: '#33AA33',
-    padding: 15,
-    borderRadius: 10,
+  acceptButton: {
+    backgroundColor: '#4CD964',
   },
-  hiddenVideo: {
-    width: 0,
-    height: 0,
+  rejectButton: {
+    backgroundColor: '#FF3B30',
   },
 });
 

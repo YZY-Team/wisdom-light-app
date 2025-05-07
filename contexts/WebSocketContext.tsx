@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useWebSocketStore } from '~/store/websocketStore';
 import { useFriendRequestStore } from '~/store/friendRequestStore';
-import { useWebRTC } from './WebRTCContext';
+import { router } from 'expo-router';
+import { useUserStore } from '~/store/userStore';
 
 type WebSocketContextType = {
   sendMessage: (message: string) => void;
@@ -18,8 +19,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const { setShouldRefresh } = useFriendRequestStore();
   const { addMessage } = useWebSocketStore();
-  const { showCallModal } = useWebRTC();
-  
+  const { userInfo } = useUserStore();
+  useEffect(() => {
+    if (userInfo) {
+      connect(userInfo.globalUserId);
+    }
+  }, [userInfo]);
   const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(socketUrl, {
     onOpen: () => {
       console.log('WebSocket 连接已建立');
@@ -31,14 +36,14 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log('WebSocket 错误:', error);
     },
     onMessage: async (event) => {
-      // console.log('收到消息:', event.data);
+      console.log('收到消息:', event.data);
       const data = JSON.parse(event.data);
-      
+
       // 处理好友请求相关的系统消息
       if (data.type === 'SYSTEM' && data.title === '添加好友') {
         setShouldRefresh(true);
       }
-      
+
       // 处理视频通话请求
       if (data.type === 'SYSTEM' && data.title === '视频通话请求') {
         const callerId = data.content.match(/用户ID: (\d+)/)?.[1];
@@ -46,13 +51,41 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         console.log('系统通话请求 - callerId:', callerId);
         console.log('系统通话请求 - callId:', callId);
         if (callerId) {
-          showCallModal(callerId, callId);
+          // 导航到通话页面
+          router.push({
+            pathname: '/(pages)/private-rtc',
+            params: {
+              mode: 'video',
+              isHost: 'false',
+              callerId,
+              callId,
+            },
+          });
         }
       }
-      
-      console.log("处理后的消息",data.type ==='SYSTEM',data.title === '视频通话请求');
+      if (data.type === 'SYSTEM' && data.title === '通话已取消') {
+        const callerId = data.content.match(/用户ID: (\d+)/)?.[1];
+        const callId = data.content.match(/通话ID: ([^,\s]+)/)?.[1];
+        console.log('系统通话请求已取消 - callerId:', callerId);
+        console.log('系统通话请求已取消 - callId:', callId);
+        router.back();
+      }
+      if (data.type === 'SYSTEM' && data.title === '通话已接通') {
+        const callerId = data.content.match(/用户ID: (\d+)/)?.[1];
+        const callId = data.content.match(/通话ID: ([^,\s]+)/)?.[1];
+        console.log('系统通话请求已接受 - callerId:', callerId);
+        console.log('系统通话请求已接受 - callId:', callId);
+        router.push({
+          pathname: '/(pages)/private-rtc',
+          params: {
+            mode: 'video',
+            isHost: 'true',
+            callerId,
+            callId,
+          },
+        });
+      }
 
-      
       await addMessage(event.data);
     },
     shouldReconnect: (closeEvent) => true,
@@ -62,7 +95,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   });
 
   const connect = useCallback((userId: string) => {
-    setSocketUrl(`ws://192.168.1.158:8080/ws/message?userId=${userId}`);
+    setSocketUrl(`ws://119.29.188.102:8080/ws/message?userId=${userId}`);
   }, []);
 
   const disconnect = useCallback(() => {

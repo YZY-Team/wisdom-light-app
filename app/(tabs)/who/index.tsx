@@ -16,6 +16,7 @@ import { cssInterop } from 'nativewind';
 import { clearDatabase } from '~/services/database';
 import { useDatabase } from '~/contexts/DatabaseContext';
 import { dialogApi } from '~/api/have/dialog';
+import { NativeWechatConstants, sendAuthRequest, shareText } from 'expo-native-wechat';
 
 const testCreateGroupDialog = ({
   title,
@@ -75,9 +76,8 @@ export default function WhoIndex() {
 
   useEffect(() => {
     AsyncStorage.getItem('token').then((token) => {
-      console.log("token",token);
-      
-    })
+      console.log('token', token);
+    });
     userApi.me().then((res) => {
       if (res.code === 200 && res.data) {
         console.log('用户信息', res.data);
@@ -128,53 +128,38 @@ export default function WhoIndex() {
       // 选择图片
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
         quality: 0.8,
       });
 
       if (!result.canceled && result.assets[0]) {
         setUploading(true);
         try {
-          const token = await AsyncStorage.getItem('token');
           const uri = result.assets[0].uri;
           const filename = uri.split('/').pop() || 'image.jpg';
-
-          const formData = new FormData();
-          formData.append('file', {
-            uri,
-            name: filename,
-            type: 'image/jpeg',
-          } as any);
-          formData.append('source', 'IMAGE_URL');
           const randomId = Date.now().toString();
-          formData.append('relatedId', randomId);
-          formData.append('bucketName', 'image');
-          console.log('formData', formData);
-          // 直接使用 fetch
-          const response = await fetch('http://192.168.1.158:8080/api/oss/minio/upload', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Accept: 'application/json',
-              Authorization: token ? `Bearer ${token}` : '',
+
+          
+          const response = await fileApi.uploadImage({
+            file: {
+              uri,
+              name: filename,
+              type: result.assets[0].mimeType,
             },
+            relatedId: randomId,
           });
 
-          const uploadRes = await response.json();
-          console.log('上传结果:', uploadRes);
+          console.log('上传结果:', response);
 
-          if (uploadRes.code === 200 && uploadRes.data) {
+          if (response.code === 200 && response.data) {
             // 更新用户信息
             const updateRes = await userApi.updateProfile({
-              avatarUrl: uploadRes.data.url,
+              avatarUrl: response.data.url,
             });
 
             if (updateRes.code === 200) {
               const newUserInfo = {
                 ...userInfo,
-                avatarUrl: uploadRes.data.url,
+                avatarUrl: response.data.url,
               };
               // @ts-expect-error
               setUserInfo(newUserInfo);
@@ -240,7 +225,13 @@ export default function WhoIndex() {
       alert('创建群聊失败，请重试');
     }
   };
-
+  const onButtonClicked = async () => {
+    shareText({
+      text: 'Hello Hector!',
+      scene: NativeWechatConstants.WXSceneSession,
+    });
+    // await verifyWechatCode(code);
+  };
   return (
     <View className="flex-1 bg-[#F5F8FC]">
       {(loggingOut || isInitializing) && (
@@ -349,8 +340,8 @@ export default function WhoIndex() {
             <Text className="ml-4 flex-1">测试创建群聊</Text>
           </Pressable>
           <Pressable
-            onPress={() => setShowLogoutModal(true)}
-            disabled={true}
+            onPress={() => onButtonClicked()}
+            // disabled={true}
             className="flex-row items-center px-4 py-4">
             <Image
               source={require('~/assets/images/who/update.png')}
@@ -442,7 +433,7 @@ export default function WhoIndex() {
         </View>
       </Modal>
 
-       {/* 创建群聊弹窗 */}
+      {/* 创建群聊弹窗 */}
       <Modal
         visible={showCreateGroupModal}
         transparent

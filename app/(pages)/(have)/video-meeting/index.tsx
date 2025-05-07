@@ -6,6 +6,21 @@ import { LinearGradient } from 'expo-linear-gradient'; // 确保安装了 expo-l
 
 export default function VideoMeetingApply() {
   const [activeTab, setActiveTab] = useState('apply'); // 'apply' or 'pending'
+  const [formData, setFormData] = useState({
+    title: '',
+    teacherName: '',
+    teacherLevel: '',
+    graduationPlatform: '',
+    coverUrl: '',
+    description: '',
+    startTime: '',
+    price: '',
+    maxStudents: ''
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -40,6 +55,44 @@ export default function VideoMeetingApply() {
                 placeholder="请输入..."
                 className="flex-1 text-base"
                 placeholderTextColor="#ccc"
+                value={formData.title}
+                onChangeText={(value) => handleInputChange('title', value)}
+              />
+            </View>
+
+            {/* 教师姓名 */}
+            <View className="flex-row items-center bg-white p-4 rounded-lg">
+              <Text className="w-20 text-gray-700">教师姓名:</Text>
+              <TextInput
+                placeholder="请输入..."
+                className="flex-1 text-base"
+                placeholderTextColor="#ccc"
+                value={formData.teacherName}
+                onChangeText={(value) => handleInputChange('teacherName', value)}
+              />
+            </View>
+
+            {/* 教师级别 */}
+            <View className="flex-row items-center bg-white p-4 rounded-lg">
+              <Text className="w-20 text-gray-700">教师级别:</Text>
+              <TextInput
+                placeholder="请输入..."
+                className="flex-1 text-base"
+                placeholderTextColor="#ccc"
+                value={formData.teacherLevel}
+                onChangeText={(value) => handleInputChange('teacherLevel', value)}
+              />
+            </View>
+
+            {/* 毕业平台 */}
+            <View className="flex-row items-center bg-white p-4 rounded-lg">
+              <Text className="w-20 text-gray-700">毕业平台:</Text>
+              <TextInput
+                placeholder="请输入..."
+                className="flex-1 text-base"
+                placeholderTextColor="#ccc"
+                value={formData.graduationPlatform}
+                onChangeText={(value) => handleInputChange('graduationPlatform', value)}
               />
             </View>
 
@@ -58,7 +111,9 @@ export default function VideoMeetingApply() {
                 numberOfLines={4}
                 className="h-24 text-base align-text-top"
                 placeholderTextColor="#ccc"
-                style={{ textAlignVertical: 'top' }} // 确保安卓上文字顶部对齐
+                style={{ textAlignVertical: 'top' }}
+                value={formData.description}
+                onChangeText={(value) => handleInputChange('description', value)}
               />
             </View>
 
@@ -69,6 +124,8 @@ export default function VideoMeetingApply() {
                 placeholder="请选择"
                 className="flex-1 text-base"
                 placeholderTextColor="#ccc"
+                value={formData.startTime}
+                onChangeText={(value) => handleInputChange('startTime', value)}
               />
             </View>
 
@@ -80,6 +137,8 @@ export default function VideoMeetingApply() {
                 className="flex-1 text-base"
                 keyboardType="numeric"
                 placeholderTextColor="#ccc"
+                value={formData.maxStudents}
+                onChangeText={(value) => handleInputChange('maxStudents', value)}
               />
             </View>
 
@@ -91,6 +150,8 @@ export default function VideoMeetingApply() {
                 className="flex-1 text-base"
                 keyboardType="numeric"
                 placeholderTextColor="#ccc"
+                value={formData.price}
+                onChangeText={(value) => handleInputChange('price', value)}
               />
             </View>
           </View>

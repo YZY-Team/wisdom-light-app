@@ -1,19 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
+import { useAuthStore } from '~/store/authStore';
 import { useUserStore } from '~/store/userStore';
 
 export const ClientProvider = ({ children }: { children: React.ReactNode }) => {
-  const userInfo = useUserStore((sorte) => sorte.userInfo);
+  const isLoggedIn = useAuthStore((sorte) => sorte.isLoggedIn);
   const router = useRouter();
-  const wsContext = useWebSocketContext();
   useEffect(() => {
-    if (userInfo) {
+    if (isLoggedIn) {
       router.replace('/(tabs)/be');
-      wsContext.connect(userInfo.globalUserId);
     } else {
       router.replace('/(auth)/login');
     }
-  }, [userInfo]);
+  }, [isLoggedIn]);
   return <>{children}</>;
 };

@@ -24,6 +24,11 @@ const getCourseVideos = (courseId: string) => {
   return request.get<CourseVideo[]>(`/wl/video/course/${courseId}`);
 };
 
+// post /wl/course-online/apply
+export const applyCourseOnline = (params: { courseId: string; userId: string }) => {
+  return request.post('/wl/course-online/apply', params);
+};
+
 export const courseApi = {
   // 获取课程列表
   getCourseList,

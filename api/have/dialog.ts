@@ -81,6 +81,15 @@ export const cancelCall = (callId: string) => {
   return request.put(`/friends/calls/${callId}/cancel`);
 };
 
+// put /friends/calls/sessions/{sessionId}/end
+export const endCall = (sessionId: string) => {
+  return request.put(`/friends/calls/sessions/${sessionId}/end`);
+};
+
+// put /friends/calls/{callId}/accept
+export const acceptCall = (callId: string) => {
+  return request.put(`/friends/calls/${callId}/accept`);
+};
 
 export const verificationApi = {
   getCode: (phone: string) => {
