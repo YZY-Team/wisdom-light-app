@@ -25,6 +25,7 @@ import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { initiateCall } from '~/api/have/dialog';
 import { cancelCall } from '~/api/have/dialog';
+import { fileApi } from '~/api/who/file';
 type MessageProps = {
   content: string;
   time: string;
@@ -280,21 +281,46 @@ export default function PrivateChat() {
     });
 
     if (!result.canceled) {
-      // 处理图片发送
-      const newMessage: Message = {
-        type: 'PRIVATE_CHAT',
-        senderId: userInfo!.globalUserId,
-        receiverId: targetUserId as string,
-        dialogId: dialogId as string,
-        textContent: '[图片消息]',
-        timestamp: String(Date.now()),
-        imageUrl: result.assets[0].uri,
-      };
+      try {
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop() || 'image.jpg';
+        const randomId = Date.now().toString();
+        const type = result.assets[0].mimeType || 'image/jpeg';
 
-      // 发送消息
-      sendMessage(JSON.stringify(newMessage));
-      // 存储消息
-      addMessage({ ...newMessage, status: 'READ' });
+        // 上传图片
+        const response = await fileApi.uploadImage({
+          file: {
+            uri,
+            type,
+            name: filename,
+          },
+          relatedId: randomId,
+        });
+        
+        console.log('上传图片', response);
+        
+        if (response.code === 200 && response.data) {
+          // 处理图片发送
+          const newMessage: Message = {
+            type: 'PRIVATE_CHAT',
+            senderId: userInfo!.globalUserId,
+            receiverId: targetUserId as string,
+            dialogId: dialogId as string,
+            textContent: '[图片消息]',
+            timestamp: String(Date.now()),
+            imageUrl: response.data.url,
+          };
+
+          // 发送消息
+          sendMessage(JSON.stringify(newMessage));
+          // 存储消息
+          addMessage({ ...newMessage, status: 'READ' });
+        } else {
+          console.error('图片上传失败:', response);
+        }
+      } catch (error) {
+        console.error('图片上传或发送失败:', error);
+      }
     }
   };
 

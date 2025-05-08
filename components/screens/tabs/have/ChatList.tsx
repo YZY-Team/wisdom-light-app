@@ -89,6 +89,7 @@ export default function ChatList() {
   const { data: dialogResponse, isLoading } = useDialogList();
   const [dialogs, setDialogs] = useState<Dialog[]>([]);
 
+  
   // 获取对话列表
   useEffect(() => {
     if (dialogResponse?.data) {

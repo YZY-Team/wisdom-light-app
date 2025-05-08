@@ -25,7 +25,18 @@ const getCourseVideos = (courseId: string) => {
 };
 
 // post /wl/course-online/apply
-export const applyCourseOnline = (params: { courseId: string; userId: string }) => {
+interface CourseOnlineApplyParams {
+  title: string;
+  teacherName: string;
+  teacherLevel: string;
+  graduationPlatform: string;
+  coverUrl: string;
+  description: string;
+  startTime: string;
+  price: number;
+}
+
+export const applyCourseOnline = (params: CourseOnlineApplyParams) => {
   return request.post('/wl/course-online/apply', params);
 };
 

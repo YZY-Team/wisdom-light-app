@@ -1,25 +1,43 @@
-import { request } from '~/utils/request';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// import { fetch as fetchExpo } from 'expo/fetch';
 export const fileApi = {
-  uploadImage: (params: {
+  uploadImage: async (params: {
     relatedId: string;
-    file: any;  // 改为 any 类型，因为 RN 的文件对象结构不同
+    file: any; // 保持 any 类型，兼容 RN 文件对象
   }) => {
     const formData = new FormData();
-    
+
     // 直接使用 RN 的文件对象
     formData.append('file', params.file);
     formData.append('source', 'IMAGE_URL');
     formData.append('relatedId', params.relatedId);
     formData.append('bucketName', 'image');
-    
-    console.log('formData:', Object.fromEntries(formData as any));
-    
-    return request.post<{url:string}>('http://192.168.1.103:3000/api/upload', formData,{
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Accept': 'application/json',
-      },
-    });
+
+    // 调试 FormData 内容（注意：FormData 无法直接转为对象，需手动调试）
+    console.log('Uploading file with formData:', formData);
+    const token = await AsyncStorage.getItem('token');
+    try {
+      const response = await fetch('http://192.168.1.158:8080/api/oss/minio/upload', {
+        method: 'POST',
+        body: formData,
+        
+        headers: {
+          "Authorization": "Bearer " + token,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data; // 假设返回 { url: string }
+    } catch (error) {
+
+      console.error('Upload error:', error);
+      throw error;
+    }
   },
 };

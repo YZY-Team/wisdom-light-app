@@ -127,7 +127,7 @@ export default function WhoIndex() {
 
       // 选择图片
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         quality: 0.8,
       });
 

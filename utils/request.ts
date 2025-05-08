@@ -67,7 +67,7 @@ export interface ApiListResponse<T> {
 
 
 const instance: AxiosInstance = axios.create({
-  baseURL: "http://119.29.188.102:8080/api",
+  baseURL: "http://192.168.1.158:8080/api",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
