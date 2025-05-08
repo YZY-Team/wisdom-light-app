@@ -79,7 +79,7 @@ export const friends = sqliteTable(
 
 // Export types for use in the app
 export type Conversation = typeof conversations.$inferSelect;
-export type Message = typeof messages.$inferSelect;
+export type MessageType = typeof messages.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;

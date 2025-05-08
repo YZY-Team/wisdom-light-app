@@ -30,7 +30,9 @@ export const initializeDatabase = async (userId?: string) => {
   console.log('初始化数据库:', dbName);
   
   // 打开数据库连接
-  _db = SQLite.openDatabaseSync(dbName);
+  _db = SQLite.openDatabaseSync(dbName,{
+    enableChangeListener:true
+  });
   
   // 初始化drizzle实例
   _drizzleDb = drizzle(_db, { schema });

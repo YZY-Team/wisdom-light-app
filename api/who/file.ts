@@ -15,7 +15,7 @@ export const fileApi = {
     
     console.log('formData:', Object.fromEntries(formData as any));
     
-    return request.post('http://192.168.1.103:3000/api/upload', formData,{
+    return request.post<{url:string}>('http://192.168.1.103:3000/api/upload', formData,{
       headers: {
         'Content-Type': 'multipart/form-data',
         'Accept': 'application/json',
