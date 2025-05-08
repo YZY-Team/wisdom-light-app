@@ -217,13 +217,6 @@ export default function TutorScreen() {
             )}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
-            onLoad={() => {
-              console.log('onLoad', messages.length);
-              flashListRef.current?.scrollToIndex({
-                index: messages.length - 1,
-                animated: false,
-              });
-            }}
           />
           {isLoading && (
             <View className="mb-4 flex-row justify-start">
