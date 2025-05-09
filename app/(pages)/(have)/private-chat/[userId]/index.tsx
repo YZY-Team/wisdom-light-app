@@ -485,14 +485,14 @@ export default function PrivateChat() {
                 </View>
               </Pressable>
             </View>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 setShowToolbar(!showToolbar);
                 setIsKeyboardVisible(false);
               }}
               className="ml-2">
               <Ionicons name="add-circle" size={32} color="#1483FD" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* 工具栏 */}

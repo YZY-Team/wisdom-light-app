@@ -5,18 +5,21 @@ import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { request } from '~/utils/request';
+import { useGoalsByBookId } from '~/queries/achievement';
+import { useLocalSearchParams } from 'expo-router';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // 成就项组件
 const AchievementItem = ({
   data,
   onChange,
   onDelete,
-  index
+  index,
 }: {
-  data: Achievement,
-  onChange: (data: Achievement) => void,
-  onDelete: () => void,
-  index: number
+  data: Achievement;
+  onChange: (data: Achievement) => void;
+  onDelete: () => void;
+  index: number;
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -53,10 +56,7 @@ const AchievementItem = ({
               {data.title || `成就 ${index + 1}`}
             </Text>
           )}
-          <TouchableOpacity
-            onPress={() => setIsEditingTitle(true)}
-            className="ml-2"
-          >
+          <TouchableOpacity onPress={() => setIsEditingTitle(true)} className="ml-2">
             <AntDesign name="edit" size={16} color="white" />
           </TouchableOpacity>
         </View>
@@ -64,11 +64,15 @@ const AchievementItem = ({
           <AntDesign name="delete" size={20} color="white" />
         </TouchableOpacity>
       </LinearGradient>
-      <View className="mt-6 mb-4">
+      <View className="mb-4 mt-6">
         {/* 解释文本 */}
         <View className="px-4">
-          <Text className="text-[12px] font-bold text-black/50">从下列范畴选择至少三项承诺创造成果，并列明：目的、行动、态度、成果、事业、家庭、人际关系、亲密关系、经济、健康、学习或其它</Text>
-          <Text className="mt-3 px-3 text-[12px] font-[400] text-black/50">每个承诺创造的范畴包括以下内容：目的（BE）、态度、行动(DO)、成果（HAVE）</Text>
+          <Text className="text-[12px] font-bold text-black/50">
+            从下列范畴选择至少三项承诺创造成果，并列明：目的、行动、态度、成果、事业、家庭、人际关系、亲密关系、经济、健康、学习或其它
+          </Text>
+          <Text className="mt-3 px-3 text-[12px] font-[400] text-black/50">
+            每个承诺创造的范畴包括以下内容：目的（BE）、态度、行动(DO)、成果（HAVE）
+          </Text>
         </View>
       </View>
       <View className="space-y-4 px-3 py-4">
@@ -85,7 +89,9 @@ const AchievementItem = ({
 
         {/* 目的 */}
         <View>
-          <Text className="mb-2 text-sm font-bold text-black">目的（Be:为什么做，有什么价值）：</Text>
+          <Text className="mb-2 text-sm font-bold text-black">
+            目的（Be:为什么做，有什么价值）：
+          </Text>
           <TextInput
             className="rounded-md bg-[rgba(20,131,253,0.05)] p-3 text-xs text-black/50"
             placeholder="请输入..."
@@ -119,16 +125,14 @@ const AchievementItem = ({
               textAlignVertical="top"
               style={{ minHeight: 100 }}
             />
-            <Text className="text-right text-xs text-black/50">
-              {data.actionPlan.length}/300
-            </Text>
+            <Text className="text-right text-xs text-black/50">{data.actionPlan.length}/300</Text>
           </View>
         </View>
 
         {/* 目标数量 */}
         <View>
           <Text className="mb-2 text-sm font-bold text-black">目标数量：</Text>
-          <View className="flex-row space-x-3">
+          <View className="flex-row gap-3">
             <TextInput
               className="flex-1 rounded-md bg-[rgba(20,131,253,0.05)] p-3 text-xs text-black/50"
               placeholder="请输入数量"
@@ -194,71 +198,51 @@ interface Achievement {
 
 export default function Achievement() {
   const router = useRouter();
-  const [achievements, setAchievements] = useState<Achievement[]>([{
-    bookId: "1911671090439000066",
-    title: "标题1",
-    commitment: "",
-    targetQuantity: 0,
-    unit: "",
-    purpose: "",
-    attitude: "",
-    actionPlan: "",
-    expectedResult: "",
-    completedQuantity: 0,
-    completionRate: 0
-  }]);
-  const [loading, setLoading] = useState(false);
-  const [achievementId, setAchievementId] = useState<string>('');
-  const [goals, setGoals] = useState<Achievement[]>([]);
+  const { bookId } = useLocalSearchParams<{ bookId: string }>();
+  const {
+    data: goalsResponse,
+  } = useGoalsByBookId(bookId);
 
-  // 获取现有成就数据和目标
+
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    {
+      bookId: '',
+      title: '标题1',
+      commitment: '',
+      targetQuantity: 0,
+      unit: '',
+      purpose: '',
+      attitude: '',
+      actionPlan: '',
+      expectedResult: '',
+      completedQuantity: 0,
+      completionRate: 0,
+    },
+  ]);
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 获取当前激活的成就书
-        const achievementResponse = await achievementBookApi.getActiveAchievementBook();
-        console.log('获取成就书响应:', achievementResponse);
-
-        if (achievementResponse?.data?.id) {
-          setAchievementId(achievementResponse.data.id);
-
-          // 获取成就书对应的目标列表
-          const goalsResponse = await achievementBookApi.getGoalsByBookId(achievementResponse.data.id);
-          console.log('获取目标列表响应:', goalsResponse);
-
-          if (goalsResponse?.data) {
-            const goalsData = goalsResponse.data as unknown as Achievement[];
-            setGoals(goalsData);
-            if (goalsData.length > 0) {
-              setAchievements(goalsData);
-            }
-          }
-        }
-      } catch (error) {
-        console.log('获取数据失败:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+    if (goalsResponse?.data) {
+      const goalsData = goalsResponse.data;
+      setAchievements(goalsData);
+    }
+  }, [goalsResponse]);
+  const [loading, setLoading] = useState(false);
 
   // 添加新的成就项
   const handleAddAchievement = () => {
     const newData: Achievement = {
-      bookId: "1911671090439000066",
-      title: "标题1",
-      commitment: "",
+      bookId: bookId as string,
+      title: '目标' + (achievements.length + 1),
+      commitment: '',
       targetQuantity: 0,
-      unit: "",
-      purpose: "",
-      attitude: "",
-      actionPlan: "",
-      expectedResult: "",
+      unit: '',
+      purpose: '',
+      attitude: '',
+      actionPlan: '',
+      expectedResult: '',
       completedQuantity: 0,
-      completionRate: 0
+      completionRate: 0,
     };
     setAchievements([...achievements, newData]);
-    achievementBookApi.createGoal(newData);
   };
 
   // 删除成就项
@@ -267,49 +251,43 @@ export default function Achievement() {
       const achievement = achievements[index];
 
       // 显示确认对话框
-      Alert.alert(
-        '确认删除',
-        '确定要删除这个目标吗？',
-        [
-          {
-            text: '取消',
-            style: 'cancel'
-          },
-          {
-            text: '确定',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                if (achievement.id) {
-                  // 如果有ID，调用删除接口
-                  const response = await achievementBookApi.deleteGoal(achievement.id);
-                  console.log('删除目标响应:', response);
+      Alert.alert('确认删除', '确定要删除这个目标吗？', [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (achievement.id) {
+                // 如果有ID，调用删除接口
+                const response = await achievementBookApi.deleteGoal(achievement.id);
+                console.log('删除目标响应:', response);
 
-                  // 删除成功，更新本地状态
-                  if (
-                    response.code === 200
-                  ) {
-                    const newAchievements = [...achievements];
-                    newAchievements.splice(index, 1);
-                    setAchievements(newAchievements);
-                    Alert.alert('成功', '目标已删除');
-                  } else {
-                    Alert.alert('失败', '目标删除失败');
-                  }
-                } else {
-                  // 如果没有ID，直接从本地状态中删除
+                // 删除成功，更新本地状态
+                if (response.code === 200) {
                   const newAchievements = [...achievements];
                   newAchievements.splice(index, 1);
                   setAchievements(newAchievements);
+                  Alert.alert('成功', '目标已删除');
+                } else {
+                  Alert.alert('失败', '目标删除失败');
                 }
-              } catch (error) {
-                console.log('删除目标失败:', error);
-                Alert.alert('提示', '删除失败，请稍后重试');
+              } else {
+                // 如果没有ID，直接从本地状态中删除
+                const newAchievements = [...achievements];
+                newAchievements.splice(index, 1);
+                setAchievements(newAchievements);
               }
+            } catch (error) {
+              console.log('删除目标失败:', error);
+              Alert.alert('提示', '删除失败，请稍后重试');
             }
-          }
-        ]
-      );
+          },
+        },
+      ]);
     } else {
       Alert.alert('提示', '至少需要保留一个成就项');
     }
@@ -325,7 +303,7 @@ export default function Achievement() {
     if (data.id) {
       try {
         const response = await achievementBookApi.updateGoal(data.id, {
-          bookId: data.bookId,
+          bookId: bookId as string,
           title: data.title,
           commitment: data.commitment,
           targetQuantity: data.targetQuantity,
@@ -335,7 +313,7 @@ export default function Achievement() {
           actionPlan: data.actionPlan,
           expectedResult: data.expectedResult,
           completedQuantity: data.completedQuantity,
-          completionRate: data.completionRate
+          completionRate: data.completionRate,
         });
         console.log('更新目标响应:', response);
       } catch (error) {
@@ -378,7 +356,7 @@ export default function Achievement() {
               actionPlan: achievement.actionPlan,
               expectedResult: achievement.expectedResult,
               completedQuantity: achievement.completedQuantity,
-              completionRate: achievement.completionRate
+              completionRate: achievement.completionRate,
             });
             console.log('更新目标响应:', response);
           } catch (error) {
@@ -402,7 +380,6 @@ export default function Achievement() {
       }
 
       Alert.alert('成功', '成就内容已保存');
-      router.back();
     } catch (error) {
       console.log('保存成就内容失败:', error);
       Alert.alert('保存失败', '请检查网络连接后重试');
@@ -412,7 +389,7 @@ export default function Achievement() {
   };
 
   return (
-    <View className='flex-1 bg-white'>
+    <KeyboardAvoidingView  behavior={'padding'} className="flex-1 bg-white">
       <View className="px-4 py-4">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>
@@ -427,10 +404,7 @@ export default function Achievement() {
         contentContainerStyle={{
           paddingBottom: 160,
         }}
-        showsVerticalScrollIndicator={false}
-      >
-
-
+        showsVerticalScrollIndicator={false}>
         {/* 成就项列表 */}
         {achievements.map((achievement, index) => (
           <AchievementItem
@@ -445,8 +419,7 @@ export default function Achievement() {
         {/* 添加按钮 */}
         <TouchableOpacity
           onPress={handleAddAchievement}
-          className="mb-4 mt-3 flex h-[50px] w-full items-center justify-center rounded-[6px] border border-[#1483FD] bg-white"
-        >
+          className="mb-4 mt-3 flex h-[50px] w-full items-center justify-center rounded-[6px] border border-[#1483FD] bg-white">
           <View className="relative h-[30px] w-[30px]">
             <View className="absolute left-0 top-[13px] h-[4px] w-full bg-[#1483FD]" />
             <View className="absolute left-[13px] top-0 h-full w-[4px] bg-[#1483FD]" />
@@ -460,18 +433,15 @@ export default function Achievement() {
           end={{ x: 1, y: 0 }}
           className="mt-4 rounded-md p-3 shadow-lg"
           style={{
-            boxShadow: "0px 6px 10px 0px rgba(20, 131, 253, 0.40)"
-          }}
-        >
-          <TouchableOpacity
-            onPress={handleSaveAchievement}
-            disabled={loading}
-          >
+            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+          }}>
+          <TouchableOpacity onPress={handleSaveAchievement} disabled={loading}>
             <Text className="text-center text-xl font-bold text-white">
               {loading ? '保存中...' : '确认'}
             </Text>
           </TouchableOpacity>
         </LinearGradient>
-      </ScrollView></View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

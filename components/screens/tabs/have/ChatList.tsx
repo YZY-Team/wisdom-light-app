@@ -107,6 +107,7 @@ export default function ChatList() {
             .from(schema.friends)
             .where(eq(schema.friends.userId, currentUserId));
 
+          console.log('result', result);
           if (result && result.length > 0) {
             setLocalFriends(
               result.map((item) => ({

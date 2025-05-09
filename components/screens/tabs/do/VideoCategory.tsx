@@ -15,21 +15,20 @@ const CourseItem = memo(
     description,
     episodeCount,
     courseId, // 新增 courseId 参数
+    coverUrl
   }: {
     title: string;
     description: string;
     episodeCount: number;
     courseId: string; // 新增 courseId 类型
+    coverUrl: string;
   }) => {
     const [expanded, setExpanded] = useState(false);
     const { data: videos, isLoading } = useCourseVideos(courseId); // 使用新的查询钩子
     const router = useRouter(); // 引入 useRouter
     const videoList = videos?.data ?? [];
 
-    // 预加载图片（可选，参考前文方案 3）
-    useEffect(() => {
-      Image.prefetch(['https://images.unsplash.com/photo-1522202176988-66273c2fd55f']);
-    }, []);
+    console.log('videoList', videoList);
 
     return (
       <Pressable
@@ -40,7 +39,7 @@ const CourseItem = memo(
           <View className="relative w-[40%]">
             <Image
               source={{
-                uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
+                uri: coverUrl,
               }}
               className="aspect-[156/84] w-full rounded-lg"
               contentFit="cover"
@@ -61,7 +60,7 @@ const CourseItem = memo(
               <View className="h-5 w-full items-center justify-center rounded">
                 <Text className="text-[12px] font-[700] text-white">{title}</Text>
               </View>
-              <View className="ml-1 items-end justify-center rounded px-1">
+              {/* <View className="ml-1 items-end justify-center rounded px-1">
                 <BlurView
                   experimentalBlurMethod="dimezisBlurView"
                   intensity={10}
@@ -69,7 +68,7 @@ const CourseItem = memo(
                   className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]">
                   <Text className="px-2 py-1 text-[10px] text-white">共{episodeCount}集</Text>
                 </BlurView>
-              </View>
+              </View> */}
             </View>
           </View>
           <View className="ml-3 flex-1">
@@ -103,11 +102,11 @@ const CourseItem = memo(
                   </View>
                   <View className="relative ml-2 w-[30%]">
                     <Image
-                      source={{
-                        uri:
-                          video.thumbnailUrl ||
-                          'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
-                      }}
+                      // source={{
+                      //   uri:
+                      //     video.thumbnailUrl ||
+                      //     'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
+                      // }}
                       className="aspect-[110/60] w-full rounded-lg"
                       contentFit="cover"
                       transition={200}
@@ -124,13 +123,13 @@ const CourseItem = memo(
                       </View>
                     </View>
                     <View className="absolute bottom-1 right-1">
-                      <BlurView
+                      {/* <BlurView
                         experimentalBlurMethod="dimezisBlurView"
                         intensity={10}
                         tint="dark"
                         className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]">
                         <Text className="px-2 py-1 text-[10px] text-white">{video.duration}</Text>
-                      </BlurView>
+                      </BlurView> */}
                     </View>
                   </View>
                   <View className="ml-3 flex-1">
@@ -172,38 +171,7 @@ export default function VideoCategory({
   const courses = data?.data.records || [];
   console.log('courses', courses);
 
-  const courseData: {
-    [key: string]: {
-      title: string;
-      description: string;
-      episodeCount: number;
-    }[];
-  } = {
-    成功学: [
-      {
-        title: '普通人逆袭的5大底层逻辑',
-        description: '学习如何培养成功者思维方式，建立正确的成功观念。',
-        episodeCount: 21,
-      },
-      {
-        title: '从思维破局到行动觉醒',
-        description:
-          '学习如何培养成功者思维方式，建立正确的成功观念。学习如何培养成功者思维方式，建立正确的成功观念观念观念。',
-        episodeCount: 21,
-      },
-      {
-        title: '赢家思维',
-        description: '学习如何培养成功者思维方式，建立正确的成功观念。',
-        episodeCount: 21,
-      },
-      {
-        title: '从自卑到自信',
-        description: '学习如何培养成功者思维方式，建立正确的成功观念。',
-        episodeCount: 21,
-      },
-    ],
-    // ... 其他分类数据保持不变
-  };
+ 
 
   return (
     <>
@@ -226,6 +194,7 @@ export default function VideoCategory({
             key={index}
             title={course.title}
             description={course.description}
+            coverUrl={course.coverUrl}
             episodeCount={course.episodeCount ?? 0}
             courseId={course.id} // 新增 courseId 参数
           />

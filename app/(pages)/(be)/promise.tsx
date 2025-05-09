@@ -6,35 +6,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { AchievementBookDTO } from '~/types/be/achievementBookType';
+import { useActiveAchievementBook } from '~/queries/achievement';
 
 export default function PromisePage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [promise, setPromise] = useState('');
+  const { data, refetch } = useActiveAchievementBook();
+  const [promise, setPromise] = useState(data?.data.promise || '');
   const [loading, setLoading] = useState(false);
-  const achievementId = '1911671090439000066'; // 固定ID
 
-  // 获取现有承诺内容
-  useEffect(() => {
-    const fetchPromise = async () => {
-      try {
-        const response = await achievementBookApi.getActiveAchievementBook();
-        console.log('获取成就书响应:', response);
 
-        // 使用类型断言处理实际返回的数据格式
-        if (response.code === 200) {
-          const data = response.data;
-          if (data.promise) {
-            setPromise(data.promise);
-          }
-        }
-      } catch (error) {
-        console.log('获取承诺内容失败:', error);
-      }
-    };
-
-    fetchPromise();
-  }, []);
 
   // 保存承诺内容
   const handleSavePromise = async () => {
@@ -48,14 +29,14 @@ export default function PromisePage() {
 
 
       // 调用API保存
-      const response = await achievementBookApi.updateAchievementBook(achievementId, { promise });
+      const response = await achievementBookApi.updateAchievementBook(data!.data!.id!, { promise });
 
       console.log('保存响应:', response);
 
       // 根据实际API响应结构处理结果
       if (response) {
         Alert.alert('成功', '承诺内容已保存');
-        router.back();
+        refetch();
       } else {
         Alert.alert('保存失败', '请稍后重试');
       }

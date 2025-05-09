@@ -1,10 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { Alert } from 'react-native';
+import { useAchievementBook, useActiveAchievementBook } from '~/queries/achievement';
 
 type FormField = {
   key: string;
@@ -15,7 +16,7 @@ type FormField = {
 const splitText = (text: string): string[][] => {
   // 先找到最后的冒号位置
   const colonIndex = text.lastIndexOf(':');
-  if (colonIndex === -1) return text.split('').map(char => [char]);
+  if (colonIndex === -1) return text.split('').map((char) => [char]);
 
   // 将文本分为冒号前和冒号两部分
   const beforeColon = text.slice(0, colonIndex);
@@ -46,24 +47,48 @@ const splitText = (text: string): string[][] => {
 
 export default function Profile() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: '张三',
-    nickname: '小张',
-    gender: '男',
-    age: '28',
-    maritalStatus: '未婚',
-    childrenStatus: '无',
-    phone: '13812345678',
-    email: 'zhangsan@example.com',
-    companyName: '智慧之光科技有限公司',
-    position: '软件工程师',
-    companySize: '100-500人',
-    annualIncome: '30万',
-    companyAddress: '北京市海淀区中关村科技园',
-    emergencyContact: '李四 13987654321',
-    homeAddress: '北京市朝阳区建国路88号',
-  });
+  const { bookId } = useLocalSearchParams();
+  const { data,refetch } = useActiveAchievementBook();
+  console.log('data11', data);
 
+  const [formData, setFormData] = useState({
+    name: data?.data.name ?? '',
+    nickname: data?.data.nickname ?? '',
+    gender: data?.data.gender ?? '',
+    age: data?.data.age ?? '',
+    maritalStatus: data?.data.maritalStatus ?? '',
+    childrenStatus: data?.data.childrenStatus ?? '',
+    phone: data?.data.phone ?? '',
+    email: data?.data.email ?? '',
+    companyName: data?.data.companyName ?? '',
+    position: data?.data.position ?? '',
+    companySize: data?.data.companySize ?? '',
+    annualIncome: data?.data.annualIncome ?? '',
+    companyAddress: data?.data.companyAddress ?? '',
+    emergencyContact: data?.data.emergencyContact ?? '',
+    homeAddress: data?.data.homeAddress ?? '',
+  });
+  useEffect(() => {
+    if (data?.data) {
+      setFormData({
+        name: data.data.name ?? '',
+        nickname: data.data.nickname ?? '',
+        gender: data.data.gender ?? '',
+        age: String(data.data.age ?? ''),
+        maritalStatus: data.data.maritalStatus ?? '',
+        childrenStatus: data.data.childrenStatus ?? '',
+        phone: data.data.phone ?? '',
+        email: data.data.email ?? '',
+        companyName: data.data.companyName ?? '',
+        position: data.data.position ?? '',
+        companySize: data.data.companySize ?? '',
+        annualIncome: data.data.annualIncome ?? '',
+        companyAddress: data.data.companyAddress ?? '',
+        emergencyContact: data.data.emergencyContact ?? '',
+        homeAddress: data.data.homeAddress ?? '',
+      });
+    }
+  }, [data]);
   const formFields: FormField[] = [
     { key: 'name', label: '姓名:' },
     { key: 'nickname', label: '称呼:' },
@@ -86,26 +111,20 @@ export default function Profile() {
       const profileContent = Object.entries(formData)
         .filter(([_, value]) => value) // 只包含有值的字段
         .map(([key, value]) => {
-          const field = formFields.find(f => f.key === key);
+          const field = formFields.find((f) => f.key === key);
           return field ? `${field.label.replace(':', '')}：${value}` : null;
         })
         .filter(Boolean)
         .join('\n\n');
 
-      // 创建成就书数据
-      const achievementData = {
-        title: '个人资料',
-        content: profileContent,
-        status: 'ACTIVE'
-      };
-      console.log("profileContent",profileContent);
-      
+      console.log('profileContent', profileContent);
+
       // 调用API更新成就书
-      const response = await achievementBookApi.updateAchievementBook("1911671090439000066", formData);
-      
-      if (response.code===200) {
+      const response = await achievementBookApi.updateAchievementBook(bookId as string, formData);
+
+      if (response.code === 200) {
         Alert.alert('成功', '个人资料已保存');
-        router.back();
+        refetch();
       } else {
         Alert.alert('保存失败', response.data.message || '请稍后重试');
       }
@@ -156,7 +175,6 @@ export default function Profile() {
                 value={formData[field.key as keyof typeof formData]}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, [field.key]: text }))}
                 keyboardType={field.keyboardType || 'default'}
-                maxLength={11}
                 multiline
               />
             </View>

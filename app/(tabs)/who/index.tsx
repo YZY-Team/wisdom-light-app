@@ -17,6 +17,9 @@ import { clearDatabase } from '~/services/database';
 import { useDatabase } from '~/contexts/DatabaseContext';
 import { dialogApi } from '~/api/have/dialog';
 import { NativeWechatConstants, sendAuthRequest, shareText } from 'expo-native-wechat';
+import { achievementBookApi } from '~/api/be/achievementBook';
+import { useAuthStore } from '~/store/authStore';
+import { useActiveAchievementBook } from '~/queries/achievement';
 
 const testCreateGroupDialog = ({
   title,
@@ -73,7 +76,7 @@ export default function WhoIndex() {
   const [groupTitle, setGroupTitle] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const { initialize, isInitializing } = useDatabase();
-
+  const setIsLoggedIn = useAuthStore((state) => state.setIsLoggedIn);
   useEffect(() => {
     AsyncStorage.getItem('token').then((token) => {
       console.log('token', token);
@@ -190,7 +193,7 @@ export default function WhoIndex() {
       // 初始化默认数据库
       await initialize();
       // 跳转到登录页
-      router.replace('(auth)/login');
+      setIsLoggedIn(false);
     } catch (error) {
       console.log('退出登录失败:', error);
       alert('退出登录失败，请重试');
@@ -225,6 +228,26 @@ export default function WhoIndex() {
       alert('创建群聊失败，请重试');
     }
   };
+  const { data: activeAchievementBook, refetch } = useActiveAchievementBook();
+  // 处理创建成就书
+  const handleCreateAchievementBook = async () => {
+    console.log('创建成就书');
+    if (activeAchievementBook) {
+      alert('您已经创建了成就书');
+      return;
+    }
+    const res = await achievementBookApi.createAchievementBook({
+      userId: userInfo?.globalUserId || '',
+    });
+    if (res.code === 200) {
+      alert('创建成就书成功');
+      refetch();
+    } else {
+      alert('创建成就书失败');
+    }
+    console.log('创建成就书结果:', res);
+  };
+
   const onButtonClicked = async () => {
     shareText({
       text: 'Hello Hector!',
@@ -333,6 +356,16 @@ export default function WhoIndex() {
               contentFit="contain"
             />
             <Text className="ml-4 flex-1">测试创建群聊</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleCreateAchievementBook}
+            className="flex-row items-center px-4 py-4">
+            <Image
+              source={require('~/assets/images/who/update.png')}
+              className="h-5 w-5"
+              contentFit="contain"
+            />
+            <Text className="ml-4 flex-1">测试创建成就书</Text>
           </Pressable>
           {/* <Pressable
             onPress={() => onButtonClicked()}

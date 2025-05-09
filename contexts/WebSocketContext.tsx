@@ -95,7 +95,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   });
 
   const connect = useCallback((userId: string) => {
-    setSocketUrl(`ws://192.168.1.158:8080/ws/message?userId=${userId}`);
+    setSocketUrl(`ws://119.29.188.102:8080/ws/message?userId=${userId}`);
   }, []);
 
   const disconnect = useCallback(() => {

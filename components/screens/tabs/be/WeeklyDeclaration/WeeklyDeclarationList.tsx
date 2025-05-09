@@ -10,10 +10,11 @@ interface WeeklyDeclarationListProps {
 }
 
 export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListProps) {
-  const { data: declarations = [], isLoading, error } = useWeeklyDeclarationList(bookId);
-  const { data: currentDeclaration } = useCurrentWeeklyDeclaration(bookId);
+  const { data: declarations = [], isLoading, error,refetch:refetchDeclarations } = useWeeklyDeclarationList(bookId);
+  const declarationList=declarations
+  const { data: currentDeclaration,refetch:refetchCurrentDeclaration } = useCurrentWeeklyDeclaration(bookId);
   const queryClient = useQueryClient();
-
+  
   // 判断宣告是否是当前周的宣告
   const isCurrentDeclaration = (declaration: WeeklyDeclarationDTO) => {
     return currentDeclaration && currentDeclaration.id === declaration.id;
@@ -60,7 +61,7 @@ export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListP
   return (
     <View className="flex-1">
       <FlashList
-        data={declarations}
+        data={declarationList}
         contentContainerStyle={{
           paddingBottom: 160,
         }}

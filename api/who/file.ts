@@ -18,7 +18,7 @@ export const fileApi = {
     console.log('Uploading file with formData:', formData);
     const token = await AsyncStorage.getItem('token');
     try {
-      const response = await fetch('http://192.168.1.158:8080/api/oss/minio/upload', {
+      const response = await fetch('http://119.29.188.102:8080/api/oss/minio/upload', {
         method: 'POST',
         body: formData,
         

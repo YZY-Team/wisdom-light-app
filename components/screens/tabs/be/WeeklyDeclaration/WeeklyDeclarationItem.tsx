@@ -26,23 +26,9 @@ export default function WeeklyDeclarationItem({
   const updateMutation = useUpdateWeeklyDeclaration();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [dailyPlans, setDailyPlans] = useState<
-    Array<{
-      achievementPlan: string;
-      completion: string;
-    }>
-  >([
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-    { achievementPlan: '', completion: '' },
-  ]);
-
   // 当declaration属性改变时，更新本地状态
   useEffect(() => {
+    console.log('declaration', declaration);
     setLocalDeclaration(declaration);
   }, [declaration]);
 
@@ -86,34 +72,37 @@ export default function WeeklyDeclarationItem({
     setIsExpanded(!isExpanded);
   };
 
-  const updateDailyPlan = (type: 'achievementPlan' | 'completion', text: string) => {
+  // 添加修改周目标的函数
+  const updateWeeklyGoal = (index: number, text: string) => {
     if (readOnly) return;
-
-    setDailyPlans((prev) => {
-      const newPlans = [...prev];
-      newPlans[selectedDay] = {
-        ...newPlans[selectedDay],
-        [type]: text,
-      };
-      return newPlans;
+    
+    const numericValue = text.trim() === '' ? 0 : parseFloat(text);
+    if (isNaN(numericValue)) return;
+    
+    // 创建新的周目标数组，避免直接修改原数组
+    const updatedGoals = [...localDeclaration.weeklyGoals];
+    updatedGoals[index] = {
+      ...updatedGoals[index],
+      targetQuantity: numericValue
+    };
+    
+    // 更新本地状态
+    setLocalDeclaration(prev => ({
+      ...prev,
+      weeklyGoals: updatedGoals
+    }));
+    
+    // 通知父组件
+    onUpdateDeclaration({
+      ...localDeclaration,
+      weeklyGoals: updatedGoals
     });
+    
+    // 添加防抖保存
+    debouncedSave();
   };
 
-  // 修改自动保存逻辑，改为手动保存
-  const handleSave = async () => {
-    if (readOnly || !localDeclaration.id) return;
-
-    try {
-      await updateMutation.mutateAsync({
-        id: localDeclaration.id.toString(),
-        declaration: localDeclaration,
-      });
-    } catch (error) {
-      console.log('保存周宣告失败:', error);
-    }
-  };
-
-  // 修改 handleTextChange，移除自动保存
+  // 修改 handleTextChange，添加防抖保存
   const handleTextChange = (
     field: keyof WeeklyDeclarationDTO,
     value: string,
@@ -133,6 +122,9 @@ export default function WeeklyDeclarationItem({
       ...localDeclaration,
       [field]: value,
     });
+    
+    // 添加防抖保存
+    debouncedSave();
   };
 
   return (
@@ -208,6 +200,7 @@ export default function WeeklyDeclarationItem({
               multiline
               value={localDeclaration.declarationContent}
               onChangeText={(text) => handleTextChange('declarationContent', text, 150)}
+              onBlur={autoSave}
               maxLength={150}
               editable={!readOnly}
             />
@@ -233,6 +226,7 @@ export default function WeeklyDeclarationItem({
                       maxLength={10}
                       value={goal.targetQuantity.toString()}
                       onChangeText={(text) => updateWeeklyGoal(index, text)}
+                      onBlur={autoSave}
                       editable={!readOnly}
                     />
                   </View>
@@ -263,7 +257,6 @@ export default function WeeklyDeclarationItem({
                 <Pressable
                   key={day}
                   onPress={() => setSelectedDay(index)}
-                  disabled={readOnly}
                   className={`mr-4 ${index === selectedDay ? 'border-b-2 border-[#1483FD]' : ''}`}>
                   <Text
                     className={`text-base ${index === selectedDay ? 'text-[#1483FD]' : 'text-gray-400'}`}>
@@ -274,84 +267,128 @@ export default function WeeklyDeclarationItem({
             </View>
 
             <View className="flex-col">
-              {/* 左侧标签 */}
-              <View className=" items-center border-b border-[#0000000D]">
-                <View className="flex flex-row  justify-between gap-2 pb-4 pt-2">
-                  <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
-                    {[...'个人成就计划'].map((char, index) => (
-                      <Text key={index} className="text-[16px] font-bold">
-                        {char}
-                      </Text>
-                    ))}
+              {/* 日计划内容 */}
+              <View className="border-b border-[#0000000D] pb-4">
+                <Text className="mb-3 text-[16px] font-bold">每日计划</Text>
+
+                {/* 上午计划 */}
+                <View className="mb-3 flex-row">
+                  <View className="w-[80px] flex-row items-center">
+                    <View className="mr-2 h-5 w-1 bg-[#1483FD]" />
+                    <Text className="text-[14px] font-bold">上午</Text>
                   </View>
-                  <View className="flex flex-1 flex-col gap-2">
-                    <View className="relative min-h-[200px] rounded-lg bg-[#F5F8FF]">
-                      <TextInput
-                        className="flex-1 p-3 text-[14px]"
-                        placeholderTextColor="#9CA3AF"
-                        placeholder="请输入今天的个人成就计划..."
-                        multiline
-                        textAlignVertical="top"
-                        value={dailyPlans[selectedDay].achievementPlan}
-                        onChangeText={(text) => {
-                          if (text.length <= 300) {
-                            updateDailyPlan('achievementPlan', text);
-                          }
-                        }}
-                        maxLength={300}
-                        editable={!readOnly}
-                      />
-                      <View className="absolute bottom-2 right-3">
-                        <Text>
-                          <Text className="text-[14px] text-black">
-                            {dailyPlans[selectedDay].achievementPlan.length}
-                          </Text>
-                          <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
-                        </Text>
-                      </View>
-                    </View>
+                  <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
+                    <Text className="text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.morningPlan || "暂无计划"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 中午计划 */}
+                <View className="mb-3 flex-row">
+                  <View className="w-[80px] flex-row items-center">
+                    <View className="mr-2 h-5 w-1 bg-[#1483FD]" />
+                    <Text className="text-[14px] font-bold">中午</Text>
+                  </View>
+                  <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
+                    <Text className="text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.noonPlan || "暂无计划"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 下午计划 */}
+                <View className="mb-3 flex-row">
+                  <View className="w-[80px] flex-row items-center">
+                    <View className="mr-2 h-5 w-1 bg-[#1483FD]" />
+                    <Text className="text-[14px] font-bold">下午</Text>
+                  </View>
+                  <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
+                    <Text className="text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.afternoonPlan || "暂无计划"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 晚上计划 */}
+                <View className="flex-row">
+                  <View className="w-[80px] flex-row items-center">
+                    <View className="mr-2 h-5 w-1 bg-[#1483FD]" />
+                    <Text className="text-[14px] font-bold">晚上</Text>
+                  </View>
+                  <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
+                    <Text className="text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.eveningPlan || "暂无计划"}
+                    </Text>
                   </View>
                 </View>
               </View>
 
-              <View className="mr-4 items-center">
-                <View className="flex flex-row justify-between gap-2 pt-4">
-                  <View className="w-[30px] flex-col items-center justify-center rounded-[6px] bg-[#5264FF1A]">
-                    {[...'完成情况'].map((char, index) => (
-                      <Text key={index} className="text-[16px] font-bold">
-                        {char}
-                      </Text>
-                    ))}
+              {/* 日完成情况 */}
+              <View className="mt-4">
+                <Text className="mb-3 text-[16px] font-bold">日完成情况</Text>
+                <View className="rounded-lg bg-[#F5F8FF] p-4">
+                  <View className="mb-2 flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">日评分:</Text>
+                    <Text className="text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayScore || "-"}
+                    </Text>
                   </View>
-                  <View className="flex flex-1 flex-col gap-2">
-                    <View className="relative min-h-[200px] rounded-lg bg-[#F5F8FF]">
-                      <TextInput
-                        className="flex-1 p-3 pl-[12px] text-[14px]"
-                        placeholderTextColor="#9CA3AF"
-                        placeholder="请输入..."
-                        multiline
-                        textAlignVertical="top"
-                        value={dailyPlans[selectedDay].completion}
-                        onChangeText={(text) => {
-                          if (text.length <= 300) {
-                            updateDailyPlan('completion', text);
-                          }
-                        }}
-                        maxLength={300}
-                        editable={!readOnly}
-                      />
-                      <View className="absolute bottom-2 right-3">
-                        <Text>
-                          <Text className="text-[14px] text-black">
-                            {dailyPlans[selectedDay].completion.length}
-                          </Text>
-                          <Text className="text-[14px] text-[rgba(0,0,0,0.5)]">/300</Text>
-                        </Text>
-                      </View>
-                    </View>
+                  <View className="mb-2 flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">日体验:</Text>
+                    <Text className="flex-1 text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayExperience || "-"}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">行得通:</Text>
+                    <Text className="flex-1 text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatWorked || "-"}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">行不通:</Text>
+                    <Text className="flex-1 text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatDidntWork || "-"}
+                    </Text>
+                  </View>
+                  <View className="mb-2 flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">学习到:</Text>
+                    <Text className="flex-1 text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatLearned || "-"}
+                    </Text>
+                  </View>
+                  <View className="flex-row">
+                    <Text className="w-[100px] text-[14px] font-bold">下一步:</Text>
+                    <Text className="flex-1 text-[14px]">
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatNext || "-"}
+                    </Text>
                   </View>
                 </View>
               </View>
+
+              {/* 日目标完成情况 */}
+              {localDeclaration.dailyDeclarations?.[selectedDay]?.dailyGoals && 
+               localDeclaration.dailyDeclarations[selectedDay].dailyGoals.length > 0 && (
+                <View className="mt-4">
+                  <Text className="mb-3 text-[16px] font-bold">周目标完成情况</Text>
+                  {localDeclaration.dailyDeclarations[selectedDay].dailyGoals.map((goal, index) => (
+                    <View key={goal.goalId || index} className="mb-2 rounded-lg bg-[#F5F8FF] p-3">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-[14px] font-bold">{goal.title || ""}:</Text>
+                        <View className="flex-row items-center">
+                          <Text className="text-[14px]">
+                            {goal.completedQuantity || 0} / {goal.weeklyTargetQuantity || 0} {goal.unit || ""}
+                          </Text>
+                          <Text className="ml-2 text-[14px] text-[#1483FD]">
+                            ({(goal.weeklyCompletionRate || 0).toFixed(1)}%)
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -406,6 +443,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.achievement}
                     onChangeText={(text) => handleTextChange('achievement', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                 </View>
@@ -423,6 +461,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.selfSummary}
                     onChangeText={(text) => handleTextChange('selfSummary', text, 300)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -446,6 +485,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.summary123456}
                     onChangeText={(text) => handleTextChange('summary123456', text, 300)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -469,6 +509,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.nextStep}
                     onChangeText={(text) => handleTextChange('nextStep', text, 300)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -488,6 +529,7 @@ export default function WeeklyDeclarationItem({
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     value={localDeclaration.weekScore}
                     onChangeText={(text) => handleTextChange('weekScore', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                 </View>
@@ -502,6 +544,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.weekExperience}
                     onChangeText={(text) => handleTextChange('weekExperience', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                 </View>
@@ -516,6 +559,7 @@ export default function WeeklyDeclarationItem({
                     multiline
                     value={localDeclaration.whatWorked}
                     onChangeText={(text) => handleTextChange('whatWorked', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                 </View>
@@ -530,11 +574,12 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.whatLearned}
                     onChangeText={(text) => handleTextChange('whatLearned', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
                 </View>
 
-                <View className="flex-row items-center gap-2">
+                {/* <View className="flex-row items-center gap-2">
                   <Text className="w-[80px] text-[14px]">下 一 步:</Text>
                   <TextInput
                     className="h-[100px] flex-1 rounded-[6px] bg-[#1483FD0D] px-3 text-[14px]"
@@ -544,9 +589,10 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.whatNext}
                     onChangeText={(text) => handleTextChange('whatNext', text)}
+                    onBlur={autoSave}
                     editable={!readOnly}
                   />
-                </View>
+                </View> */}
               </View>
             </View>
           </View>

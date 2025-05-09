@@ -170,6 +170,7 @@ export default function Login() {
         // 建立WebSocket连接
         setUserInfo(userRes.data);
         setIsLoggedIn(true);
+        router.replace('(tabs)/have');
       }
     } catch (error) {
       // router.replace('(tabs)/do');

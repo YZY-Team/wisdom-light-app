@@ -2,19 +2,25 @@ import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { achievementBookApi } from '~/api/be/achievementBook';
-import { useActiveAchievementBook } from '~/queries/achievement';
-import { useUserStore } from '~/store/userStore';
 import { Image } from 'expo-image';
 import NoMemberTip from './NoMemberTip';
+import { UserInfo } from '~/store/userStore';
+import { AchievementBookDTO } from '~/types/be/achievementBookType';
+
 cssInterop(LinearGradient, { className: 'style' });
 cssInterop(Image, { className: 'style' });
-export default function Achievements() {
-  const { userInfo } = useUserStore();
-  const { data: achievementBookResponse, isLoading } = useActiveAchievementBook();
-  const achievementBook = achievementBookResponse?.data;
+
+// Achievements 组件属性定义
+type AchievementsProps = {
+  achievementBook?: AchievementBookDTO;
+  userInfo: UserInfo;
+};
+
+export default function Achievements({ achievementBook, userInfo }: AchievementsProps) {
+  const { bookId } = useLocalSearchParams<{ bookId: string }>();
   const [achievementStatus, setAchievementStatus] = useState({
     profile: '未完成',
     oath: '未完成',
@@ -23,32 +29,39 @@ export default function Achievements() {
   });
 
   if (!userInfo?.isMember) {
-    return (
-      <NoMemberTip
-        tipText="充值会员之后才能拥有成就书哦～"
-      />
-    );
+    return <NoMemberTip tipText="充值会员之后才能拥有成就书哦～" />;
   }
 
   useEffect(() => {
-    if (achievementBook) {
-      // 解析成就书内容并更新状态
-      const profileStatus = checkProfileStatus(achievementBook);
-      const oathStatus = checkOathStatus(achievementBook);
-      const promiseStatus = checkPromiseStatus(achievementBook);
-      const achievementStatus = checkAchievementStatus(achievementBook);
 
-      setAchievementStatus({
-        profile: profileStatus,
-        oath: oathStatus,
-        promise: promiseStatus,
-        achievement: achievementStatus,
-      });
-    }
+    const getGoalStatus = async () => {
+      if (achievementBook) {
+        // 解析成就书内容并更新状态
+        const profileStatus = checkProfileStatus(achievementBook);
+        const oathStatus = checkOathStatus(achievementBook);
+        const promiseStatus = checkPromiseStatus(achievementBook);
+        console.log("bookId",bookId);
+        const goalStatus = await achievementBookApi.getGoalsByBookId(achievementBook.id as string);
+  
+        const achievementStatus = checkAchievementStatus(goalStatus.data);
+  
+        console.log("profileStatus",profileStatus);
+        
+        setAchievementStatus({
+          profile: profileStatus,
+          oath: oathStatus,
+          promise: promiseStatus,
+          achievement: achievementStatus,
+        });
+      }
+    };
+    getGoalStatus();
   }, [achievementBook]);
 
   // 检查个人资料完成状态
   const checkProfileStatus = (data: any) => {
+    console.log('个人资料数据:', data);
+
     // 检查个人资料字段是否已填写
     const profileFields = [
       'name',
@@ -94,6 +107,7 @@ export default function Achievements() {
       (field) =>
         profileData[field] !== undefined && profileData[field] !== null && profileData[field] !== ''
     );
+    console.log('个人资料字段:', profileFields);
     const completion = filledFields.length / profileFields.length;
 
     console.log('个人资料完成度:', completion, filledFields);
@@ -169,6 +183,15 @@ export default function Achievements() {
   // 检查成果完成状态
   const checkAchievementStatus = (data: any) => {
     if (!data) return '未完成';
+
+    // 如果是数组，至少需要三个承诺目标才算已完成
+    if (Array.isArray(data)) {
+      if (data.length >= 3) return '已完成';
+      if (data.length > 0) return '进行中';
+      return '未完成';
+    }
+
+    console.log('成果状态:', data);
 
     // 尝试从不同数据结构中获取成果信息
     let hasAchievement = false;
@@ -315,7 +338,12 @@ export default function Achievements() {
               title: '个人资料',
               status: achievementStatus.profile,
               date: getCreateDate(),
-              href: '/profile',
+              href: {
+                pathname: '/profile',
+                params: {
+                  bookId: achievementBook?.id || '',
+                },
+              },
             },
             {
               icon: 'star',
@@ -323,7 +351,12 @@ export default function Achievements() {
               title: '我的约誓',
               status: achievementStatus.oath,
               date: getCreateDate(),
-              href: '/oath',
+              href: {
+                pathname: '/oath',
+                params: {
+                  bookId: achievementBook?.id || '',
+                },
+              },
             },
             {
               icon: 'book',
@@ -331,7 +364,12 @@ export default function Achievements() {
               title: '我的承诺',
               status: achievementStatus.promise,
               date: getCreateDate(),
-              href: '/promise',
+              href: {
+                pathname: '/promise',
+                params: {
+                  bookId: achievementBook?.id || '',
+                },
+              },
             },
             {
               icon: 'rocket',
@@ -339,12 +377,17 @@ export default function Achievements() {
               title: '创造成果',
               status: achievementStatus.achievement,
               date: getCreateDate(),
-              href: '/achievement',
+              href: {
+                pathname: '/achievement',
+                params: {
+                  bookId: achievementBook?.id || '',
+                },
+              },
             },
           ].map((item) => (
             <Link
               key={item.title}
-              href={`${item.href}`}
+              href={item.href}
               asChild
               className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
               <Pressable className="flex-row items-center gap-4">

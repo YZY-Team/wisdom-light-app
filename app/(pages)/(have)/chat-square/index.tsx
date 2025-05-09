@@ -134,11 +134,18 @@ export default function ChatSquare() {
     setInputMessage('');
     
     // 发送到WebSocket
+    console.log('发送消息:', {
+      type: 'GROUP_CHAT',
+      dialogId: "1920783225209827330",
+      groupId: "1920783225209827330",
+      textContent: inputMessage,
+      clientMessageId: 'client-msg-' + Date.now(),
+    });
     sendMessage(
       JSON.stringify({
         type: 'GROUP_CHAT',
-        dialogId: "888888",
-        groupId: "888888",
+        dialogId: "1920783225209827330",
+        groupId: "1920783225209827330",
         textContent: inputMessage,
         clientMessageId: 'client-msg-' + Date.now(),
       })

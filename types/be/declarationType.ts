@@ -62,6 +62,8 @@ export interface WeeklyDeclarationDTO {
   weeklyGoals: WeeklyGoalDTO[];
   /** 平均完成率 */
   averageCompletionRate: number;
+  /** 每日宣告列表 */
+  dailyDeclarations?: NewDailyDeclarationDTO[];
   /** 创建时间 */
   createTime: string;
   /** 更新时间 */

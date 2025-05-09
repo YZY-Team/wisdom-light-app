@@ -1,10 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { cssInterop } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tutorApi } from '~/api/who/tutor';
 
 // 启用nativewind的CSS类名支持
 cssInterop(LinearGradient, { className: 'style' });
@@ -46,6 +47,28 @@ export default function ApplySettlementScreen() {
       }
     }
     return true;
+  };
+
+  // 处理提交
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        userId: 0,
+        realName: formData.name,
+        specialization: formData.platform,
+        qualificationUrls: formData.code,
+        introduction: formData.oath,
+        teachingYears: Number(formData.teachingExperience),
+        contactPhone: formData.phone,
+        contactEmail: formData.email,
+        applyReason: formData.vision,
+      };
+      await tutorApi.submitApplication(payload);
+      Alert.alert('申请提交成功');
+      router.back();
+    } catch (error: any) {
+      Alert.alert('提交失败', error.message || '请稍后重试');
+    }
   };
 
   // 渲染文本框标签
@@ -92,19 +115,6 @@ export default function ApplySettlementScreen() {
     { key: 'coachingExperience', label: '做过几次教练：' }
   ];
 
-  // 团队和个人数据字段
-  const pillarFields = [
-    { key: 'teamPillars', label: '带的团队三大支柱数据：（带了几班填几班数据）' },
-    { key: 'personalPillars', label: '个人再走时三大支柱数据：' },
-  ];
-
-  // 三大支柱数据字段
-  const achievementFields = [
-    { key: 'achievement', label: '个人成就：' },
-    { key: 'invitation', label: '感        召：' },
-    { key: 'service', label: ' 社        服:' }
-  ];
-
   return (
     <View className="flex-1 ">
       {/* 顶部导航栏 */}
@@ -117,7 +127,6 @@ export default function ApplySettlementScreen() {
           <View style={{ width: 24 }} />
         </View>
       </View>
-
 
       {/* 表单内容 */}
       <ScrollView
@@ -139,8 +148,6 @@ export default function ApplySettlementScreen() {
               />
             </View>
           ))}</View>
-
-
 
           {/* 团队和个人数据字段 */}
           {/* {pillarFields.map((field) => (
@@ -176,10 +183,7 @@ export default function ApplySettlementScreen() {
           {/* 提交按钮 - 现在放在滚动区域内 */}
           <View className="mt-8 mb-10">
             <TouchableOpacity
-              onPress={() => {
-                // 提交逻辑
-                console.log('提交表单', formData);
-              }}
+              onPress={handleSubmit}
               disabled={!isFormComplete()}
             >
               <LinearGradient

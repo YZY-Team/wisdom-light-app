@@ -16,8 +16,8 @@ import {
 } from '~/queries/dailyDeclaration';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
 import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
-import { useUserStore } from '~/store/userStore';
 import NoMemberTip from '../NoMemberTip';
+import { UserInfo } from '~/store/userStore';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -182,10 +182,14 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
   );
 };
 
+// DailyDeclaration 组件属性定义
+type DailyDeclarationProps = {
+  bookId: string;
+  userInfo: UserInfo;
+};
+
 // 主组件：每日宣告列表
-export default function DailyDeclaration() {
-  const { userInfo } = useUserStore();
-  const bookId = '1911671090439000066'; // 这里需要从上下文获取实际的bookId
+export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationProps) {
   const createDeclaration = useCreateDeclaration();
 
   if (!userInfo?.isMember) {
@@ -204,9 +208,11 @@ export default function DailyDeclaration() {
 
   // 刷新数据的回调函数
   const fetchDeclarations = useCallback(() => {
-    refetchToday();
-    refetchHistory();
-  }, [refetchToday, refetchHistory]);
+    if (bookId) {
+      refetchToday();
+      refetchHistory();
+    }
+  }, [refetchToday, refetchHistory, bookId]);
 
   // 处理历史宣告数据
   const historicalDailyData = useMemo(() => {
@@ -261,8 +267,10 @@ export default function DailyDeclaration() {
 
   // 创建今日宣告的处理函数
   const handleCreateTodayDeclaration = async (weeklyDeclarationId: string) => {
+    if (!userInfo?.globalUserId || !bookId) return;
+    
     const newDeclaration: NewDailyDeclarationDTO = {
-      userId: '1909855525598679042', // TODO: 从用户上下文获取
+      userId: userInfo.globalUserId, // 使用用户的 globalUserId
       bookId: bookId,
       weeklyDeclarationId: weeklyDeclarationId,
       dayNumber: 1, // TODO: 根据实际情况计算
@@ -289,7 +297,7 @@ export default function DailyDeclaration() {
 
   // 如果没有今日宣告，创建新的宣告
   useEffect(() => {
-    if (todayDeclarationRes?.code === 404) {
+    if (todayDeclarationRes?.code === 404 && bookId && userInfo?.globalUserId) {
       const createWeeklyDeclarationAndDaily = async () => {
         try {
           const currentWeekResponse =
@@ -299,7 +307,7 @@ export default function DailyDeclaration() {
           if (currentWeekResponse.code === 404) {
             const newWeeklyDeclaration = {
               bookId: bookId,
-              userId: '1909855525598679042', // TODO: 从用户上下文获取
+              userId: userInfo.globalUserId, // 使用用户的 globalUserId
               weekNumber: 1, // TODO: 计算当前是第几周
               title: '',
               declarationContent: '',
@@ -340,7 +348,15 @@ export default function DailyDeclaration() {
 
       createWeeklyDeclarationAndDaily();
     }
-  }, [todayDeclarationRes?.code, bookId]);
+  }, [todayDeclarationRes?.code, bookId, userInfo?.globalUserId]);
+
+  if (!bookId) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-gray-500">未找到活跃的成就书</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1">

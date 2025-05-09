@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -38,48 +38,25 @@ export default function AddFriend() {
     refetch: refetchSearch,
   } = useFindFriends(currentSearchTerm);
 
-  // 处理添加好友
-  const handleAddFriend = async (receiverId: string) => {
-    if (!userInfo?.globalUserId) {
-      alert('用户未登录');
-      return;
-    }
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedReceiverId, setSelectedReceiverId] = useState<string | null>(null);
+  const [remarkText, setRemarkText] = useState('');
+  const [acceptModalVisible, setAcceptModalVisible] = useState(false);
+  const [selectedAcceptRequestId, setSelectedAcceptRequestId] = useState<string | null>(null);
+  const [acceptRemarkText, setAcceptRemarkText] = useState('');
 
-    sendFriendRequest(
-      {
-        senderId: userInfo.globalUserId,
-        receiverId,
-        requestMessage: '请求添加好友',
-      },
-      {
-        onSuccess: () => {
-          alert('好友请求已发送');
-        },
-        onError: (error) => {
-          console.log('发送好友请求失败:', error);
-          alert('发送好友请求失败');
-        },
-      }
-    );
+  // 处理添加好友
+  const handleAddFriend = (receiverId: string) => {
+    setSelectedReceiverId(receiverId);
+    setRemarkText('');
+    setModalVisible(true);
   };
 
   // 处理同意好友请求
-  const handleAcceptRequest = async (requestId: string) => {
-    acceptFriendRequest(
-      {
-        requestId,
-        nickname: '不知道',
-      },
-      {
-        onSuccess: () => {
-          alert('已同意好友请求');
-        },
-        onError: (error) => {
-          console.log('同意好友请求失败:', error);
-          alert('同意好友请求失败');
-        },
-      }
-    );
+  const handleAcceptRequest = (requestId: string) => {
+    setSelectedAcceptRequestId(requestId);
+    setAcceptRemarkText('');
+    setAcceptModalVisible(true);
   };
 
   // 处理搜索提交
@@ -93,6 +70,52 @@ export default function AddFriend() {
 
   const handSearch = (text: string) => {
     searchText.current = text;
+  };
+
+  const confirmAddFriend = () => {
+    if (!userInfo?.globalUserId) {
+      alert('用户未登录');
+      setModalVisible(false);
+      return;
+    }
+    if (!selectedReceiverId) return;
+    sendFriendRequest(
+      {
+        senderId: userInfo.globalUserId,
+        receiverId: selectedReceiverId,
+        requestMessage: remarkText.trim() || '请求添加好友',
+      },
+      {
+        onSuccess: () => {
+          setModalVisible(false);
+          alert('好友请求已发送');
+        },
+        onError: (error) => {
+          console.log('发送好友请求失败:', error);
+          alert('发送好友请求失败');
+        },
+      }
+    );
+  };
+
+  const confirmAcceptRequest = () => {
+    if (!selectedAcceptRequestId) return;
+    acceptFriendRequest(
+      {
+        requestId: selectedAcceptRequestId,
+        nickname: acceptRemarkText.trim() || '朋友',
+      },
+      {
+        onSuccess: () => {
+          setAcceptModalVisible(false);
+          alert('已同意好友请求');
+        },
+        onError: (error) => {
+          console.log('同意好友请求失败:', error);
+          alert('同意好友请求失败');
+        },
+      }
+    );
   };
 
   interface SearchViewProps {
@@ -189,6 +212,48 @@ export default function AddFriend() {
 
   return (
     <View className="flex-1 bg-white">
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="w-11/12 bg-white rounded-lg p-4">
+            <Text className="text-lg font-semibold mb-2">添加好友备注</Text>
+            <TextInput
+              className="border border-gray-300 rounded px-2 py-1 mb-4"
+              placeholder="请输入备注"
+              value={remarkText}
+              onChangeText={setRemarkText}
+            />
+            <View className="flex-row justify-end">
+              <Pressable onPress={() => setModalVisible(false)} className="px-4 py-2">
+                <Text className="text-base text-gray-500">取消</Text>
+              </Pressable>
+              <Pressable onPress={confirmAddFriend} className="px-4 py-2">
+                <Text className="text-base text-[#1687fd]">确定</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={acceptModalVisible} transparent animationType="slide">
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="w-11/12 bg-white rounded-lg p-4">
+            <Text className="text-lg font-semibold mb-2">备注好友</Text>
+            <TextInput
+              className="border border-gray-300 rounded px-2 py-1 mb-4"
+              placeholder="请输入备注"
+              value={acceptRemarkText}
+              onChangeText={setAcceptRemarkText}
+            />
+            <View className="flex-row justify-end">
+              <Pressable onPress={() => setAcceptModalVisible(false)} className="px-4 py-2">
+                <Text className="text-base text-gray-500">取消</Text>
+              </Pressable>
+              <Pressable onPress={confirmAcceptRequest} className="px-4 py-2">
+                <Text className="text-base text-[#1687fd]">确定</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
       {/* 头部 */}
       <View className="flex-row items-center px-4 py-3">
         <Pressable
