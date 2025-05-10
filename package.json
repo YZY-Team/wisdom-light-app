@@ -59,7 +59,8 @@
     "react-native-webrtc": "^124.0.5",
     "react-use-websocket": "^4.13.0",
     "tailwind-merge": "^3.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "react-native-gesture-handler": "~2.20.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
 import { UserInfo } from '~/store/userStore';
 import { Alert } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 cssInterop(Image, { className: 'style' });
 cssInterop(BlurView, { className: 'style' });
@@ -142,7 +143,7 @@ export default function WeeklyDeclaration({ bookId, userInfo }: WeeklyDeclaratio
   }
 
   return (
-    <View className="flex-1 pt-4">
+    <KeyboardAvoidingView keyboardVerticalOffset={50} className="flex-1"  behavior={'padding'} style={{ flex: 1 }}>
       {/* <View className="absolute right-4 top-10 z-[1000]">
         <Pressable onPress={handleSave} disabled={isSaving}>
           <BlurView
@@ -163,6 +164,6 @@ export default function WeeklyDeclaration({ bookId, userInfo }: WeeklyDeclaratio
           <Text>未找到活跃的成就书</Text>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }

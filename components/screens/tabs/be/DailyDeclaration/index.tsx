@@ -18,6 +18,7 @@ import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
 import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 import NoMemberTip from '../NoMemberTip';
 import { UserInfo } from '~/store/userStore';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -66,7 +67,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
 
   // 判断是否为今天的宣告
   const isToday = new Date().toISOString().split('T')[0] === item.date.toISOString().split('T')[0];
-  
+
   return (
     <View className="" style={{ opacity: isToday ? 1 : 0.5 }}>
       {/* 日期头部 */}
@@ -200,18 +201,22 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
   const createDeclaration = useCreateDeclaration();
 
   if (!userInfo?.isMember) {
-    return (
-      <NoMemberTip 
-        tipText="充值会员之后才能拥有日宣告哦～"
-      />
-    );
+    return <NoMemberTip tipText="充值会员之后才能拥有日宣告哦～" />;
   }
 
   // 获取今日宣告
-  const { data: todayDeclarationRes, isLoading: isTodayLoading, refetch: refetchToday } = useTodayDeclaration(bookId);
+  const {
+    data: todayDeclarationRes,
+    isLoading: isTodayLoading,
+    refetch: refetchToday,
+  } = useTodayDeclaration(bookId);
 
   // 获取历史宣告列表
-  const { data: historyResponse, isLoading: isHistoryLoading, refetch: refetchHistory } = useBookDeclarations(bookId);
+  const {
+    data: historyResponse,
+    isLoading: isHistoryLoading,
+    refetch: refetchHistory,
+  } = useBookDeclarations(bookId);
 
   // 刷新数据的回调函数
   const fetchDeclarations = useCallback(() => {
@@ -275,7 +280,7 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
   // 创建今日宣告的处理函数
   const handleCreateTodayDeclaration = async (weeklyDeclarationId: string) => {
     if (!userInfo?.globalUserId || !bookId) return;
-    
+
     const newDeclaration: NewDailyDeclarationDTO = {
       userId: userInfo.globalUserId, // 使用用户的 globalUserId
       bookId: bookId,
@@ -366,7 +371,11 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
   }
 
   return (
-    <View className="flex-1">
+    <KeyboardAvoidingView
+      keyboardVerticalOffset={50}
+      className="flex-1"
+      behavior={'padding'}
+      style={{ flex: 1 }}>
       {isHistoryLoading ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-gray-500">加载中...</Text>
@@ -382,19 +391,27 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
                     timeSlots: [
                       {
                         title: '上午',
-                        items: [{ content: todayDeclarationRes.data.morningPlan || '', time: '7:00' }],
+                        items: [
+                          { content: todayDeclarationRes.data.morningPlan || '', time: '7:00' },
+                        ],
                       },
                       {
                         title: '中午',
-                        items: [{ content: todayDeclarationRes.data.noonPlan || '', time: '12:00' }],
+                        items: [
+                          { content: todayDeclarationRes.data.noonPlan || '', time: '12:00' },
+                        ],
                       },
                       {
                         title: '下午',
-                        items: [{ content: todayDeclarationRes.data.afternoonPlan || '', time: '14:00' }],
+                        items: [
+                          { content: todayDeclarationRes.data.afternoonPlan || '', time: '14:00' },
+                        ],
                       },
                       {
                         title: '晚上',
-                        items: [{ content: todayDeclarationRes.data.eveningPlan || '', time: '19:00' }],
+                        items: [
+                          { content: todayDeclarationRes.data.eveningPlan || '', time: '19:00' },
+                        ],
                       },
                     ],
                     eveningContent: '',
@@ -436,7 +453,7 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
           }}
         />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

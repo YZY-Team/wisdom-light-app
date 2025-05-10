@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
@@ -14,6 +13,7 @@ import { useState } from 'react';
 import { cssInterop } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tutorApi } from '~/api/who/tutor';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // 启用nativewind的CSS类名支持
 cssInterop(LinearGradient, { className: 'style' });

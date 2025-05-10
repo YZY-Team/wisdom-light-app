@@ -262,12 +262,7 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
   };
 
   return (
-    <ScrollView
-      className="flex-1   pt-4"
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{
-        paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
-      }}>
+    <View className="flex-1 pt-4 px-4">
       {/* 总数据 */}
       <View className="mb-4">
         <Text className="mb-2 text-base font-[800] ">总数据</Text>
@@ -381,10 +376,11 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
               },
             },
           ].map((item) => (
-            <TouchableOpacity key={item.title} activeOpacity={0.8}>
-              <Link
-                href={item.href}
-                className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
+            <Link
+              key={item.title}
+              href={item.href}
+              asChild>
+              <TouchableOpacity activeOpacity={0.8} className="h-[72px] flex-row items-center gap-4 rounded-xl bg-white p-4">
                 <View className="flex-1 flex-row items-center gap-4">
                   <View
                     className="h-10 w-10 items-center justify-center rounded-full"
@@ -401,11 +397,11 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
                     <Text className="text-xs text-gray-300">创建于 {item.date}</Text>
                   </View>
                 </View>
-              </Link>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </Link>
           ))}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
