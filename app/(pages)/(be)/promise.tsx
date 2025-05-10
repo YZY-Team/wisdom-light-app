@@ -12,7 +12,7 @@ export default function PromisePage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data, refetch } = useActiveAchievementBook();
-  const [promise, setPromise] = useState(data?.data.promise || '');
+  const [promise, setPromise] = useState(data?.data?.promise || '');
   const [loading, setLoading] = useState(false);
 
 

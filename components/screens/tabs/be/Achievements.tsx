@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,20 +33,19 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
   }
 
   useEffect(() => {
-
     const getGoalStatus = async () => {
       if (achievementBook) {
         // 解析成就书内容并更新状态
         const profileStatus = checkProfileStatus(achievementBook);
         const oathStatus = checkOathStatus(achievementBook);
         const promiseStatus = checkPromiseStatus(achievementBook);
-        console.log("bookId",bookId);
+        console.log('bookId', bookId);
         const goalStatus = await achievementBookApi.getGoalsByBookId(achievementBook.id as string);
-  
+
         const achievementStatus = checkAchievementStatus(goalStatus.data);
-  
-        console.log("profileStatus",profileStatus);
-        
+
+        console.log('profileStatus', profileStatus);
+
         setAchievementStatus({
           profile: profileStatus,
           oath: oathStatus,
@@ -265,10 +264,10 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
   return (
     <ScrollView
       className="flex-1   pt-4"
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={{
         paddingBottom: 160, // 40 * 4，确保底部内容不被导航栏遮挡
-      }}
-      showsVerticalScrollIndicator={false}>
+      }}>
       {/* 总数据 */}
       <View className="mb-4">
         <Text className="mb-2 text-base font-[800] ">总数据</Text>
@@ -326,9 +325,6 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
       <View>
         <View className="mb-4 flex flex-row items-center    justify-between">
           <Text className=" flex items-center justify-center text-base  font-[800] ">成就书</Text>
-          <Pressable>
-            <Text className="text-sm   font-[800] text-[#1483FD] underline">简介</Text>
-          </Pressable>
         </View>
         <View className="flex flex-col gap-2 ">
           {[
@@ -385,28 +381,28 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
               },
             },
           ].map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              asChild
-              className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
-              <Pressable className="flex-row items-center gap-4">
-                <View
-                  className="h-10 w-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: `${item.color}20` }}>
-                  <Ionicons
-                    name={item.icon as keyof typeof Ionicons.glyphMap}
-                    size={20}
-                    color={item.color}
-                  />
+            <TouchableOpacity key={item.title} activeOpacity={0.8}>
+              <Link
+                href={item.href}
+                className="h-[90px] flex-row items-center gap-4 rounded-xl bg-white p-4">
+                <View className="flex-1 flex-row items-center gap-4">
+                  <View
+                    className="h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: `${item.color}20` }}>
+                    <Ionicons
+                      name={item.icon as keyof typeof Ionicons.glyphMap}
+                      size={20}
+                      color={item.color}
+                    />
+                  </View>
+                  <View className="flex flex-1 flex-col gap-1">
+                    <Text className="text-base font-medium">{item.title}</Text>
+                    <Text className="text-sm text-gray-400">{item.status}</Text>
+                    <Text className="text-xs text-gray-300">创建于 {item.date}</Text>
+                  </View>
                 </View>
-                <View className="flex flex-1 flex-col gap-1">
-                  <Text className="text-base font-medium">{item.title}</Text>
-                  <Text className=" text-sm text-gray-400">{item.status}</Text>
-                  <Text className="text-xs text-gray-300">创建于 {item.date}</Text>
-                </View>
-              </Pressable>
-            </Link>
+              </Link>
+            </TouchableOpacity>
           ))}
         </View>
       </View>

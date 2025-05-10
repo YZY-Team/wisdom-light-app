@@ -229,10 +229,13 @@ export default function WhoIndex() {
     }
   };
   const { data: activeAchievementBook, refetch } = useActiveAchievementBook();
+
+  console.log("activeAchievementBook",activeAchievementBook);
+  
   // 处理创建成就书
   const handleCreateAchievementBook = async () => {
-    console.log('创建成就书');
-    if (activeAchievementBook) {
+    console.log('创建成就书', activeAchievementBook);
+    if (activeAchievementBook?.code===200) {
       alert('您已经创建了成就书');
       return;
     }

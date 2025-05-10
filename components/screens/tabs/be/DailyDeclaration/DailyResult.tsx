@@ -24,6 +24,7 @@ type DailyResultProps = {
   showHeader?: boolean; // 是否显示标题栏
   declarationId?: string; // 宣告ID
   onUpdate?: () => void; // 更新回调
+  readOnly?: boolean; // 是否只读模式
 };
 
 // 今日成果组件：展示每日目标完成情况和进度
@@ -32,6 +33,7 @@ export default function DailyResult({
   showHeader = true,
   declarationId,
   onUpdate,
+  readOnly = false,
 }: DailyResultProps) {
   // 编辑状态管理
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
@@ -42,6 +44,7 @@ export default function DailyResult({
 
   // 开始编辑
   const startEditing = (index: number, content: string) => {
+    if (readOnly) return; // 只读模式下不允许编辑
     setEditingStates((prev) => ({ ...prev, [index]: true }));
     setTempContents((prev) => ({ ...prev, [index]: content }));
   };
@@ -159,7 +162,7 @@ export default function DailyResult({
                           onChangeText={(text) => handleTextChange(index, text)}
                           onBlur={() => handleBlur(index)}
                           blurOnSubmit={true}
-                          editable={declarationId !== undefined}
+                          editable={!readOnly && declarationId !== undefined}
                           keyboardType="numeric"
                         />
                         {/* 加载中指示器 */}

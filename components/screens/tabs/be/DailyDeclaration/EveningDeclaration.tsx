@@ -23,10 +23,11 @@ type EveningDeclarationProps = {
   showHeader?: boolean;          // 是否显示标题栏
   declarationId?: string;        // 宣告ID
   onUpdate?: () => void;         // 更新回调
+  readOnly?: boolean;            // 是否只读模式
 };
 
 // 晚总结组件：展示每日晚间的总结报告
-export default function EveningDeclaration({ date, eveningReport, showHeader = true, declarationId, onUpdate }: EveningDeclarationProps) {
+export default function EveningDeclaration({ date, eveningReport, showHeader = true, declarationId, onUpdate, readOnly = false }: EveningDeclarationProps) {
   // 编辑状态管理
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
   // 临时内容管理
@@ -36,6 +37,7 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
 
   // 开始编辑
   const startEditing = (label: string, content: string) => {
+    if (readOnly) return; // 只读模式下不允许编辑
     setEditingStates(prev => ({ ...prev, [label]: true }));
     setTempContents(prev => ({ ...prev, [label]: content }));
   };
@@ -157,7 +159,7 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
                   onChangeText={(text) => handleTextChange(reportItem.label, text)}
                   onBlur={() => handleBlur(reportItem.label)}
                   blurOnSubmit={true}
-                  editable={declarationId !== undefined}
+                  editable={!readOnly && declarationId !== undefined}
                   maxLength={100}
                 />
                 {/* 加载中指示器 */}

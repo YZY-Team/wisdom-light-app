@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,7 +43,7 @@ export default function Oath() {
         </View>
 
         <View className="mt-4 h-[200px] rounded-lg bg-[#1483FD0D] p-4">
-          <Text className="text-sm text-gray-400">请输入...</Text>
+          <TextInput className="text-sm text-gray-400" placeholder="请输入..." />
         </View>
 
         <View className="mt-20 w-full">

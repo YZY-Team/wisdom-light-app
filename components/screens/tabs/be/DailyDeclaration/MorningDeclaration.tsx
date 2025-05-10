@@ -31,6 +31,7 @@ type MorningDeclarationProps = {
   showHeader?: boolean;       // 是否显示标题栏
   declarationId?: string;     // 日宣告ID
   onUpdate?: () => void;      // 更新回调
+  readOnly?: boolean;         // 是否只读模式
 };
 
 // 根据时间段标题获取对应的颜色
@@ -50,7 +51,7 @@ const getBarColor = (title: string) => {
 };
 
 // 早宣告组件：展示每日早晨的时间段计划
-export default function MorningDeclaration({ date, timeSlots, expanded = true, showHeader = true, declarationId, onUpdate }: MorningDeclarationProps) {
+export default function MorningDeclaration({ date, timeSlots, expanded = true, showHeader = true, declarationId, onUpdate, readOnly = false }: MorningDeclarationProps) {
   // 编辑状态管理
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
   // 临时内容管理
@@ -60,6 +61,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
 
   // 开始编辑
   const startEditing = (sectionTitle: string, itemIndex: number, content: string) => {
+    if (readOnly) return; // 只读模式下不允许编辑
     const key = `${sectionTitle}-${itemIndex}`;
     setEditingStates(prev => ({ ...prev, [key]: true }));
     setTempContents(prev => ({ ...prev, [key]: content }));
@@ -205,6 +207,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
                         onChangeText={(text) => handleTextChange(section.title, itemIndex, text)}
                         onBlur={() => handleBlur(section.title, itemIndex)}
                         blurOnSubmit={true}
+                        editable={!readOnly && declarationId !== undefined}
                       />
                       {/* 加载中指示器 */}
                       {loadingStates[`${section.title}-${itemIndex}`] && (

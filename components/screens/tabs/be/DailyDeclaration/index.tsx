@@ -64,8 +64,11 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
     setExpanded(!expanded);
   };
 
+  // 判断是否为今天的宣告
+  const isToday = new Date().toISOString().split('T')[0] === item.date.toISOString().split('T')[0];
+  
   return (
-    <View className="">
+    <View className="" style={{ opacity: isToday ? 1 : 0.5 }}>
       {/* 日期头部 */}
       <View className="flex-row items-center justify-center  px-4 py-4">
         <View className="mt-1 flex-row items-end">
@@ -124,6 +127,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
             showHeader={false}
             declarationId={item.id}
             onUpdate={onRefresh}
+            readOnly={!isToday}
           />
         )}
       </View>
@@ -156,6 +160,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
             showHeader={false}
             declarationId={item.id}
             onUpdate={onRefresh}
+            readOnly={!isToday}
           />
         </View>
       )}
@@ -168,6 +173,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
           showHeader={true}
           declarationId={item.id}
           onUpdate={onRefresh}
+          readOnly={!isToday}
         />
       ) : (
         /* 收起状态 - 仅显示目标列表内容，不带标题 */
@@ -176,6 +182,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
           showHeader={false}
           declarationId={item.id}
           onUpdate={onRefresh}
+          readOnly={!isToday}
         />
       )}
     </View>

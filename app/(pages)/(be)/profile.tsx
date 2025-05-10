@@ -1,4 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AntDesign } from '@expo/vector-icons';
@@ -48,44 +56,44 @@ const splitText = (text: string): string[][] => {
 export default function Profile() {
   const router = useRouter();
   const { bookId } = useLocalSearchParams();
-  const { data,refetch } = useActiveAchievementBook();
+  const { data, refetch } = useActiveAchievementBook();
   console.log('data11', data);
 
   const [formData, setFormData] = useState({
-    name: data?.data.name ?? '',
-    nickname: data?.data.nickname ?? '',
-    gender: data?.data.gender ?? '',
-    age: data?.data.age ?? '',
-    maritalStatus: data?.data.maritalStatus ?? '',
-    childrenStatus: data?.data.childrenStatus ?? '',
-    phone: data?.data.phone ?? '',
-    email: data?.data.email ?? '',
-    companyName: data?.data.companyName ?? '',
-    position: data?.data.position ?? '',
-    companySize: data?.data.companySize ?? '',
-    annualIncome: data?.data.annualIncome ?? '',
-    companyAddress: data?.data.companyAddress ?? '',
-    emergencyContact: data?.data.emergencyContact ?? '',
-    homeAddress: data?.data.homeAddress ?? '',
+    name: data?.data?.name ?? '',
+    nickname: data?.data?.nickname ?? '',
+    gender: data?.data?.gender ?? '',
+    age: data?.data?.age ?? '',
+    maritalStatus: data?.data?.maritalStatus ?? '',
+    childrenStatus: data?.data?.childrenStatus ?? '',
+    phone: data?.data?.phone ?? '',
+    email: data?.data?.email ?? '',
+    companyName: data?.data?.companyName ?? '',
+    position: data?.data?.position ?? '',
+    companySize: data?.data?.companySize ?? '',
+    annualIncome: data?.data?.annualIncome ?? '',
+    companyAddress: data?.data?.companyAddress ?? '',
+    emergencyContact: data?.data?.emergencyContact ?? '',
+    homeAddress: data?.data?.homeAddress ?? '',
   });
   useEffect(() => {
     if (data?.data) {
       setFormData({
-        name: data.data.name ?? '',
-        nickname: data.data.nickname ?? '',
-        gender: data.data.gender ?? '',
-        age: String(data.data.age ?? ''),
-        maritalStatus: data.data.maritalStatus ?? '',
-        childrenStatus: data.data.childrenStatus ?? '',
-        phone: data.data.phone ?? '',
-        email: data.data.email ?? '',
-        companyName: data.data.companyName ?? '',
-        position: data.data.position ?? '',
-        companySize: data.data.companySize ?? '',
-        annualIncome: data.data.annualIncome ?? '',
-        companyAddress: data.data.companyAddress ?? '',
-        emergencyContact: data.data.emergencyContact ?? '',
-        homeAddress: data.data.homeAddress ?? '',
+        name: data.data?.name ?? '',
+        nickname: data.data?.nickname ?? '',
+        gender: data.data?.gender ?? '',
+        age: String(data.data?.age ?? ''),
+        maritalStatus: data.data?.maritalStatus ?? '',
+        childrenStatus: data.data?.childrenStatus ?? '',
+        phone: data.data?.phone ?? '',
+        email: data.data?.email ?? '',
+        companyName: data.data?.companyName ?? '',
+        position: data.data?.position ?? '',
+        companySize: data.data?.companySize ?? '',
+        annualIncome: data.data?.annualIncome ?? '',
+        companyAddress: data.data?.companyAddress ?? '',
+        emergencyContact: data.data?.emergencyContact ?? '',
+        homeAddress: data.data?.homeAddress ?? '',
       });
     }
   }, [data]);
@@ -135,7 +143,11 @@ export default function Profile() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <KeyboardAvoidingView
+      keyboardVerticalOffset={50}
+      className="flex-1"
+      behavior={'padding'}
+      style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* 固定的顶部导航 */}
       <View className="px-4 py-4">
         <View className="flex-row items-center justify-between">
@@ -150,9 +162,6 @@ export default function Profile() {
       {/* 可滚动的内容区域 */}
       <ScrollView
         className="flex-1 px-4"
-        contentContainerStyle={{
-          paddingBottom: 160,
-        }}
         showsVerticalScrollIndicator={false}>
         <View className="flex-col gap-1 rounded-xl bg-white py-2">
           {formFields.map((field, index) => (
@@ -203,6 +212,6 @@ export default function Profile() {
           </LinearGradient>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
