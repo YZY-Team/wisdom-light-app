@@ -1,13 +1,4 @@
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Platform,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,98 +7,15 @@ import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { Message, useWebSocketStore } from '~/store/websocketStore';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useUserStore } from '~/store/userStore';
-import { usePathname } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { initiateCall } from '~/api/have/dialog';
 import { cancelCall } from '~/api/have/dialog';
 import { fileApi } from '~/api/who/file';
-type MessageProps = {
-  content: string;
-  time: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  isSelf?: boolean;
-  imageUrl?: string;
-  audioUrl?: string;
-};
-
-const MessageItem = ({ content, time, user, isSelf, imageUrl, audioUrl }: MessageProps) => {
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const playSound = async () => {
-    if (!audioUrl) return;
-
-    try {
-      if (sound) {
-        if (isPlaying) {
-          await sound.stopAsync();
-          setIsPlaying(false);
-        } else {
-          await sound.playAsync();
-          setIsPlaying(true);
-        }
-      } else {
-        const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUrl });
-        setSound(newSound);
-
-        newSound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
-            setIsPlaying(false);
-          }
-        });
-
-        await newSound.playAsync();
-        setIsPlaying(true);
-      }
-    } catch (error) {
-      console.error('播放语音消息失败:', error);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
-
-  return (
-    <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
-      <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
-      <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
-        {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
-        <View className={`max-w-[70%] rounded-2xl p-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} className="h-40 w-40 rounded-md" contentFit="cover" />
-          ) : audioUrl ? (
-            <TouchableOpacity onPress={playSound} className="flex-row items-center">
-              <Ionicons
-                name={isPlaying ? 'pause-circle' : 'play-circle'}
-                size={24}
-                color={isSelf ? '#fff' : '#333'}
-              />
-              <Text className={`ml-2 ${isSelf ? 'text-white' : 'text-gray-800'}`}>
-                {isPlaying ? '正在播放语音...' : '点击播放语音'}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text className={isSelf ? 'text-white' : 'text-gray-800'}>{content}</Text>
-          )}
-        </View>
-        <Text className="mt-1 text-xs text-gray-400">{time}</Text>
-      </View>
-    </View>
-  );
-};
+import MessageItem, { MessageProps } from '~/app/components/MessageItem';
+import { useFriendDetail } from '~/queries/friend';
 
 export default function PrivateChat() {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -118,6 +26,17 @@ export default function PrivateChat() {
   const headerHeight = useHeaderHeight();
   console.log('对方id', targetUserId);
 
+  // 获取好友详情
+  const { data: friendData, isLoading: friendLoading } = useFriendDetail(targetUserId as string);
+  const [friendInfo, setFriendInfo] = useState<any>(null);
+
+  // 当好友详情加载完成时更新状态
+  useEffect(() => {
+    if (friendData && !friendLoading) {
+      setFriendInfo(friendData.data);
+    }
+  }, [friendData, friendLoading]);
+  
   // 新增的状态
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
@@ -126,6 +45,8 @@ export default function PrivateChat() {
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
   const [showVideoCallModal, setShowVideoCallModal] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string>('');
+  // 添加新状态用于全局遮罩层
+  const [showGlobalOverlay, setShowGlobalOverlay] = useState(false);
 
   // 从 Zustand store 获取消息
   const messages = useWebSocketStore((stats) => stats.messages);
@@ -134,6 +55,46 @@ export default function PrivateChat() {
 
   // WebSocket 上下文
   const { sendMessage } = useWebSocketContext();
+
+  // 获取 markMessagesAsRead 函数
+  const { markMessagesAsRead } = useWebSocketStore();
+
+  // 监听新消息并自动标记已读
+  useEffect(() => {
+    const unsubscribe = useWebSocketStore.subscribe((state, prevState) => {
+      // 获取当前对话的消息
+      const currentDialogMessages = state.messages[String(dialogId)] || [];
+      const prevDialogMessages = prevState.messages[String(dialogId)] || [];
+
+      // 如果有新消息（当前消息数量大于之前的消息数量）
+      if (currentDialogMessages.length > prevDialogMessages.length) {
+        // 找出新消息
+        const newMessages = currentDialogMessages.filter(
+          (msg) => !prevDialogMessages.some((prevMsg) => prevMsg.timestamp === msg.timestamp)
+        );
+
+        // 如果有新消息且不是自己发送的，则标记为已读
+        const hasUnreadMessages = newMessages.some(
+          (msg) => msg.senderId !== userInfo?.globalUserId
+        );
+
+        if (hasUnreadMessages) {
+          markMessagesAsRead(String(dialogId), String(targetUserId));
+        }
+      }
+    });
+
+    // 组件卸载时取消订阅
+    return () => {
+      unsubscribe();
+    };
+  }, [dialogId, targetUserId, userInfo?.globalUserId, markMessagesAsRead]);
+
+  // 全局关闭操作浮窗的函数
+  const closeAllActionPopups = () => {
+    setShowGlobalOverlay(false);
+  };
+
 
   // 将 Zustand 的消息转换为组件需要的格式
   // 将时间格式化函数提取出来
@@ -165,17 +126,20 @@ export default function PrivateChat() {
     }
   }, []);
 
-  // 将头像URL缓存到 Map 中
-  const avatarCache = useRef(new Map<string, string>());
+  // 获取头像URL，优先使用真实头像，没有则使用默认头像
   const getAvatarUrl = useCallback((senderId: string) => {
-    if (!avatarCache.current.has(senderId)) {
-      avatarCache.current.set(
-        senderId,
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`
-      );
+    // 如果是当前用户
+    if (senderId === userInfo?.globalUserId) {
+      return userInfo?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`;
+    } 
+    // 如果是好友
+    else if (senderId === targetUserId && friendInfo) {
+      // 优先使用自定义头像，其次使用原始头像，最后使用默认头像
+      return friendInfo.customAvatarUrl || friendInfo.avatarUrl || friendInfo.originalAvatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`;
     }
-    return avatarCache.current.get(senderId)!;
-  }, []);
+    // 默认头像
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`;
+  }, [userInfo, friendInfo, targetUserId]);
 
   // 移除其他重复的性能统计代码
   // 发送消息
@@ -183,13 +147,16 @@ export default function PrivateChat() {
 
   const handleSendMessage = useCallback(() => {
     if (!inputMessage.trim()) return;
-
+    const textContent = JSON.stringify({
+      type: 'text',
+      text: inputMessage,
+    });
     const newMessage: Message = {
       type: 'PRIVATE_CHAT',
       senderId: userInfo!.globalUserId,
       receiverId: targetUserId as string,
       dialogId: dialogId as string,
-      textContent: inputMessage,
+      textContent: textContent,
       timestamp: String(Date.now()),
     };
     console.log('发送消息', newMessage);
@@ -225,16 +192,44 @@ export default function PrivateChat() {
         timeCache.set(msg.timestamp, time);
       }
 
+      // 解析消息内容
+      let content = '';
+      let imageUrl;
+      let audioUrl;
+
+      try {
+        const parsedContent = JSON.parse(msg.textContent);
+        console.log('解析消息内容:', { parsedContent, isSelf, senderId: msg.senderId, myId: userInfo?.globalUserId });
+
+        if (parsedContent.type === 'text') {
+          content = parsedContent.text;
+        } else if (parsedContent.type === 'image') {
+          content = '[图片消息]';
+          imageUrl = parsedContent.url;
+        } else if (parsedContent.type === 'audio') {
+          content = '[语音消息]';
+          audioUrl = parsedContent.url;
+          console.log('识别到语音消息:', { audioUrl, isSelf });
+        } else {
+          // 默认情况，直接显示文本内容
+          content = msg.textContent;
+        }
+      } catch (error) {
+        // 如果解析失败，直接显示原始内容
+        content = msg.textContent;
+        console.warn('消息解析失败:', { content, error });
+      }
+
       return {
-        content: msg.textContent,
+        content,
         time,
         user: {
           name: isSelf ? '我' : (userName as string),
           avatar: getAvatarUrl(msg.senderId),
         },
         isSelf,
-        imageUrl: msg.imageUrl,
-        audioUrl: msg.audioUrl,
+        imageUrl,
+        audioUrl,
       };
     });
   }, [visibleMessages, userInfo?.globalUserId, userName, formatTime, getAvatarUrl]);
@@ -264,8 +259,15 @@ export default function PrivateChat() {
     prevMessagesCount.current = formattedMessages.length;
   }, [formattedMessages]);
 
+  // 使用导入的MessageItem组件，传递全局控制函数
+  const MessageItemWithPopupControl = (props: MessageProps) => (
+    <MessageItem
+      {...props}
+    />
+  );
+
   const renderItem = useCallback(
-    ({ item }: { item: MessageProps }) => <MessageItem {...item} />,
+    ({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />,
     []
   );
 
@@ -296,9 +298,12 @@ export default function PrivateChat() {
           },
           relatedId: randomId,
         });
-        
+
         console.log('上传图片', response);
-        
+        const textContent = JSON.stringify({
+          type: 'image',
+          url: response.data.url,
+        });
         if (response.code === 200 && response.data) {
           // 处理图片发送
           const newMessage: Message = {
@@ -306,15 +311,16 @@ export default function PrivateChat() {
             senderId: userInfo!.globalUserId,
             receiverId: targetUserId as string,
             dialogId: dialogId as string,
-            textContent: '[图片消息]',
+            textContent: textContent,
             timestamp: String(Date.now()),
-            imageUrl: response.data.url,
           };
 
           // 发送消息
           sendMessage(JSON.stringify(newMessage));
           // 存储消息
           addMessage({ ...newMessage, status: 'READ' });
+          // 收起工具栏
+          setShowToolbar(false);
         } else {
           console.error('图片上传失败:', response);
         }
@@ -349,67 +355,49 @@ export default function PrivateChat() {
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
+      console.log('录制的语音URI:', uri);
+
       setRecording(null);
       setIsRecording(false);
+      const randomId = Date.now().toString();
+      const response = await fileApi.uploadImage({
+        file: {
+          uri,
+          type: 'audio/mpeg',
+          name: 'audio.mp3',
+        },
+        relatedId: randomId,
+      });
+      console.log('上传语音响应:', response);
 
       // 处理语音消息发送
-      if (uri) {
+      if (response.code === 200 && response.data) {
+        const textContent = JSON.stringify({
+          type: 'audio',
+          url: response.data.url,
+        });
+        console.log('准备发送语音消息:', textContent);
+        
         const newMessage: Message = {
           type: 'PRIVATE_CHAT',
           senderId: userInfo!.globalUserId,
           receiverId: targetUserId as string,
           dialogId: dialogId as string,
-          textContent: '[语音消息]',
+          textContent: textContent,
           timestamp: String(Date.now()),
-          audioUrl: uri,
         };
 
         // 发送消息
+        console.log('发送语音消息对象:', newMessage);
         sendMessage(JSON.stringify(newMessage));
         // 存储消息
         addMessage({ ...newMessage, status: 'READ' });
+        // 收起工具栏
+        setShowToolbar(false);
       }
     } catch (err) {
       console.error('停止录音失败:', err);
     }
-  };
-
-  // 语音通话
-  const handleVoiceCall = () => {
-    // 处理语音通话逻辑
-    setShowVoiceCallModal(true);
-
-    // 调用语音通话API
-    initiateCall({
-      callerId: Number(userInfo?.globalUserId),
-      receiverId: Number(targetUserId),
-      callType: 'AUDIO',
-    }).then(res => {
-      if (res.code === 200) {
-        console.log('语音通话', res);
-        setCurrentCallId(res.data.callId);
-      }
-    });
-  };
-
-  // 视频通话
-  const handleVideoCall = () => {
-    // 处理视频通话逻辑
-    setShowVideoCallModal(true);
-
-    // 调用视频通话API
-    initiateCall({
-      callerId: userInfo!.globalUserId,
-      receiverId: targetUserId as string,
-      callType: 'VIDEO',
-    }).then(res => {
-      if (res.code === 200) {
-        setCurrentCallId(res.data.callId);
-        console.log('视频通话', res);
-      }
-    }).catch(err=>{
-      console.log('视频通话失败',err);
-    });
   };
 
   // 处理挂断通话
@@ -457,6 +445,24 @@ export default function PrivateChat() {
           />
         </View>
 
+        {/* 全局遮罩层，点击任何地方关闭浮窗 */}
+        {showGlobalOverlay && (
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100%',
+              height: '100%',
+              zIndex: 40,
+            }}
+            onPress={closeAllActionPopups}
+          />
+        )}
+
         {/* 底部输入框 */}
         <View className="px-4 pb-4" style={{ paddingBottom: insets.bottom + 20 || 20 }}>
           <View className="flex-row items-center">
@@ -485,14 +491,14 @@ export default function PrivateChat() {
                 </View>
               </Pressable>
             </View>
-            {/* <TouchableOpacity
+            <TouchableOpacity
               onPress={() => {
                 setShowToolbar(!showToolbar);
                 setIsKeyboardVisible(false);
               }}
               className="ml-2">
               <Ionicons name="add-circle" size={32} color="#1483FD" />
-            </TouchableOpacity> */}
+            </TouchableOpacity>
           </View>
 
           {/* 工具栏 */}
@@ -519,20 +525,6 @@ export default function PrivateChat() {
                 <Text className="mt-1 text-xs text-gray-600">
                   {isRecording ? '松开结束' : '按住说话'}
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleVoiceCall} className="items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                  <Ionicons name="call" size={24} color="#1483FD" />
-                </View>
-                <Text className="mt-1 text-xs text-gray-600">语音聊天</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleVideoCall} className="items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                  <Ionicons name="videocam" size={24} color="#1483FD" />
-                </View>
-                <Text className="mt-1 text-xs text-gray-600">视频聊天</Text>
               </TouchableOpacity>
             </View>
           )}

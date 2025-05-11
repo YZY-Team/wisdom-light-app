@@ -71,6 +71,7 @@ export type CourseVideo = {
     sequence: number;
     accessType: string;
     videoUrl: string;
+    coverUrl: string;
     fileName: string | null;
     status: string;
   };

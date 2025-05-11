@@ -140,7 +140,7 @@ export default function GroupChat() {
   const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const userInfo = useUserStore((state) => state.userInfo);
-  const { groupId, groupName, groupAvatarUrl } = useLocalSearchParams();
+  const { groupId, groupName, dialogId, groupAvatarUrl } = useLocalSearchParams();
   const [inputMessage, setInputMessage] = useState('');
   const headerHeight = useHeaderHeight();
 
@@ -231,10 +231,9 @@ export default function GroupChat() {
 
     const newMessage: Message = {
       type: 'GROUP_CHAT',
-      senderId: userInfo!.globalUserId,
-      groupId: groupId as string,
+      dialogId: dialogId as string,
       textContent: inputMessage,
-      timestamp: String(Date.now()),
+      // clientMessageId: String(Date.now()),
     };
     console.log('发送群消息', newMessage);
 
@@ -267,7 +266,7 @@ export default function GroupChat() {
       // 使用缓存的时间格式化结果
       let time = timeCache.get(msg.timestamp);
       if (!time) {
-        time = formatTime(msg.timestamp);
+        time = "xxxxx";
         timeCache.set(msg.timestamp, time);
       }
 

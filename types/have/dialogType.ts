@@ -1,8 +1,8 @@
 // 对话类型枚举
 export enum DialogType {
-  Type1 = '1',
-  Type2 = '2',
-  Type3 = '3'
+  Type1 = 1,
+  Type2 = 2,
+  Type3 = 3
 }
 
 // 对话信息

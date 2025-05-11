@@ -11,6 +11,14 @@ export const useFriendList = () => {
   return { data, isLoading, error };
 };
 
+// 获取好友详情
+export const useFriendDetail = (id: string) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['friendDetail', id],
+    queryFn: () => friendApi.getFriend(id),
+  });
+  return { data, isLoading, error };
+};
 // 获取待处理的好友请求
 export const usePendingRequests = () => {
   const { data, isLoading, error, refetch } = useQuery({
@@ -69,7 +77,7 @@ export const useFindFriends = (username: string) => {
       return data.data.filter(Boolean) as unknown as FindFriend[];
     }
     // 处理单个对象情况
-    return data.data ? [data.data].filter(Boolean) as unknown as FindFriend[] : [];
+    return data.data ? ([data.data].filter(Boolean) as unknown as FindFriend[]) : [];
   };
 
   return {

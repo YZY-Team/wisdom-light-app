@@ -61,7 +61,8 @@
     "react-native-webrtc": "^124.0.5",
     "react-use-websocket": "^4.13.0",
     "tailwind-merge": "^3.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-media-library": "~17.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

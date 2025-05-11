@@ -13,13 +13,11 @@ const CourseItem = memo(
   ({
     title,
     description,
-    episodeCount,
     courseId, // 新增 courseId 参数
-    coverUrl
+    coverUrl,
   }: {
     title: string;
     description: string;
-    episodeCount: number;
     courseId: string; // 新增 courseId 类型
     coverUrl: string;
   }) => {
@@ -47,8 +45,8 @@ const CourseItem = memo(
               cachePolicy="memory-disk"
               priority="high"
             />
-            <View className="absolute left-0 top-0 h-full w-full flex-col justify-between py-2">
-              <View className="flex w-full items-end justify-center rounded pr-2">
+            <View className="absolute left-0 top-0 h-full items-center w-full flex-col justify-center py-2">
+              {/* <View className="flex w-full items-end justify-center rounded pr-2">
                 <Image
                   source={vip}
                   className="rounded-1 h-[18px] w-[36px]"
@@ -56,19 +54,10 @@ const CourseItem = memo(
                   transition={200}
                   cachePolicy="memory-disk"
                 />
-              </View>
-              <View className="h-5 w-full items-center justify-center rounded">
-                <Text className="text-[12px] font-[700] text-white">{title}</Text>
-              </View>
-              {/* <View className="ml-1 items-end justify-center rounded px-1">
-                <BlurView
-                  experimentalBlurMethod="dimezisBlurView"
-                  intensity={10}
-                  tint="dark"
-                  className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]">
-                  <Text className="px-2 py-1 text-[10px] text-white">共{episodeCount}集</Text>
-                </BlurView>
               </View> */}
+              <View className="h-5 w-full items-center  justify-center rounded">
+                <Text className="text-[14px] font-[600] text-black">{title}</Text>
+              </View>
             </View>
           </View>
           <View className="ml-3 flex-1">
@@ -89,7 +78,7 @@ const CourseItem = memo(
             videoList.map((video, index) => (
               <Pressable
                 key={index}
-                className="mb-2 flex-row items-center rounded-lg px-1"
+                className="mb-2 flex-row items-center  rounded-lg px-1"
                 onPress={() =>
                   router.push({
                     pathname: '/videoDetail',
@@ -100,13 +89,11 @@ const CourseItem = memo(
                   <View>
                     <Text className="text-[#00000066]">{index + 1}</Text>
                   </View>
-                  <View className="relative ml-2 w-[30%]">
+                  <View className="relative border rounded-lg border-[#D9D9D9]/10 ml-2 w-[30%]">
                     <Image
-                      // source={{
-                      //   uri:
-                      //     video.thumbnailUrl ||
-                      //     'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
-                      // }}
+                      source={{
+                        uri: video.coverUrl,
+                      }}
                       className="aspect-[110/60] w-full rounded-lg"
                       contentFit="cover"
                       transition={200}
@@ -116,7 +103,7 @@ const CourseItem = memo(
                     <View className="absolute left-0 top-0 flex h-full w-full items-center justify-center px-1">
                       <View className="max-w-[80%]">
                         <Text
-                          className="truncate bg-white p-1 text-[1.6vw] font-[700] text-[#1483FD]"
+                          className="truncate  p-1 text-[2vw] font-[700] text-black"
                           numberOfLines={1}>
                           {video.title}
                         </Text>
@@ -134,7 +121,7 @@ const CourseItem = memo(
                   </View>
                   <View className="ml-3 flex-1">
                     <Text className="text-sm font-[600]" numberOfLines={1}>
-                      {index + 1}.{video.title}
+                      {video.title}
                     </Text>
                     <Text className="mt-1 text-xs text-[#00000066]" numberOfLines={2}>
                       {video.description}
@@ -171,8 +158,6 @@ export default function VideoCategory({
   const courses = data?.data.records || [];
   console.log('courses', courses);
 
- 
-
   return (
     <>
       {/* 二级分类 */}
@@ -195,7 +180,6 @@ export default function VideoCategory({
             title={course.title}
             description={course.description}
             coverUrl={course.coverUrl}
-            episodeCount={course.episodeCount ?? 0}
             courseId={course.id} // 新增 courseId 参数
           />
         )) || <Text className="text-center text-gray-500">暂无课程</Text>}
