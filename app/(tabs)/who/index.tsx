@@ -1,5 +1,5 @@
 import { Href, Link, useFocusEffect } from 'expo-router';
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -114,7 +114,7 @@ export default function WhoIndex() {
         console.log('更新成功:', res.data);
       }
     } catch (error) {
-      console.log('更新失败:', error);
+      Alert.alert('ID重复,请重新输入');
     }
   };
 
@@ -409,7 +409,7 @@ export default function WhoIndex() {
           <Pressable onPress={(e) => e.stopPropagation()}>
             <View className="rounded-lg bg-white p-4">
               <Text className="mb-2 text-base text-gray-600">
-                {editType === 'nickname' ? '编辑昵称' : '编辑用户名'}
+                {editType === 'nickname' ? '编辑昵称' : '编辑用ID'}
               </Text>
               <TextInput
                 value={editValue}

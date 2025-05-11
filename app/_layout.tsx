@@ -11,7 +11,7 @@ import { WebRTCProvider } from '~/contexts/WebRTCContext';
 import { ClientProvider } from '~/components/Providers/ClientProvider';
 import { registerApp, sendAuthRequest } from "expo-native-wechat";
 import { useEffect } from 'react';
-
+import 'react-native-gesture-handler';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

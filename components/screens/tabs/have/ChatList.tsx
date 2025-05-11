@@ -160,6 +160,7 @@ export default function ChatList() {
       return {
         id: dialog.dialogId,
         dialogId: dialog.dialogId,
+        dialogType: dialog.dialogType,
         avatar: dialog.avatarUrl ? { uri: dialog.avatarUrl } : defaultAvatar,
         name: dialog.title || '未知对话',
         lastMessage: dialog.lastMessageContent || '暂无消息',
@@ -278,21 +279,15 @@ export default function ChatList() {
     (chat) => chat.lastMessage !== '暂无消息' || chat.dialogId
   ); // 只显示有消息或有对话ID的聊天
 
-  const handleChatPress = async (userName: string, targetUserId: string, dialogId: string) => {
-    const startTime = performance.now();
+  const handleChatPress = async (userName: string, targetUserId: string, dialogId: string,dialogType:number) => {
     try {
       // 标记该对话的消息为已读
-      console.log('标记消息为已读开始', dialogId, targetUserId);
       markMessagesAsRead(dialogId, targetUserId);
-
-      const routeStart = performance.now();
+      
       router.push({
         pathname: `/private-chat/${dialogId}`,
         params: { userName, dialogId, targetUserId },
       });
-      console.log('路由跳转耗时:', performance.now() - routeStart, 'ms');
-
-      console.log('总耗时:', performance.now() - startTime, 'ms');
     } catch (error) {
       console.log('处理对话出错:', error);
     }
@@ -312,7 +307,7 @@ export default function ChatList() {
         <ChatItem
           key={chat.id + chat.dialogId}
           {...chat}
-          onPress={() => handleChatPress(chat.name, chat.id, chat.dialogId)}
+          onPress={() => handleChatPress(chat.name, chat.id, chat.dialogId,chat.dialogType)}
         />
       ))}
     </ScrollView>

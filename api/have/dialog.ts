@@ -52,6 +52,11 @@ export const dialogApi = {
   addGroupMembers: (dialogId: string, memberIds: string[]) => {
     return request.post(`/dialogs/group/${dialogId}/members`, memberIds);
   },
+
+  // 加入聊天广场
+  joinChatSquare: () => {
+    return request.post(`/dialogs/square`);
+  },
 };
 
 // 定义通话响应类型

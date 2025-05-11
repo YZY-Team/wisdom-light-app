@@ -8,6 +8,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
+import { dialogApi } from '~/api/have/dialog';
 
 type MessageProps = {
   content: string;
@@ -90,6 +91,28 @@ export default function ChatSquare() {
       isSelf: true,
     },
   ]);
+  const [dialogId, setDialogId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  // 加入聊天广场
+  useEffect(() => {
+    const joinSquare = async () => {
+      try {
+        setLoading(true);
+        const response = await dialogApi.joinChatSquare();
+        if (response && response.data) {
+          console.log('加入聊天广场成功:', response.data);
+          setDialogId(response.data.toString());
+        }
+      } catch (error) {
+        console.error('加入聊天广场失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    joinSquare();
+  }, []);
 
   useEffect(() => {
     if (lastMessage) {
@@ -118,7 +141,7 @@ export default function ChatSquare() {
   }, [lastMessage]);
 
   const handleSendMessage = useCallback(() => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || !dialogId) return;
 
     const newMessage = {
       content: inputMessage,
@@ -136,16 +159,16 @@ export default function ChatSquare() {
     // 发送到WebSocket
     console.log('发送消息:', {
       type: 'GROUP_CHAT',
-      dialogId: "1920783225209827330",
-      groupId: "1920783225209827330",
+      dialogId: dialogId,
+      groupId: dialogId,
       textContent: inputMessage,
       clientMessageId: 'client-msg-' + Date.now(),
     });
     sendMessage(
       JSON.stringify({
         type: 'GROUP_CHAT',
-        dialogId: "1920783225209827330",
-        groupId: "1920783225209827330",
+        dialogId: dialogId,
+        groupId: dialogId,
         textContent: inputMessage,
         clientMessageId: 'client-msg-' + Date.now(),
       })
@@ -155,7 +178,7 @@ export default function ChatSquare() {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
-  }, [inputMessage, sendMessage]);
+  }, [inputMessage, sendMessage, dialogId]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -246,7 +269,7 @@ export default function ChatSquare() {
         {/* 消息区域 */}
         <View className="flex-1">
           <Text className="px-4 py-2 text-center text-sm text-[#757575]">
-            欢迎来到聊天广场，请文明发言！
+            {loading ? '正在加入聊天广场...' : '欢迎来到聊天广场，请文明发言！'}
           </Text>
           <ScrollView 
             ref={scrollViewRef}
