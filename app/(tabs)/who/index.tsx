@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
 import { useState } from 'react';
@@ -20,6 +20,7 @@ import { NativeWechatConstants, sendAuthRequest, shareText } from 'expo-native-w
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { useAuthStore } from '~/store/authStore';
 import { useActiveAchievementBook } from '~/queries/achievement';
+import { useQuery } from '@tanstack/react-query';
 
 const testCreateGroupDialog = ({
   title,
@@ -77,17 +78,24 @@ export default function WhoIndex() {
   const [groupDescription, setGroupDescription] = useState('');
   const { initialize, isInitializing } = useDatabase();
   const setIsLoggedIn = useAuthStore((state) => state.setIsLoggedIn);
-  useEffect(() => {
-    AsyncStorage.getItem('token').then((token) => {
-      console.log('token', token);
-    });
-    userApi.me().then((res) => {
-      if (res.code === 200 && res.data) {
-        console.log('用户信息', res.data);
-        setUserInfo(res.data);
-      }
-    });
-  }, []);
+  const { data: userinfoQuery, refetch: refetchUserinfo } = useQuery({
+    queryKey: ['userinfo'],
+    queryFn: () => userApi.me().then((res) => res.data),
+  });
+
+
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('token').then((token) => {
+        console.log('token', token);
+      });
+      refetchUserinfo().then((res) => {
+        if (res.data) {
+          setUserInfo(res.data);
+        }
+      });
+    }, []),
+  );
 
   const handleEdit = (type: 'nickname' | 'username') => {
     setEditType(type);
@@ -141,7 +149,6 @@ export default function WhoIndex() {
           const filename = uri.split('/').pop() || 'image.jpg';
           const randomId = Date.now().toString();
 
-          
           const response = await fileApi.uploadImage({
             file: {
               uri,
@@ -230,12 +237,12 @@ export default function WhoIndex() {
   };
   const { data: activeAchievementBook, refetch } = useActiveAchievementBook();
 
-  console.log("activeAchievementBook",activeAchievementBook);
-  
+  console.log('activeAchievementBook', activeAchievementBook);
+
   // 处理创建成就书
   const handleCreateAchievementBook = async () => {
     console.log('创建成就书', activeAchievementBook);
-    if (activeAchievementBook?.code===200) {
+    if (activeAchievementBook?.code === 200) {
       alert('您已经创建了成就书');
       return;
     }
@@ -330,16 +337,20 @@ export default function WhoIndex() {
             title="会员充值"
             href="/membership"
           />
-          <MenuItem
-            icon={require('~/assets/images/who/join.png')}
-            title="申请入驻"
-            href="/become-mentor"
-          />
-          <MenuItem
-            icon={require('~/assets/images/who/join.png')}
-            title="导师入口"
-            href="/tutor-entrance"
-          />
+          {userInfo?.tutorType === '用户' ? (
+            <MenuItem
+              icon={require('~/assets/images/who/join.png')}
+              title="申请入驻"
+              href="/become-mentor"
+            />
+          ) : (
+            <MenuItem
+              icon={require('~/assets/images/who/join.png')}
+              title="导师入口"
+              href="/tutor-entrance"
+            />
+          )}
+
           <MenuItem
             icon={require('~/assets/images/who/customer-service.png')}
             title="人工客服"

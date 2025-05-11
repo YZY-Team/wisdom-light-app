@@ -9,7 +9,7 @@ const QUERY_KEYS = {
   DECLARATION_DETAIL: 'declarationDetail',
 } as const;
 
-// 获取今日宣告
+// 获取今
 export const useTodayDeclaration = (bookId: string) => {
   return useQuery({
     queryKey: [QUERY_KEYS.TODAY_DECLARATION, bookId],

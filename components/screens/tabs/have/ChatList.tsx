@@ -14,6 +14,7 @@ import { useUserStore } from '~/store/userStore';
 import { cssInterop } from 'nativewind';
 import { Image, ImageSource } from 'expo-image';
 import { useFriendList } from '~/queries/friend';
+import { useWebSocketContext } from '~/contexts/WebSocketContext';
 
 cssInterop(Image, { className: 'style' });
 
@@ -37,13 +38,7 @@ const isValidUrl = (url: string) => {
   }
 };
 
-// 获取头像源
-const getAvatarSource = (avatarUrl?: string | null) => {
-  if (isValidUrl(avatarUrl ?? '')) {
-    return { uri: avatarUrl || '' };
-  }
-  return defaultAvatar;
-};
+
 
 // ChatItem 组件保持不变
 const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }: ChatItemProps) => (
@@ -72,11 +67,19 @@ const ChatItem = ({ id, avatar, name, lastMessage, time, unreadCount, onPress }:
 
 export default function ChatList() {
   const { messages, markMessagesAsRead } = useWebSocketStore();
+  const {lastMessage}=useWebSocketContext()
   const currentUserId = useUserStore((state) => state.userInfo?.globalUserId);
   const { data: dialogResponse, isLoading, refetch } = useDialogList();
   const { data: friendList } = useFriendList();
   const [dialogs, setDialogs] = useState<Dialog[]>([]);
-
+  useEffect(()=>{
+    console.log("lastMessage",lastMessage)
+    const dialog=dialogResponse?.data.find((dialog)=>dialog.dialogId===lastMessage?.data.dialogId)
+    console.log("dialog",dialog)
+    if(!dialog){
+      refetch()
+    }
+  },[lastMessage])
   // 刷新对话列表
   useEffect(() => {
     // 每次组件挂载或激活时刷新对话列表
@@ -158,9 +161,7 @@ export default function ChatList() {
     const rawMessageContent = lastMessage?.textContent || dialog.lastMessageContent || '暂无消息';
     
     // 解析并格式化消息内容
-    const formattedMessageContent = dialog.dialogType === 1 
-      ? parseMessageContent(rawMessageContent) 
-      : rawMessageContent;
+    const formattedMessageContent = parseMessageContent(rawMessageContent);
 
     const lastMessageTime = lastMessage?.timestamp
       ? (() => {
@@ -183,8 +184,17 @@ export default function ChatList() {
 
     const unreadCount =
       dialog.unreadCount ||
-      dialogMessages.filter((msg) => msg.senderId !== currentUserId && msg.status !== 'READ')
-        .length;
+      dialogMessages.filter((msg) => {
+        // 私聊消息：发送者不是当前用户且状态不是已读
+        if (msg.type === 'PRIVATE_CHAT') {
+          return msg.senderId !== currentUserId && msg.status !== 'READ';
+        }
+        // 群聊消息：发送者不是当前用户且当前用户不在已读列表中
+        else if (msg.type === 'GROUP_CHAT') {
+          return msg.senderId !== currentUserId && (!msg.readBy || !msg.readBy.includes(currentUserId || ''));
+        }
+        return false;
+      }).length;
 
     // 如果对话类型为1（私聊），尝试从好友列表获取头像
     let avatarSource = defaultAvatar;
@@ -223,7 +233,11 @@ export default function ChatList() {
   ) => {
     try {
       // 标记该对话的消息为已读
-      markMessagesAsRead(dialogId, targetUserId);
+      if (dialogType === 2) { // 群聊
+        markMessagesAsRead(dialogId, currentUserId || '');
+      } else { // 私聊
+        markMessagesAsRead(dialogId, targetUserId);
+      }
 
       // 根据对话类型决定跳转到私聊还是群聊
       if (dialogType === 2) {

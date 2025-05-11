@@ -30,14 +30,21 @@ function useWeeklyDeclarationCreation(bookId: string, userId: string) {
     queryKey: bookId ? weeklyDeclarationKeys.current(bookId) : ['weeklyDeclaration', 'current', 'none'],
     queryFn: async () => {
       if (!bookId) return null;
-      const response = await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
-      if (response.code === 200) {
-        return response.data;
+      try {
+        const response = await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
+        if (response.code === 200) {
+          return response.data;
+        }
+        return null;
+      } catch (error) {
+        console.log("error",error);
+        return null;
       }
-      return null;
     },
     enabled: !!bookId, // 只有当 bookId 存在时才启用查询
   });
+  console.log("currentDeclaration",currentDeclaration);
+  
   
   const createMutation = useCreateWeeklyDeclaration();
   const [hasTriedCreating, setHasTriedCreating] = useState(false);
@@ -50,7 +57,7 @@ function useWeeklyDeclarationCreation(bookId: string, userId: string) {
     // 4. 当前没有周宣告数据
     // 5. 没有正在进行的创建操作
     // 6. 之前没有尝试过创建
-    if (bookId && userId && !isLoading && !currentDeclaration && !createMutation.isPending && !hasTriedCreating) {
+    if (bookId && userId && !isLoading && currentDeclaration && !createMutation.isPending && !hasTriedCreating) {
       const newDeclaration: Omit<WeeklyDeclarationDTO, 'id'> = {
         bookId: bookId,
         userId: userId, // 使用用户的 globalUserId

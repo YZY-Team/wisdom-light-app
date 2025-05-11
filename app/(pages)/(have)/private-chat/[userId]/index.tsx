@@ -14,7 +14,7 @@ import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { cancelCall } from '~/api/have/dialog';
 import { fileApi } from '~/api/who/file';
-import MessageItem, { MessageProps } from '~/app/components/MessageItem';
+import MessageItem, { MessageProps, AudioProvider } from '~/app/components/MessageItem';
 import { useFriendDetail } from '~/queries/friend';
 
 export default function PrivateChat() {
@@ -241,23 +241,7 @@ export default function PrivateChat() {
     setLoading(false);
   }, [loading]);
 
-  // 添加一个标记是否是首次加载的 ref
-  const isFirstLoad = useRef(true);
-  // 添加一个记录之前消息数量的 ref
-  const prevMessagesCount = useRef(0);
 
-  // 监听消息变化，判断是否需要滚动
-  useEffect(() => {
-    if (!scrollViewRef.current) return;
-
-    // 首次加载或有新消息时才滚动
-    if (isFirstLoad.current || formattedMessages.length > prevMessagesCount.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
-    }
-
-    isFirstLoad.current = false;
-    prevMessagesCount.current = formattedMessages.length;
-  }, [formattedMessages]);
 
   // 使用导入的MessageItem组件，传递全局控制函数
   const MessageItemWithPopupControl = (props: MessageProps) => (
@@ -266,12 +250,27 @@ export default function PrivateChat() {
     />
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />,
-    []
+  // 修改为使用 AudioProvider 包装
+  const renderFlatList = () => (
+    <AudioProvider>
+      <FlashList
+        data={[...formattedMessages].reverse()}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={
+          ({ item }: { item: MessageProps }) => (
+            <MessageItemWithPopupControl 
+              {...item}
+              messageId={`msg_${item.time}_${item.user.name}`} // 确保每个消息有唯一的ID
+            />
+          )
+        }
+        estimatedItemSize={100}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        inverted
+      />
+    </AudioProvider>
   );
-
-  const keyExtractor = useCallback((item: any, index: number) => `${item.time}-${index}`, []);
 
   // 图片选择器
   const pickImage = async () => {
@@ -433,16 +432,7 @@ export default function PrivateChat() {
 
         {/* 消息区域 */}
         <View className="flex-1">
-          <FlashList
-            data={[...formattedMessages].reverse()}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            estimatedItemSize={100}
-            contentContainerStyle={{ padding: 16 }}
-            inverted
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-          />
+          {renderFlatList()}
         </View>
 
         {/* 全局遮罩层，点击任何地方关闭浮窗 */}

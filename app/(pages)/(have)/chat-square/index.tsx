@@ -9,34 +9,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { dialogApi } from '~/api/have/dialog';
-
-type MessageProps = {
-  content: string;
-  time: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  isSelf?: boolean;
-};
-
-const MessageItem = ({ content, time, user, isSelf }: MessageProps) => (
-  <View className={`mb-4 flex-row ${isSelf ? 'justify-end' : 'justify-start'}`}>
-    {!isSelf && (
-      <Image source={{ uri: user.avatar }} className="mr-2 h-10 w-10 rounded-full" contentFit="cover" />
-    )}
-    <View className="max-w-[80%]">
-      {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
-      <View className={`rounded-2xl px-4 py-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}>
-        <Text className={`text-sm ${isSelf ? 'text-white' : 'text-gray-800'}`}>{content}</Text>
-        <Text className={`mt-1 text-xs ${isSelf ? 'text-white/40' : 'text-gray-400'}`}>{time}</Text>
-      </View>
-    </View>
-    {isSelf && (
-      <Image source={{ uri: user.avatar }} className="ml-2 h-10 w-10 rounded-full" contentFit="cover" />
-    )}
-  </View>
-);
+import { FlashList } from '@shopify/flash-list';
+import MessageItem, { MessageProps, AudioProvider } from '~/app/components/MessageItem';
+import { fileApi } from '~/api/who/file';
+import { useUserStore } from '~/store/userStore';
 
 export default function ChatSquare() {
   const insets = useSafeAreaInsets();
@@ -45,52 +21,9 @@ export default function ChatSquare() {
   const [showToolbar, setShowToolbar] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const { sendMessage, lastMessage, readyState } = useWebSocketContext();
-  const [messages, setMessages] = useState<MessageProps[]>([
-    {
-      content: '我上周参加了，学习积分讲得很实用，强烈推荐！',
-      time: '10:22',
-      user: {
-        name: 'Kitty',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kitty',
-      },
-    },
-    {
-      content: '我也觉得很不错，特别是关于个人成长部分的内容',
-      time: '10:23',
-      user: {
-        name: 'Rhea',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
-      },
-      isSelf: true,
-    },
-    {
-      content: '下次什么时候还有类似的活动？',
-      time: '10:25',
-      user: {
-        name: 'Tom',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tom',
-      },
-    },
-    {
-      content: "据说下个月中旬会有一场，主题是'智慧之光修行体系'",
-      time: '10:26',
-      user: {
-        name: 'Sarah',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-      },
-    },
-    {
-      content: '太好了，我一定要参加！',
-      time: '10:27',
-      user: {
-        name: 'Rhea',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
-      },
-      isSelf: true,
-    },
-  ]);
+  const { sendMessage, lastMessage } = useWebSocketContext();
+  const userInfo = useUserStore((state) => state.userInfo);
+  const [messages, setMessages] = useState<MessageProps[]>([]);
   const [dialogId, setDialogId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
@@ -118,93 +51,188 @@ export default function ChatSquare() {
     if (lastMessage) {
       try {
         const data = JSON.parse(lastMessage.data);
-        if (data.type === 'GROUP_CHAT') {
-          setMessages((prev) => [...prev, {
-            content: data.textContent,
-            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-            user: {
-              name: data.senderName || '未知用户',
-              avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.senderName || 'Unknown'}`,
+        // 只处理当前对话的消息
+        console.log('data', data, dialogId);
+        if (data.type === 'GROUP_CHAT' && data.dialogId === dialogId) {
+          let content = '';
+          let imageUrl: string | undefined;
+          let audioUrl: string | undefined;
+          let parsedContent = JSON.parse(data.textContent);
+          try {
+            if (parsedContent.type === 'text') {
+              content = parsedContent.text;
+            } else if (parsedContent.type === 'image') {
+              content = '[图片消息]';
+              imageUrl = parsedContent.url;
+            } else if (parsedContent.type === 'audio') {
+              content = '[语音消息]';
+              audioUrl = parsedContent.url;
+            } else {
+              content = data.textContent;
+            }
+          } catch {
+            content = data.textContent;
+          }
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              content,
+              time: new Date(Number(data.timestamp)).toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+              user: {
+                name: parsedContent.nickname || '未知用户',
+                avatar:
+                  parsedContent.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown`,
+              },
+              isSelf: false,
+              imageUrl,
+              audioUrl,
             },
-            isSelf: false
-          }]);
-          
-          // 滚动到底部
-          setTimeout(() => {
-            scrollViewRef.current?.scrollToEnd({ animated: true });
-          }, 100);
+          ]);
         }
       } catch (error) {
         console.log('解析消息失败:', error);
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, dialogId]);
 
   const handleSendMessage = useCallback(() => {
     if (!inputMessage.trim() || !dialogId) return;
+
+    const textContent = JSON.stringify({
+      type: 'text',
+      text: inputMessage,
+      avatar:
+        userInfo?.avatarUrl ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+      nickname: userInfo?.nickname || 'Me',
+    });
 
     const newMessage = {
       content: inputMessage,
       time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
       user: {
-        name: 'Rhea',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
+        name: userInfo?.nickname || 'Me',
+        avatar:
+          userInfo?.avatarUrl ||
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
       },
       isSelf: true,
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setInputMessage('');
-    
+
     // 发送到WebSocket
-    console.log('发送消息:', {
-      type: 'GROUP_CHAT',
-      dialogId: dialogId,
-      groupId: dialogId,
-      textContent: inputMessage,
-      clientMessageId: 'client-msg-' + Date.now(),
-    });
     sendMessage(
       JSON.stringify({
         type: 'GROUP_CHAT',
         dialogId: dialogId,
-        groupId: dialogId,
-        textContent: inputMessage,
-        clientMessageId: 'client-msg-' + Date.now(),
+        textContent: textContent,
       })
     );
+  }, [inputMessage, sendMessage, dialogId, userInfo]);
 
-    // 滚动到底部
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [inputMessage, sendMessage, dialogId]);
+  // 使用导入的MessageItem组件
+  const MessageItemWithPopupControl = (props: MessageProps) => <MessageItem {...props} />;
 
+  // 渲染消息列表
+  const renderMessageList = () => (
+    <AudioProvider>
+      <FlashList
+        data={[...messages].reverse()}
+        renderItem={({ item, index }: { item: MessageProps; index: number }) => (
+          <MessageItemWithPopupControl 
+            {...item}
+            messageId={`square_${index}_${item.time}`}
+          />
+        )}
+        keyExtractor={(item, index) => `${item.time}-${index}`}
+        estimatedItemSize={100}
+        contentContainerStyle={{ padding: 16 }}
+        inverted
+      />
+    </AudioProvider>
+  );
+
+  // 图片选择器
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes:['images'],
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
-      // 处理图片发送
-      const newMessage = {
-        content: '图片消息',
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-        user: {
-          name: 'Rhea',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
-        },
-        isSelf: true,
-        image: result.assets[0].uri,
-      };
+      try {
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop() || 'image.jpg';
+        const randomId = Date.now().toString();
+        const type = result.assets[0].mimeType || 'image/jpeg';
 
-      setMessages(prev => [...prev, newMessage]);
+        // 上传图片
+        const response = await fileApi.uploadImage({
+          file: {
+            uri,
+            type,
+            name: filename,
+          },
+          relatedId: randomId,
+        });
+
+        console.log('上传图片', response);
+
+        if (response.code === 200 && response.data) {
+          const textContent = JSON.stringify({
+            type: 'image',
+            url: response.data.url,
+            avatar:
+              userInfo?.avatarUrl ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+            nickname: userInfo?.nickname || 'Me',
+          });
+
+          // 添加本地消息
+          const newMessage = {
+            content: '[图片消息]',
+            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+            user: {
+              name: userInfo?.nickname || 'Me',
+              avatar:
+                userInfo?.avatarUrl ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+            },
+            isSelf: true,
+            imageUrl: response.data.url,
+          };
+
+          setMessages((prev) => [...prev, newMessage]);
+
+          // 发送到WebSocket
+          sendMessage(
+            JSON.stringify({
+              type: 'GROUP_CHAT',
+              dialogId: dialogId,
+              textContent: textContent,
+            })
+          );
+
+          // 收起工具栏
+          setShowToolbar(false);
+        } else {
+          console.error('图片上传失败:', response);
+        }
+      } catch (error) {
+        console.error('图片上传或发送失败:', error);
+      }
     }
   };
 
+  // 语音录制
   const startRecording = async () => {
     try {
       await Audio.requestPermissionsAsync();
@@ -229,23 +257,61 @@ export default function ChatSquare() {
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
+      console.log('录制的语音URI:', uri);
+
       setRecording(null);
       setIsRecording(false);
 
+      const randomId = Date.now().toString();
+      const response = await fileApi.uploadImage({
+        file: {
+          uri,
+          type: 'audio/mpeg',
+          name: 'audio.mp3',
+        },
+        relatedId: randomId,
+      });
+      console.log('上传语音响应:', response);
+
       // 处理语音消息发送
-      if (uri) {
+      if (response.code === 200 && response.data) {
+        const textContent = JSON.stringify({
+          type: 'audio',
+          url: response.data.url,
+          avatar:
+            userInfo?.avatarUrl ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+          nickname: userInfo?.nickname || 'Me',
+        });
+        console.log('准备发送语音消息:', textContent);
+
+        // 添加本地消息
         const newMessage = {
-          content: '语音消息',
+          content: '[语音消息]',
           time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
           user: {
-            name: 'Rhea',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rhea',
+            name: userInfo?.nickname || 'Me',
+            avatar:
+              userInfo?.avatarUrl ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
           },
           isSelf: true,
-          audio: uri,
+          audioUrl: response.data.url,
         };
 
-        setMessages(prev => [...prev, newMessage]);
+        setMessages((prev) => [...prev, newMessage]);
+
+        // 发送到WebSocket
+        sendMessage(
+          JSON.stringify({
+            type: 'GROUP_CHAT',
+            dialogId: dialogId,
+            textContent: textContent,
+          })
+        );
+
+        // 收起工具栏
+        setShowToolbar(false);
       }
     } catch (err) {
       console.error('停止录音失败:', err);
@@ -253,10 +319,7 @@ export default function ChatSquare() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={'padding'}
-      keyboardVerticalOffset={0}
-      style={{ flex: 1 }}>
+    <KeyboardAvoidingView behavior={'padding'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
       <View className="flex-1 bg-[#f5f8fc]">
         {/* 头部 */}
         <View className="flex-row items-center px-4 py-3">
@@ -271,14 +334,7 @@ export default function ChatSquare() {
           <Text className="px-4 py-2 text-center text-sm text-[#757575]">
             {loading ? '正在加入聊天广场...' : '欢迎来到聊天广场，请文明发言！'}
           </Text>
-          <ScrollView 
-            ref={scrollViewRef}
-            className="flex-1 p-4"
-            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}>
-            {messages.map((msg, index) => (
-              <MessageItem key={index} {...msg} />
-            ))}
-          </ScrollView>
+          {renderMessageList()}
         </View>
 
         {/* 底部输入框和工具栏 */}
@@ -307,7 +363,7 @@ export default function ChatSquare() {
                 </View>
               </Pressable>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
                 setShowToolbar(!showToolbar);
                 setIsKeyboardVisible(false);
@@ -320,23 +376,22 @@ export default function ChatSquare() {
           {/* 工具栏 */}
           {showToolbar && (
             <View className="mt-2 flex-row justify-around rounded-lg bg-white p-4">
-              <TouchableOpacity 
-                onPress={pickImage}
-                className="items-center">
+              <TouchableOpacity onPress={pickImage} className="items-center">
                 <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                   <Ionicons name="image" size={24} color="#1483FD" />
                 </View>
                 <Text className="mt-1 text-xs text-gray-600">图片</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 onPress={isRecording ? stopRecording : startRecording}
                 className="items-center">
-                <View className={`h-12 w-12 items-center justify-center rounded-full ${isRecording ? 'bg-red-100' : 'bg-blue-100'}`}>
-                  <Ionicons 
-                    name={isRecording ? "mic" : "mic-outline"} 
-                    size={24} 
-                    color={isRecording ? "#FF0000" : "#1483FD"} 
+                <View
+                  className={`h-12 w-12 items-center justify-center rounded-full ${isRecording ? 'bg-red-100' : 'bg-blue-100'}`}>
+                  <Ionicons
+                    name={isRecording ? 'mic' : 'mic-outline'}
+                    size={24}
+                    color={isRecording ? '#FF0000' : '#1483FD'}
                   />
                 </View>
                 <Text className="mt-1 text-xs text-gray-600">

@@ -1,6 +1,6 @@
 import { ScrollView, View, Text, Pressable, Modal } from 'react-native';
 import SecondaryCategory from './SecondaryCategory';
-import CourseCard from './CourseCard';
+
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';

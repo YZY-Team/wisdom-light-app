@@ -19,6 +19,7 @@ export interface TutorApplicationParams {
   teamSize: number;
   assistantCount: number;
   coachCount: number;
+  tutorType: string;
 }
 
 export const tutorApi = {

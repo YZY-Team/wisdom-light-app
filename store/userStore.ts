@@ -22,6 +22,7 @@ export type UserInfo = {
   accountRole: 'USER' | 'ADMIN';
   status: 'ACTIVE' | 'INACTIVE';
   loginTime: string;
+  tutorType: string;
 };
 
 type UserState = {

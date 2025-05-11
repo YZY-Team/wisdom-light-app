@@ -11,17 +11,12 @@ interface GroupTabProps {
 
 export default function GroupTab({ searchText }: GroupTabProps) {
   const { data: groupDialogs, isLoading, error } = useGroupDialogList();
-
   // 根据搜索文本过滤群聊
-  const filteredGroups = groupDialogs?.data?.filter((group: Dialog) => {
-    const searchLower = searchText.toLowerCase();
-    return group.title?.toLowerCase().includes(searchLower);
-  }) || [];
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+  const filteredGroups =
+    groupDialogs?.data?.filter((group: Dialog) => {
+      const searchLower = searchText.toLowerCase();
+      return group.title?.toLowerCase().includes(searchLower);
+    }) || [];
 
   if (isLoading) {
     return (
@@ -57,7 +52,11 @@ export default function GroupTab({ searchText }: GroupTabProps) {
             onPress={() => {
               router.push({
                 pathname: `/group-chat/${item.dialogId}`,
-                params: { groupId: item.dialogId, groupName: item.title, groupAvatarUrl: item.avatarUrl },
+                params: {
+                  dialogId: item.dialogId,
+                  groupName: item.title,
+                  groupAvatarUrl: item.avatarUrl,
+                },
               });
             }}>
             <Image

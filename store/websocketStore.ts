@@ -14,6 +14,7 @@ export type Message = {
   timestamp: string;
   imageUrl?: string; // 图片消息URL
   audioUrl?: string; // 音频消息URL
+  readBy?: string[]; // 群聊消息已读用户ID列表
 };
 
 // Store 的状态和方法
@@ -56,35 +57,54 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
           }
           parsedMessage.senderId = String(parsedMessage.senderId);
           parsedMessage.status = parsedMessage.senderId === currentUserId ? 'READ' : 'CREATED';
+          // 初始化已读用户数组
+          if (parsedMessage.type === 'GROUP_CHAT') {
+            parsedMessage.readBy = parsedMessage.senderId === currentUserId ? [currentUserId] : [];
+          }
         } catch (e) {
-          console.log('消息解析失败:', e);
+          console.log('消息解析失败:', message);
           return state;
         }
       } else {
         parsedMessage = {
           ...message,
-          // 根据消息类型设置正确的ID
-          ...(message.type === 'GROUP_CHAT'
-            ? { groupId: String(message.groupId) }
-            : {
-                dialogId: String(message.dialogId),
-                receiverId: String(message.receiverId),
-              }),
+          // 使用 dialogId 作为群聊消息的 key
+          dialogId: String(message.dialogId),
           senderId: String(message.senderId),
           status: message.senderId === currentUserId ? 'READ' : 'CREATED',
+          // 初始化已读用户数组
+          readBy: message.type === 'GROUP_CHAT' 
+            ? (message.senderId === currentUserId ? [currentUserId] : (message.readBy || []))
+            : undefined,
         };
       }
 
-      // 使用正确的ID作为消息存储的key
-      const messageKey = parsedMessage.type === 'GROUP_CHAT' ? parsedMessage.groupId : parsedMessage.dialogId;
+      // 使用 dialogId 作为消息存储的 key
+      const messageKey = parsedMessage.dialogId;
       if (!messageKey) {
         console.error('消息缺少必要的ID');
         return state;
       }
 
+      console.log('保存消息:', { messageKey, parsedMessage });
+
+      // 检查是否已存在相同消息，避免重复
+      const existingMessages = state.messages[messageKey] || [];
+      const isDuplicate = existingMessages.some(msg => 
+        // 比较关键字段以确定是否为重复消息
+        msg.senderId === parsedMessage.senderId && 
+        msg.textContent === parsedMessage.textContent && 
+        msg.timestamp === parsedMessage.timestamp
+      );
+      
+      if (isDuplicate) {
+        console.log('检测到重复消息，跳过添加');
+        return state;
+      }
+
       const newMessages = {
         ...state.messages,
-        [messageKey]: [...(state.messages[messageKey] || []), parsedMessage],
+        [messageKey]: [...existingMessages, parsedMessage],
       };
 
       // 持久化更新
@@ -110,12 +130,29 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
   markMessagesAsRead: (dialogId: string, userId: string) =>
     set((state) => {
       const dialogMessages = state.messages[dialogId];
-      if (!dialogMessages) return state;
-      const updatedMessages = dialogMessages.map((msg) =>
-        msg.senderId === userId && msg.status !== 'READ'
-          ? { ...msg, status: 'READ' as const }
-          : msg
-      );
+      if (!dialogMessages || !userId) return state;
+      
+      const updatedMessages = dialogMessages.map((msg) => {
+        // 私聊消息处理
+        if (msg.type === 'PRIVATE_CHAT') {
+          // 如果消息是别人发给我的，且状态不是已读，则标记为已读
+          if (msg.senderId !== useUserStore.getState().userInfo?.globalUserId && msg.status !== 'READ') {
+            return { ...msg, status: 'READ' as const };
+          }
+        }
+        
+        // 群聊消息处理
+        if (msg.type === 'GROUP_CHAT') {
+          // 确保readBy数组存在
+          const readBy = msg.readBy || [];
+          // 如果当前用户不在已读列表中，添加到已读列表
+          if (!readBy.includes(userId)) {
+            return { ...msg, readBy: [...readBy, userId] };
+          }
+        }
+        
+        return msg;
+      });
 
       const newMessages = {
         ...state.messages,

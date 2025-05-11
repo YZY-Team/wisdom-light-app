@@ -47,11 +47,11 @@ export default function DoIndex() {
 
   return (
     <ScrollView className="flex-1 bg-[#F5F8FC]">
-      <View className='bg-white/80 pb-2'>
+      <View className="bg-white/80 pb-2">
         <View className="p-4">
           <View className="flex-row items-center rounded-full bg-[#1687fd]/5 px-4  ">
             <TextInput
-              className="ml-2 flex-1 h-[30px] py-0"
+              className="ml-2 h-[30px] flex-1 py-0"
               placeholder="搜索课程..."
               placeholderTextColor="#666"
             />
@@ -90,7 +90,6 @@ export default function DoIndex() {
         <OnlineCourseCategory
           activeSecondaryIndex={activeSecondaryIndices[1]}
           onSecondaryCategoryPress={(index) => handleSecondaryCategory(index)}
-          courses={[]}
         />
       )}
       {activePrimaryIndex === 2 && (

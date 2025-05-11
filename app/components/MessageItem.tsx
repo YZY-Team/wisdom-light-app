@@ -1,13 +1,33 @@
 import { View, Text, TouchableOpacity, Alert, Dimensions, Modal } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, memo, createContext, useContext } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Clipboard from 'expo-clipboard';
 import { Audio } from 'expo-av';
 import Animated from 'react-native-reanimated';
+
+// 创建全局音频上下文来管理当前播放的消息
+const AudioContext = createContext<{
+  currentPlayingId: string | null;
+  setCurrentPlayingId: (id: string | null) => void;
+}>({
+  currentPlayingId: null,
+  setCurrentPlayingId: () => {},
+});
+
+// 音频上下文提供者组件
+export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+  
+  return (
+    <AudioContext.Provider value={{ currentPlayingId, setCurrentPlayingId }}>
+      {children}
+    </AudioContext.Provider>
+  );
+};
 
 // 图片预览组件
 const ImagePreview = memo(
@@ -101,67 +121,156 @@ export type MessageProps = {
   isSelf?: boolean;
   imageUrl?: string;
   audioUrl?: string;
+  messageId?: string;
+  readStatus?: string;
 };
 
-const MessageItem = memo(({ content, time, user, isSelf, imageUrl, audioUrl }: MessageProps) => {
+const MessageItem = memo(({ content, time, user, isSelf, imageUrl, audioUrl, messageId, readStatus }: MessageProps) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
+  // 使用全局音频上下文
+  const { currentPlayingId, setCurrentPlayingId } = useContext(AudioContext);
+  
+  // 检查当前消息是否正在播放
+  const isThisPlaying = messageId && currentPlayingId === messageId;
+  
+  // 当全局播放ID变化时更新本地播放状态
+  useEffect(() => {
+    // 如果当前全局播放的不是这条消息，但本地状态显示正在播放，则停止播放
+    if (messageId && currentPlayingId !== messageId && isPlaying) {
+      if (sound) {
+        console.log('全局播放ID变化，停止当前音频', messageId);
+        sound.stopAsync();
+        setIsPlaying(false);
+      }
+    }
+  }, [currentPlayingId, messageId, sound, isPlaying]);
 
   // 添加调试信息
   useEffect(() => {
     if (audioUrl) {
-      console.log('音频消息渲染:', { isSelf, audioUrl });
+      console.log('音频消息渲染:', { isSelf, audioUrl, messageId });
     }
-  }, [audioUrl, isSelf]);
+  }, [audioUrl, isSelf, messageId]);
 
   const playSound = async () => {
-    if (!audioUrl) return;
+    if (!audioUrl || !messageId) return;
 
     try {
+      // 如果已经在加载中，不要重复操作
+      if (isLoading) return;
+
+      // 如果有错误，重置错误状态
+      if (loadError) setLoadError(null);
+
+      // 如果当前有其他消息在播放，通知上下文切换播放ID
+      if (currentPlayingId && currentPlayingId !== messageId) {
+        console.log('切换播放ID', { from: currentPlayingId, to: messageId });
+        setCurrentPlayingId(messageId);
+      }
+
       if (sound) {
         if (isPlaying) {
           await sound.stopAsync();
           setIsPlaying(false);
+          setCurrentPlayingId(null);
         } else {
-          await sound.playAsync();
-          setIsPlaying(true);
+          try {
+            const status = await sound.getStatusAsync();
+            if (status.isLoaded) {
+              await sound.playAsync();
+              setIsPlaying(true);
+              setCurrentPlayingId(messageId);
+            } else {
+              // 如果声音没有正确加载，重新加载
+              console.log('声音未正确加载，重新尝试');
+              setSound(null);
+              loadAndPlaySound();
+            }
+          } catch (error) {
+            console.error('播放已存在的声音失败:', error);
+            setLoadError('播放失败，请重试');
+            setIsPlaying(false);
+            setCurrentPlayingId(null);
+          }
         }
       } else {
-        const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: audioUrl },
-          { shouldPlay: true },
-          (status) => {
-            if (status.isLoaded) {
-              // 如果还没有获取到时长，且现在有了时长信息
-              if (audioDuration === null && status.durationMillis) {
-                console.log('音频时长', status.durationMillis);
-                setAudioDuration(status.durationMillis);
-              }
-              
-              // 更新播放状态
-              if (status.isPlaying) {
-                setIsPlaying(true);
-              } else if (status.didJustFinish) {
-                setIsPlaying(false);
-              }
-            }
-          }
-        );
-        
-        setSound(newSound);
-        setIsPlaying(true);
-        
-        // 获取音频时长
-        const status = await newSound.getStatusAsync();
-        if (status.isLoaded && status.durationMillis) {
-          console.log('立即获取音频时长', status.durationMillis);
-          setAudioDuration(status.durationMillis);
-        }
+        loadAndPlaySound();
       }
     } catch (error) {
       console.error('播放语音消息失败:', error);
+      setLoadError('播放失败，请重试');
+      setIsPlaying(false);
+      setIsLoading(false);
+      setCurrentPlayingId(null);
+    }
+  };
+
+  // 抽取加载和播放音频的逻辑到单独的函数
+  const loadAndPlaySound = async () => {
+    if (!audioUrl || !messageId) return; // 确保messageId存在
+    
+    try {
+      setIsLoading(true);
+      
+      // 添加超时处理
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('加载超时')), 10000); // 10秒超时
+      });
+      
+      // 创建加载音频的Promise
+      const loadPromise = Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded) {
+            // 如果还没有获取到时长，且现在有了时长信息
+            if (audioDuration === null && status.durationMillis) {
+              console.log('音频时长', status.durationMillis);
+              setAudioDuration(status.durationMillis);
+            }
+            
+            // 更新播放状态
+            if (status.isPlaying) {
+              setIsPlaying(true);
+              if (messageId) setCurrentPlayingId(messageId); // 确保messageId存在
+              setIsLoading(false);
+            } else if (status.didJustFinish) {
+              setIsPlaying(false);
+              setCurrentPlayingId(null);
+              setIsLoading(false);
+            }
+          }
+        }
+      );
+      
+      // 使用Promise.race来处理超时
+      const result = await Promise.race([loadPromise, timeoutPromise]) as {sound: Audio.Sound};
+      const newSound = result.sound;
+      
+      setSound(newSound);
+      setIsPlaying(true);
+      setCurrentPlayingId(messageId);
+      
+      // 获取音频时长
+      const status = await newSound.getStatusAsync();
+      if (status.isLoaded && status.durationMillis) {
+        console.log('立即获取音频时长', status.durationMillis);
+        setAudioDuration(status.durationMillis);
+      }
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('加载音频失败:', error);
+      setLoadError('加载失败，请重试');
+      setIsPlaying(false);
+      setIsLoading(false);
+      setCurrentPlayingId(null);
     }
   };
 
@@ -217,17 +326,16 @@ const MessageItem = memo(({ content, time, user, isSelf, imageUrl, audioUrl }: M
   };
 
   return (
-    <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
+    <View className={`mb-4 px-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
       <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
-      <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
-        {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
+      <View className={`flex-1  ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
+        {!isSelf && <Text className="mb-1 text-sm  text-gray-600">{user.name}</Text>}
         <View
           className={`relative rounded-2xl p-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}
           style={[
             { maxWidth: '70%' },
             audioUrl ? getAudioStyle() : {}
           ]}>
-          {/* 添加调试信息，不要在JSX中直接使用console.log */}
           {imageUrl ? (
             <TouchableOpacity onPress={() => setShowImagePreview(true)}>
               <Image
@@ -237,32 +345,48 @@ const MessageItem = memo(({ content, time, user, isSelf, imageUrl, audioUrl }: M
               />
             </TouchableOpacity>
           ) : audioUrl ? (
-            <TouchableOpacity 
-              onPress={() => {
-                console.log('点击音频消息', { isSelf, audioUrl });
-                playSound();
-              }} 
-              className="flex-row items-center w-full"
-            >
-              <Ionicons
-                name={isPlaying ? 'pause-circle' : 'play-circle'}
-                size={24}
-                color={isSelf ? '#fff' : '#333'}
-              />
-              <View className="ml-2 flex-1">
-                <Text className={`${isSelf ? 'text-white' : 'text-gray-800'}`}>
-                  {isPlaying ? '正在播放语音...' : '点击播放语音'}
-                </Text>
-                <Text className={`text-xs ${isSelf ? 'text-white/70' : 'text-gray-500'}`}>
-                  {formatDuration(audioDuration)}
+            <TouchableOpacity onPress={playSound} disabled={isLoading}>
+              <View className="flex-row items-center">
+                <View className="mr-2">
+                  {isLoading ? (
+                    <Ionicons name="ellipsis-horizontal" size={24} color={isSelf ? '#fff' : '#666'} />
+                  ) : isThisPlaying ? (
+                    <Ionicons name="pause" size={24} color={isSelf ? '#fff' : '#666'} />
+                  ) : (
+                    <Ionicons name="play" size={24} color={isSelf ? '#fff' : '#666'} />
+                  )}
+                </View>
+                <View className="flex-1">
+                  <View
+                    className={`h-1 rounded-full ${isSelf ? 'bg-blue-300' : 'bg-gray-300'}`}
+                    style={{ width: audioDuration ? '100%' : 80 }}
+                  />
+                  {loadError && (
+                    <Text className={`mt-1 text-xs ${isSelf ? 'text-red-200' : 'text-red-500'}`}>
+                      {loadError}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  className={`ml-2 text-xs ${isSelf ? 'text-blue-100' : 'text-gray-500'}`}>
+                  {formatDuration(audioDuration) || '0:00'}
                 </Text>
               </View>
             </TouchableOpacity>
           ) : (
-            <Text className={isSelf ? 'text-white' : 'text-gray-800'}>{content}</Text>
+            <Text
+              className={`text-sm ${isSelf ? 'text-white' : 'text-gray-900'}`}
+              selectable={true}>
+              {content}
+            </Text>
           )}
         </View>
-        <Text className="mt-1 text-xs text-gray-400">{time}</Text>
+        <View className="mt-1 flex-row items-center ">
+          <Text className={` text-xs`}>{time}</Text>
+          {isSelf && readStatus && (
+            <Text className="ml-2 text-xs text-gray-500">{readStatus}</Text>
+          )}
+        </View>
       </View>
 
       {/* 图片预览模态框 */}

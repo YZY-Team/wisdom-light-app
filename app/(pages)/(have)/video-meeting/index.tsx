@@ -64,13 +64,14 @@ export default function VideoMeetingApply() {
 
         // 上传图片
         const uploadResult = await fileApi.uploadImage({
-          relatedId: 'temp', // 这里可能需要根据实际业务调整
+          relatedId: new Date().getTime().toString(), // 这里可能需要根据实际业务调整
           file: fileToUpload,
         });
-
+        console.log("uploadResult",uploadResult);
+        
         // 更新表单数据
-        if (uploadResult?.url) {
-          handleInputChange('coverUrl', uploadResult.url);
+        if (uploadResult?.data?.url) {
+          handleInputChange('coverUrl', uploadResult.data.url);
         }
       }
     } catch (error) {
@@ -82,7 +83,7 @@ export default function VideoMeetingApply() {
   const handleSubmit = async () => {
     try {
       // 表单验证
-      if (!formData.title || !formData.teacherName || !formData.description || !formData.startTime || !formData.price) {
+      if (!formData.title || !formData.teacherName || !formData.description || !formData.startTime || !formData.price || !formData.coverUrl) {
         Alert.alert('提示', '请填写必要信息');
         return;
       }
@@ -98,15 +99,20 @@ export default function VideoMeetingApply() {
         price: Number(formData.price)
       };
 
-      await applyCourseOnline(params);
-      Alert.alert('成功', '申请已提交', [
-        {
-          text: '确定',
+      const res = await applyCourseOnline(params);
+      if (res.code === 200) {
+        Alert.alert('成功', '申请已提交', [
+          {
+            text: '确定',
           onPress: () => {
             router.back();
           },
         },
       ]);
+      } else {
+        // @ts-expect-error 类型错误
+        Alert.alert(res.error);
+      }
     } catch (error) {
       Alert.alert('错误', '提交失败，请重试');
     }

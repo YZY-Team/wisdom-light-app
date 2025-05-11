@@ -23,6 +23,9 @@ import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { fileApi } from '~/api/who/file';
+import { dialogApi } from '~/api/have/dialog';
+import MessageItem, { MessageProps, AudioProvider } from '~/app/components/MessageItem';
 
 type GroupMember = {
   userId: string;
@@ -31,116 +34,34 @@ type GroupMember = {
   isOnline?: boolean;
 };
 
-type MessageProps = {
-  content: string;
-  time: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  isSelf?: boolean;
+type WebSocketMessage = {
+  type: string;
+  dialogId: string;
+  textContent: string;
+  senderId: string;
+  timestamp: string;
+  status?: string;
   imageUrl?: string;
   audioUrl?: string;
+  messageId?: string;
+  readBy?: string;
 };
 
-const MessageItem = ({ content, time, user, isSelf, imageUrl, audioUrl }: MessageProps) => {
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const playSound = async () => {
-    if (!audioUrl) return;
-
-    try {
-      if (sound) {
-        if (isPlaying) {
-          await sound.stopAsync();
-          setIsPlaying(false);
-        } else {
-          await sound.playAsync();
-          setIsPlaying(true);
-        }
-      } else {
-        const { sound: newSound } = await Audio.Sound.createAsync({ uri: audioUrl });
-        setSound(newSound);
-
-        newSound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && !status.isPlaying && status.didJustFinish) {
-            setIsPlaying(false);
-          }
-        });
-
-        await newSound.playAsync();
-        setIsPlaying(true);
-      }
-    } catch (error) {
-      console.error('播放语音消息失败:', error);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
-
-  return (
-    <View className={`mb-4 flex-row ${isSelf ? 'flex-row-reverse' : ''}`}>
-      <Image source={{ uri: user.avatar }} className="h-10 w-10 rounded-full" contentFit="cover" />
-      <View className={`flex-1 ${isSelf ? 'mr-3 items-end' : 'ml-3'}`}>
-        {!isSelf && <Text className="mb-1 text-sm text-gray-600">{user.name}</Text>}
-        <View className={`max-w-[70%] rounded-2xl p-3 ${isSelf ? 'bg-blue-500' : 'bg-white'}`}>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} className="h-40 w-40 rounded-md" contentFit="cover" />
-          ) : audioUrl ? (
-            <TouchableOpacity onPress={playSound} className="flex-row items-center">
-              <Ionicons
-                name={isPlaying ? 'pause-circle' : 'play-circle'}
-                size={24}
-                color={isSelf ? '#fff' : '#333'}
-              />
-              <Text className={`ml-2 ${isSelf ? 'text-white' : 'text-gray-800'}`}>
-                {isPlaying ? '正在播放语音...' : '点击播放语音'}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text className={isSelf ? 'text-white' : 'text-gray-800'}>{content}</Text>
-          )}
-        </View>
-        <Text className="mt-1 text-xs text-gray-400">{time}</Text>
-      </View>
-    </View>
-  );
+type GroupMemberResponse = {
+  userId: string;
+  nickname: string;
+  avatarUrl: string;
+  isOnline: boolean;
 };
 
-const GroupMemberList = ({ members }: { members: GroupMember[] }) => {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4 px-4">
-      {members.map((member) => (
-        <View key={member.userId} className="mr-4 items-center">
-          <View className="relative">
-            <Image
-              source={{ uri: member.avatar }}
-              className="h-12 w-12 rounded-full"
-              contentFit="cover"
-            />
-            {member.isOnline && (
-              <View className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
-            )}
-          </View>
-          <Text className="mt-1 text-xs text-gray-600">{member.name}</Text>
-        </View>
-      ))}
-    </ScrollView>
-  );
-};
+// 使用导入的MessageItem组件
+const MessageItemWithPopupControl = (props: MessageProps) => <MessageItem {...props} />;
 
 export default function GroupChat() {
   const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const userInfo = useUserStore((state) => state.userInfo);
-  const { groupId, groupName, dialogId, groupAvatarUrl } = useLocalSearchParams();
+  const { groupName, dialogId, groupAvatarUrl } = useLocalSearchParams();
   const [inputMessage, setInputMessage] = useState('');
   const headerHeight = useHeaderHeight();
 
@@ -151,98 +72,21 @@ export default function GroupChat() {
   const [isRecording, setIsRecording] = useState(false);
 
   // 模拟群成员数据
-  const [groupMembers] = useState<GroupMember[]>([
-    {
-      userId: '1',
-      name: '张三',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-      isOnline: true,
-    },
-    {
-      userId: '2',
-      name: '李四',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-      isOnline: true,
-    },
-    {
-      userId: '3',
-      name: '王五',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
-      isOnline: false,
-    },
-    // 可以添加更多成员
-  ]);
-
-  // 从 Zustand store 获取消息
-  const messages = useWebSocketStore((stats) => stats.messages);
-  const chatMessages = messages[String(groupId)] || [];
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
 
   // WebSocket 上下文
-  const { sendMessage } = useWebSocketContext();
+  const { sendMessage, lastMessage } = useWebSocketContext();
 
-  // 将 Zustand 的消息转换为组件需要的格式
-  // 将时间格式化函数提取出来
-  // 优化消息格式化逻辑
-  // 优化时间格式化函数
-  // 修改 formatTime 的参数类型，接受 string 或 number
-  const formatTime = useCallback((timestamp: string | number) => {
-    try {
-      // 检查时间戳是否为数字字符串或数字
-      const ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp;
-      if (isNaN(ts)) {
-        console.warn('无效的时间戳:', timestamp);
-        return '';
-      }
-
-      const date = new Date(ts);
-      if (date.toString() === 'Invalid Date') {
-        console.warn('无效的日期:', timestamp);
-        return '';
-      }
-
-      return date.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch (error) {
-      console.log('时间格式化错误:', error);
-      return '';
-    }
-  }, []);
-
-  // 将头像URL缓存到 Map 中
-  const avatarCache = useRef(new Map<string, string>());
-  const getAvatarUrl = useCallback((senderId: string) => {
-    if (!avatarCache.current.has(senderId)) {
-      avatarCache.current.set(
-        senderId,
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${senderId}`
-      );
-    }
-    return avatarCache.current.get(senderId)!;
-  }, []);
-
-  // 移除其他重复的性能统计代码
-  // 发送消息
+  // 从 Zustand store 获取消息和添加消息的方法
   const { addMessage } = useWebSocketStore();
+  const messages = useWebSocketStore((state) => state.messages);
+  const chatMessages = messages[String(dialogId)] || [];
+  console.log('当前对话ID:', dialogId);
+  console.log('所有消息键:', Object.keys(messages));
+  console.log('当前对话消息数量:', chatMessages.length);
 
-  const handleSendMessage = useCallback(() => {
-    if (!inputMessage.trim()) return;
-
-    const newMessage: Message = {
-      type: 'GROUP_CHAT',
-      dialogId: dialogId as string,
-      textContent: inputMessage,
-      // clientMessageId: String(Date.now()),
-    };
-    console.log('发送群消息', newMessage);
-
-    // 发送消息
-    sendMessage(JSON.stringify(newMessage));
-    // 存储消息
-    addMessage({ ...newMessage, status: 'READ' });
-    setInputMessage('');
-  }, [inputMessage, sendMessage, groupId, addMessage, userInfo]);
+  // 添加 FlashList 的引用
+  const flashListRef = useRef<FlashList<any>>(null);
 
   // 添加分页状态
   const [page, setPage] = useState(1);
@@ -252,37 +96,83 @@ export default function GroupChat() {
   // 优化消息获取逻辑
   const visibleMessages = useMemo(() => {
     if (!chatMessages.length) return [];
-    const start = Math.max(0, chatMessages.length - page * PAGE_SIZE);
-    return chatMessages.slice(start);
+    // 由于不再使用 inverted 属性，我们需要确保消息按时间顺序排列（旧的在上，新的在下）
+    const messages = [...chatMessages];
+    const start = Math.max(0, messages.length - page * PAGE_SIZE);
+    return messages.slice(start);
   }, [chatMessages, page]);
-  const formattedMessages = useMemo(() => {
-    const timeCache = new Map<string, string>();
-    const memberMap = new Map(groupMembers.map((member) => [member.userId, member]));
 
+  const formattedMessages = useMemo(() => {
     return visibleMessages.map((msg) => {
       const isSelf = msg.senderId === userInfo?.globalUserId;
-      const sender = memberMap.get(msg.senderId);
 
-      // 使用缓存的时间格式化结果
-      let time = timeCache.get(msg.timestamp);
-      if (!time) {
-        time = "xxxxx";
-        timeCache.set(msg.timestamp, time);
+      // 解析消息内容
+      let content = '';
+      let imageUrl;
+      let audioUrl;
+      let nickname = '';
+      let avatar = '';
+
+      try {
+        const parsedContent = JSON.parse(msg.textContent);
+        console.log('解析的消息内容:', new Date().toLocaleString(), parsedContent);
+        if (parsedContent.type === 'text') {
+          content = parsedContent.text;
+          nickname = parsedContent.nickname || '未知用户';
+          avatar =
+            parsedContent.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+        } else if (parsedContent.type === 'image') {
+          content = '[图片消息]';
+          imageUrl = parsedContent.url;
+          nickname = parsedContent.nickname || '未知用户';
+          avatar =
+            parsedContent.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+        } else if (parsedContent.type === 'audio') {
+          content = '[语音消息]';
+          audioUrl = parsedContent.url;
+          nickname = parsedContent.nickname || '未知用户';
+          avatar =
+            parsedContent.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+        }
+      } catch (error) {
+        console.error('消息内容解析失败:', error, msg.textContent);
+        content = msg.textContent;
+        nickname = '未知用户';
+        avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
       }
 
-      return {
-        content: msg.textContent,
+      // 格式化时间
+      const time = new Date(Number(msg.timestamp)).toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // 计算已读状态
+      const readCount = msg.readBy?.length || 0;
+      const isRead = isSelf && readCount > 1; // 自己的消息至少有一个其他人已读
+      const readStatus = isSelf ? (isRead ? `${readCount - 1}人已读` : '未读') : '';
+
+      const messageProps: MessageProps = {
+        content,
         time,
         user: {
-          name: isSelf ? '我' : sender?.name || '未知用户',
-          avatar: sender?.avatar || getAvatarUrl(msg.senderId),
+          name: isSelf ? '我' : nickname,
+          avatar: isSelf ? userInfo?.avatarUrl || avatar : avatar,
         },
         isSelf,
-        imageUrl: msg.imageUrl,
-        audioUrl: msg.audioUrl,
+        imageUrl,
+        audioUrl,
+        messageId: `${msg.senderId}-${msg.timestamp}`, // 添加唯一ID
+        readStatus, // 添加已读状态
       };
+
+      return messageProps;
     });
-  }, [visibleMessages, userInfo?.globalUserId, groupMembers, formatTime, getAvatarUrl]);
+  }, [visibleMessages, userInfo?.globalUserId, userInfo?.avatarUrl]);
+
   // 处理加载更多
   const handleLoadMore = useCallback(() => {
     if (loading) return;
@@ -291,30 +181,165 @@ export default function GroupChat() {
     setLoading(false);
   }, [loading]);
 
-  // 添加一个标记是否是首次加载的 ref
-  const isFirstLoad = useRef(true);
-  // 添加一个记录之前消息数量的 ref
-  const prevMessagesCount = useRef(0);
-
-  // 监听消息变化，判断是否需要滚动
+  // WebSocket 消息处理
   useEffect(() => {
-    if (!scrollViewRef.current) return;
+    if (lastMessage) {
+      try {
+        const data = JSON.parse(lastMessage.data) as WebSocketMessage;
+        // 只处理当前对话的消息
+        console.log('收到WebSocket消息:', new Date().toLocaleString(), data);
+        if (data.type === 'GROUP_CHAT' && data.dialogId === dialogId) {
+          // 解析消息内容
+          try {
+            const parsedContent = JSON.parse(data.textContent);
+            console.log('解析后的消息内容:', new Date().toLocaleString(), parsedContent);
 
-    // 首次加载或有新消息时才滚动
-    if (isFirstLoad.current || formattedMessages.length > prevMessagesCount.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
+            // 构造完整的消息对象
+            const newMessage: Message = {
+              type: 'GROUP_CHAT',
+              dialogId: data.dialogId,
+              senderId: data.senderId,
+              textContent: data.textContent,
+              timestamp: data.timestamp,
+              status: 'READ',
+            };
+
+            // 只有当消息不是自己发送的时候才添加到store
+            if (data.senderId !== userInfo?.globalUserId) {
+              console.log('添加其他人的消息到store:', new Date().toLocaleString(), newMessage);
+              addMessage(newMessage);
+
+              // 发送已读回执
+              if (userInfo?.globalUserId) {
+                const readReceiptMessage = {
+                  type: 'READ_RECEIPT',
+                  dialogId: dialogId as string,
+                  messageId: `${data.senderId}-${data.timestamp}`, // 使用相同的消息ID格式
+                  readBy: userInfo.globalUserId,
+                };
+                console.log('发送已读回执:', new Date().toLocaleString(), readReceiptMessage);
+                sendMessage(JSON.stringify(readReceiptMessage));
+                
+                // 立即标记该消息为已读
+                const { markMessagesAsRead } = useWebSocketStore.getState();
+                markMessagesAsRead(dialogId as string, userInfo.globalUserId);
+              }
+            } else {
+              console.log('跳过自己发送的消息，避免重复:', new Date().toLocaleString(), newMessage);
+            }
+          } catch (error) {
+            console.log('解析消息内容失败:', error);
+          }
+        } else if (data.type === 'READ_RECEIPT' && data.dialogId === dialogId) {
+          // 处理已读回执
+          console.log('收到已读回执:', new Date().toLocaleString(), data);
+          if (data.messageId && data.readBy && userInfo?.globalUserId) {
+            // 从 WebSocketStore 获取 markMessagesAsRead 方法
+            const { markMessagesAsRead } = useWebSocketStore.getState();
+            // 标记指定消息为已读
+            markMessagesAsRead(dialogId as string, data.readBy);
+          }
+        } else {
+          console.log('消息不匹配当前对话:', {
+            messageType: data.type,
+            messageDialogId: data.dialogId,
+            currentDialogId: dialogId,
+            timestamp: new Date().toLocaleString(),
+          });
+        }
+      } catch (error) {
+        console.log('解析消息失败:', error);
+      }
     }
+  }, [lastMessage, dialogId, addMessage, userInfo?.globalUserId, sendMessage]);
 
-    isFirstLoad.current = false;
-    prevMessagesCount.current = formattedMessages.length;
-  }, [formattedMessages]);
+  // 发送消息处理
+  const handleSendMessage = useCallback(() => {
+    if (!inputMessage.trim() || !dialogId) return;
+
+    const timestamp = String(Date.now());
+    const textContent = JSON.stringify({
+      type: 'text',
+      text: inputMessage,
+      avatar:
+        userInfo?.avatarUrl ||
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+      nickname: userInfo?.nickname || 'Me',
+    });
+
+    // WebSocket消息格式
+    const wsMessage = {
+      type: 'GROUP_CHAT',
+      dialogId: dialogId as string,
+      textContent: textContent,
+    };
+    console.log('发送消息:', new Date().toLocaleString(), wsMessage);
+
+    // 发送到WebSocket
+    sendMessage(JSON.stringify(wsMessage));
+
+    // 本地store消息格式
+    const storeMessage: Message = {
+      type: 'GROUP_CHAT',
+      dialogId: dialogId as string,
+      senderId: userInfo!.globalUserId,
+      textContent: textContent,
+      timestamp: timestamp,
+      status: 'READ',
+    };
+
+    // 直接添加到store，不等待WebSocket回调
+    console.log('添加自己的消息到store:', new Date().toLocaleString(), storeMessage);
+    addMessage(storeMessage);
+
+    setInputMessage('');
+  }, [inputMessage, sendMessage, dialogId, userInfo, addMessage]);
+
+  // 获取群成员列表
+  useEffect(() => {
+    const fetchGroupMembers = async () => {
+      try {
+        const response = await dialogApi.getGroupMembers(dialogId as string);
+        if (response && response.data) {
+          const memberList = response.data as GroupMemberResponse[];
+          const members: GroupMember[] = memberList.map((member) => ({
+            userId: member.userId,
+            name: member.nickname || '未知用户',
+            avatar:
+              member.avatarUrl ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId}`,
+          }));
+          setGroupMembers(members);
+        }
+      } catch (error) {
+        console.error('获取群成员列表失败:', error);
+      }
+    };
+
+    if (dialogId) {
+      fetchGroupMembers();
+    }
+  }, [dialogId]);
+
+  // 进入群聊时标记消息为已读
+  useEffect(() => {
+    if (dialogId && userInfo?.globalUserId) {
+      // 从 WebSocketStore 获取 markMessagesAsRead 方法
+      const { markMessagesAsRead } = useWebSocketStore.getState();
+      // 标记当前对话中的所有消息为已读
+      markMessagesAsRead(dialogId as string, userInfo.globalUserId);
+    }
+  }, [dialogId, userInfo?.globalUserId]);
 
   const renderItem = useCallback(
-    ({ item }: { item: MessageProps }) => <MessageItem {...item} />,
+    ({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />,
     []
   );
 
-  const keyExtractor = useCallback((item: any, index: number) => `${item.time}-${index}`, []);
+  const keyExtractor = useCallback(
+    (item: MessageProps) => item.messageId || `${item.user.name}-${item.time}-${Math.random()}`,
+    []
+  );
 
   // 图片选择器
   const pickImage = async () => {
@@ -326,20 +351,63 @@ export default function GroupChat() {
     });
 
     if (!result.canceled) {
-      // 处理图片发送
-      const newMessage: Message = {
-        type: 'GROUP_CHAT',
-        senderId: userInfo!.globalUserId,
-        groupId: groupId as string,
-        textContent: '[图片消息]',
-        timestamp: String(Date.now()),
-        imageUrl: result.assets[0].uri,
-      };
+      try {
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop() || 'image.jpg';
+        const randomId = Date.now().toString();
+        const type = result.assets[0].mimeType || 'image/jpeg';
 
-      // 发送消息
-      sendMessage(JSON.stringify(newMessage));
-      // 存储消息
-      addMessage({ ...newMessage, status: 'READ' });
+        // 上传图片
+        const response = await fileApi.uploadImage({
+          file: {
+            uri,
+            type,
+            name: filename,
+          },
+          relatedId: randomId,
+        });
+
+        console.log('上传图片', response);
+
+        if (response.code === 200 && response.data) {
+          const textContent = JSON.stringify({
+            type: 'image',
+            url: response.data.url,
+            nickname: userInfo?.nickname || 'Me',
+            avatar: userInfo?.avatarUrl || '',
+          });
+
+          // WebSocket消息格式
+          const wsMessage = {
+            type: 'GROUP_CHAT',
+            dialogId: dialogId as string,
+            textContent: textContent,
+          };
+
+          // 发送到WebSocket
+          sendMessage(JSON.stringify(wsMessage));
+
+          // 本地store消息格式
+          const storeMessage: Message = {
+            type: 'GROUP_CHAT',
+            dialogId: dialogId as string,
+            senderId: userInfo!.globalUserId,
+            textContent: textContent,
+            timestamp: String(Date.now()),
+            status: 'READ',
+          };
+
+          // 保存消息到 store
+          addMessage(storeMessage);
+
+          // 收起工具栏
+          setShowToolbar(false);
+        } else {
+          console.error('图片上传失败:', response);
+        }
+      } catch (error) {
+        console.error('图片上传或发送失败:', error);
+      }
     }
   };
 
@@ -368,49 +436,99 @@ export default function GroupChat() {
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
+      console.log('录制的语音URI:', uri);
+
       setRecording(null);
       setIsRecording(false);
 
-      // 处理语音消息发送
-      if (uri) {
-        const newMessage: Message = {
+      const randomId = Date.now().toString();
+      const response = await fileApi.uploadImage({
+        file: {
+          uri,
+          type: 'audio/mpeg',
+          name: 'audio.mp3',
+        },
+        relatedId: randomId,
+      });
+      console.log('上传语音响应:', response);
+
+      if (response.code === 200 && response.data) {
+        const textContent = JSON.stringify({
+          type: 'audio',
+          url: response.data.url,
+          nickname: userInfo?.nickname || 'Me',
+          avatar: userInfo?.avatarUrl || '',
+        });
+
+        // WebSocket消息格式
+        const wsMessage = {
           type: 'GROUP_CHAT',
-          senderId: userInfo!.globalUserId,
-          groupId: groupId as string,
-          textContent: '[语音消息]',
-          timestamp: String(Date.now()),
-          audioUrl: uri,
+          dialogId: dialogId as string,
+          textContent: textContent,
         };
 
-        // 发送消息
-        sendMessage(JSON.stringify(newMessage));
-        // 存储消息
-        addMessage({ ...newMessage, status: 'READ' });
+        // 发送到WebSocket
+        sendMessage(JSON.stringify(wsMessage));
+
+        // 本地store消息格式
+        const storeMessage: Message = {
+          type: 'GROUP_CHAT',
+          dialogId: dialogId as string,
+          senderId: userInfo!.globalUserId,
+          textContent: textContent,
+          timestamp: String(Date.now()),
+          status: 'READ',
+        };
+
+        // 保存消息到 store
+        addMessage(storeMessage);
+
+        // 收起工具栏
+        setShowToolbar(false);
       }
     } catch (err) {
       console.error('停止录音失败:', err);
     }
   };
 
+  // 渲染消息列表
+  const renderMessageList = () => (
+    <AudioProvider>
+      <FlashList
+        inverted
+        ref={flashListRef}
+        data={[...formattedMessages].reverse()}
+        renderItem={({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />}
+        keyExtractor={(item, index) => `${item.messageId || index}`}
+        estimatedItemSize={100}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+      />
+    </AudioProvider>
+  );
+
   return (
     <KeyboardAvoidingView className="flex-1" behavior={'padding'} keyboardVerticalOffset={0}>
       <View className="flex-1 bg-[#1483fd]/10 py-3">
         {/* 头部导航栏 */}
-        <View className="flex-row items-center justify-between px-4" style={{ paddingTop: insets.top }}>
+        <View
+          className="flex-row items-center justify-between px-4"
+          style={{ paddingTop: insets.top }}>
           <Pressable
             onPress={() => router.back()}
             className="h-12 w-12 items-center justify-center">
             <Ionicons name="chevron-back" size={24} color="#666" />
           </Pressable>
-          
+
           <View className="flex-1 items-center justify-center">
             <Text className="text-lg font-medium">{groupName}</Text>
           </View>
-          
+
           <Pressable
             onPress={() => {
               router.push({
-                pathname: `/group-chat/${groupId}/info`,
+                pathname: `/group-chat/${dialogId}/info`,
                 params: { groupName, groupAvatarUrl },
               });
             }}
@@ -420,18 +538,7 @@ export default function GroupChat() {
         </View>
 
         {/* 消息区域 */}
-        <View className="flex-1">
-          <FlashList
-            data={[...formattedMessages].reverse()}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            estimatedItemSize={100}
-            contentContainerStyle={{ padding: 16 }}
-            inverted
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.5}
-          />
-        </View>
+        <View className="flex-1">{renderMessageList()}</View>
 
         {/* 底部输入框 */}
         <View className="px-4 pb-4" style={{ paddingBottom: insets.bottom + 20 || 20 }}>

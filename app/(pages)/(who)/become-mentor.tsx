@@ -16,6 +16,15 @@ import { format } from 'date-fns';
 // 启用nativewind的CSS类名支持
 cssInterop(LinearGradient, { className: 'style' });
 
+// 导师类型枚举
+enum TutorType {
+  CHIEF = '首席导师',
+  MENTOR = '导师',
+  HEAD_COACH = '总教练',
+  COACH_TEAM = '教练团长',
+  COACH = '教练',
+}
+
 export default function ApplySettlementScreen() {
   const router = useRouter();
   const { data: currentTutor } = useQuery({
@@ -40,7 +49,11 @@ export default function ApplySettlementScreen() {
     teamSize: '',
     teachingExperience: '',
     coachingExperience: '',
+    tutorType: '',
   });
+  // 下拉框状态
+  const [showTutorTypeDropdown, setShowTutorTypeDropdown] = useState(false);
+  
   useEffect(() => {
     if (currentTutor?.data) {
       setFormData({
@@ -60,6 +73,7 @@ export default function ApplySettlementScreen() {
         teamSize: currentTutor.data.teamSize?.toString() || '',
         teachingExperience: currentTutor.data.assistantCount?.toString() || '',
         coachingExperience: currentTutor.data.coachCount?.toString() || '',
+        tutorType: currentTutor.data.tutorType || '',
       });
     }
   }, [currentTutor]);
@@ -95,6 +109,7 @@ export default function ApplySettlementScreen() {
         teamSize: Number(formData.teamSize),
         assistantCount: Number(formData.teachingExperience),
         coachCount: Number(formData.coachingExperience),
+        tutorType: formData.tutorType,
       };
       const res = await tutorApi.submitApplication(payload);
       if (res.code === 200) {
@@ -146,8 +161,11 @@ export default function ApplySettlementScreen() {
     { key: 'teamSize', label: '原生团队人数：' },
     { key: 'teachingExperience', label: '做过几次助教：' },
     { key: 'coachingExperience', label: '做过几次教练：' },
+    { key: 'tutorType', label: '导师类型：' },
   ];
 
+  console.log("判断申请状态",currentTutor?.data?.status);
+  
   // 判断申请状态
   const isRejected = currentTutor?.data?.status === 'REJECTED';
   const isPending = currentTutor?.data?.status === 'PENDING';
@@ -184,6 +202,12 @@ export default function ApplySettlementScreen() {
         }
       ]
     );
+  };
+
+  // 选择导师类型
+  const handleSelectTutorType = (type: string) => {
+    setFormData(prev => ({ ...prev, tutorType: type }));
+    setShowTutorTypeDropdown(false);
   };
 
   return (
@@ -230,16 +254,45 @@ export default function ApplySettlementScreen() {
                   <View key={field.key} className="flex-row items-center">
                     {renderLabel(field.label)}
                     <View className="flex-1">
-                      <TextInput
-                        className="rounded-[6px] bg-[rgba(20,131,253,0.05)] px-4 py-3 text-black"
-                        placeholder={`请输入${field.label.replace(/\s+/g, '').replace('：', '')}...`}
-                        placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                        value={formData[field.key as keyof typeof formData]}
-                        onChangeText={(text) =>
-                          setFormData((prev) => ({ ...prev, [field.key]: text }))
-                        }
-                        editable={!isSubmitted && !isPending} // 如果已提交且未被拒绝或取消，或者处于pending状态，则不可编辑
-                      />
+                      {field.key === 'tutorType' ? (
+                        <View className="relative">
+                          <TouchableOpacity
+                            onPress={() => !isSubmitted && !isPending && setShowTutorTypeDropdown(!showTutorTypeDropdown)}
+                            className="rounded-[6px] bg-[rgba(20,131,253,0.05)] px-4 py-3"
+                            disabled={isSubmitted || isPending}>
+                            <View className="flex-row items-center justify-between">
+                              <Text className={formData.tutorType ? "text-black" : "text-black/50"}>
+                                {formData.tutorType || `请选择导师类型...`}
+                              </Text>
+                              <AntDesign name="down" size={16} color="rgba(0, 0, 0, 0.5)" />
+                            </View>
+                          </TouchableOpacity>
+                          
+                          {showTutorTypeDropdown && (
+                            <View className="absolute -top-[200px] z-10 w-full rounded-[6px] bg-white shadow-lg">
+                              {Object.values(TutorType).map((type) => (
+                                <TouchableOpacity
+                                  key={type}
+                                  onPress={() => handleSelectTutorType(type)}
+                                  className="border-b border-[#F5F5F5] p-3">
+                                  <Text className="text-[14px]">{type}</Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      ) : (
+                        <TextInput
+                          className="rounded-[6px] bg-[rgba(20,131,253,0.05)] px-4 py-3 text-black"
+                          placeholder={`请输入${field.label.replace(/\s+/g, '').replace('：', '')}...`}
+                          placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                          value={formData[field.key as keyof typeof formData]}
+                          onChangeText={(text) =>
+                            setFormData((prev) => ({ ...prev, [field.key]: text }))
+                          }
+                          editable={!isSubmitted && !isPending} // 如果已提交且未被拒绝或取消，或者处于pending状态，则不可编辑
+                        />
+                      )}
                     </View>
                   </View>
                 ))}

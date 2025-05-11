@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -8,6 +8,7 @@ import { request } from '~/utils/request';
 import { useGoalsByBookId } from '~/queries/achievement';
 import { useLocalSearchParams } from 'expo-router';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { FlashList } from '@shopify/flash-list';
 
 // 成就项组件
 const AchievementItem = ({
@@ -222,7 +223,7 @@ export default function Achievement() {
   useEffect(() => {
     if (goalsResponse?.data) {
       const goalsData = goalsResponse.data;
-      setAchievements(goalsData);
+      setAchievements(goalsData as unknown as Achievement[]);
     }
   }, [goalsResponse]);
   const [loading, setLoading] = useState(false);
@@ -388,6 +389,17 @@ export default function Achievement() {
     }
   };
 
+  // 渲染单个成就项的函数
+  const renderAchievementItem = ({ item, index }: { item: Achievement, index: number }) => (
+    <AchievementItem
+      key={index}
+      data={item}
+      onChange={(data) => handleAchievementChange(index, data)}
+      onDelete={() => handleDeleteAchievement(index)}
+      index={index}
+    />
+  );
+
   return (
     <KeyboardAvoidingView  behavior={'padding'} className="flex-1 bg-white">
       <View className="px-4 py-4">
@@ -399,49 +411,47 @@ export default function Achievement() {
           <View style={{ width: 24 }} />
         </View>
       </View>
-      <ScrollView
-        className="flex-1 bg-[#F5F5F5] px-4 pt-4"
-        contentContainerStyle={{
-          paddingBottom: 160,
-        }}
-        showsVerticalScrollIndicator={false}>
-        {/* 成就项列表 */}
-        {achievements.map((achievement, index) => (
-          <AchievementItem
-            key={index}
-            data={achievement}
-            onChange={(data) => handleAchievementChange(index, data)}
-            onDelete={() => handleDeleteAchievement(index)}
-            index={index}
-          />
-        ))}
+      <View className="flex-1 bg-[#F5F5F5] px-4 pt-4">
+        <FlashList
+          data={achievements}
+          renderItem={renderAchievementItem}
+          estimatedItemSize={500}
+          keyExtractor={(_, index) => index.toString()}
+          ListFooterComponent={
+            <>
+              {/* 添加按钮 */}
+              <TouchableOpacity
+                onPress={handleAddAchievement}
+                className="mb-4 mt-3 flex h-[50px] w-full items-center justify-center rounded-[6px] border border-[#1483FD] bg-white">
+                <View className="relative h-[30px] w-[30px]">
+                  <View className="absolute left-0 top-[13px] h-[4px] w-full bg-[#1483FD]" />
+                  <View className="absolute left-[13px] top-0 h-full w-[4px] bg-[#1483FD]" />
+                </View>
+              </TouchableOpacity>
 
-        {/* 添加按钮 */}
-        <TouchableOpacity
-          onPress={handleAddAchievement}
-          className="mb-4 mt-3 flex h-[50px] w-full items-center justify-center rounded-[6px] border border-[#1483FD] bg-white">
-          <View className="relative h-[30px] w-[30px]">
-            <View className="absolute left-0 top-[13px] h-[4px] w-full bg-[#1483FD]" />
-            <View className="absolute left-[13px] top-0 h-full w-[4px] bg-[#1483FD]" />
-          </View>
-        </TouchableOpacity>
-
-        {/* 确认按钮 */}
-        <LinearGradient
-          colors={['#20B4F3', '#5762FF']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="mt-4 rounded-md p-3 shadow-lg"
-          style={{
-            boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
-          }}>
-          <TouchableOpacity onPress={handleSaveAchievement} disabled={loading}>
-            <Text className="text-center text-xl font-bold text-white">
-              {loading ? '保存中...' : '确认'}
-            </Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </ScrollView>
+              {/* 确认按钮 */}
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="mt-4 rounded-md p-3 shadow-lg"
+                style={{
+                  boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
+                }}>
+                <TouchableOpacity onPress={handleSaveAchievement} disabled={loading}>
+                  <Text className="text-center text-xl font-bold text-white">
+                    {loading ? '保存中...' : '确认'}
+                  </Text>
+                </TouchableOpacity>
+              </LinearGradient>
+            </>
+          }
+          contentContainerStyle={{
+            paddingBottom: 160,
+          }}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }

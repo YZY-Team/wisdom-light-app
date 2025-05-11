@@ -18,6 +18,7 @@ export interface TutorApplicationParams {
   teamSize: number;
   assistantCount: number;
   coachCount: number;
+  tutorType: string;
 }
 
 export interface TutorData {
@@ -39,6 +40,7 @@ export interface TutorData {
   teamSize: number;
   assistantCount: number;
   coachCount: number;
+  tutorType: string;
   status: string;
   reviewComment: string | null;
   reviewTime: string | null;

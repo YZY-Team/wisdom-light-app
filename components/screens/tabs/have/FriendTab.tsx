@@ -92,7 +92,7 @@ const flattenGroupedData = (groupedData: FriendGroup): Item[] => {
 // 好友项组件
 const FriendItem = memo(({ item }: { item: Friend }) => (
   <Pressable
-    className="flex-row items-center bg-white py-3"
+    className="flex-row px-4 items-center bg-white py-3"
     onPress={() => {
       router.push({
         pathname: '/friend-detail',
