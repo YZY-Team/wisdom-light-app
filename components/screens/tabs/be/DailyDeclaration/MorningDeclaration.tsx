@@ -14,24 +14,24 @@ cssInterop(BlurView, { className: 'style' });
 // 定义时间段项的类型接口
 type TimeSlotItem = {
   content: string; // 内容描述
-  time: string;    // 时间点
+  time: string; // 时间点
 };
 
 // 定义时间段区块的类型接口
 type TimeSlotSection = {
-  title: string;        // 区块标题（上午/中午/下午/晚上）
+  title: string; // 区块标题（上午/中午/下午/晚上）
   items: TimeSlotItem[]; // 该时间段的具体项目列表
 };
 
 // 定义组件的属性类型接口
 type MorningDeclarationProps = {
-  date: Date;                 // 日期
+  date: Date; // 日期
   timeSlots: TimeSlotSection[]; // 时间段数据
-  expanded?: boolean;         // 是否展开显示详细内容
-  showHeader?: boolean;       // 是否显示标题栏
-  declarationId?: string;     // 日宣告ID
-  onUpdate?: () => void;      // 更新回调
-  readOnly?: boolean;         // 是否只读模式
+  expanded?: boolean; // 是否展开显示详细内容
+  showHeader?: boolean; // 是否显示标题栏
+  declarationId?: string; // 日宣告ID
+  onUpdate?: () => void; // 更新回调
+  readOnly?: boolean; // 是否只读模式
 };
 
 // 根据时间段标题获取对应的颜色
@@ -51,22 +51,22 @@ const getBarColor = (title: string) => {
 };
 
 // 早宣告组件：展示每日早晨的时间段计划
-export default function MorningDeclaration({ date, timeSlots, expanded = true, showHeader = true, declarationId, onUpdate, readOnly = false }: MorningDeclarationProps) {
+export default function MorningDeclaration({
+  date,
+  timeSlots,
+  expanded = true,
+  showHeader = true,
+  declarationId,
+  readOnly = false,
+}: MorningDeclarationProps) {
+  console.log('morning declaration', declarationId);
+
   // 编辑状态管理
   const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
   // 临时内容管理
   const [tempContents, setTempContents] = useState<{ [key: string]: string }>({});
   // 加载状态管理
   const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
-
-  // 开始编辑
-  const startEditing = (sectionTitle: string, itemIndex: number, content: string) => {
-    if (readOnly) return; // 只读模式下不允许编辑
-    const key = `${sectionTitle}-${itemIndex}`;
-    setEditingStates(prev => ({ ...prev, [key]: true }));
-    setTempContents(prev => ({ ...prev, [key]: content }));
-  };
-
   // 保存编辑
   const saveEditing = async (sectionTitle: string, itemIndex: number) => {
     if (!declarationId) return;
@@ -75,7 +75,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
     const content = tempContents[key];
 
     try {
-      setLoadingStates(prev => ({ ...prev, [key]: true }));
+      setLoadingStates((prev) => ({ ...prev, [key]: true }));
 
       // 根据时间段更新对应的字段
       const updateData: any = {};
@@ -97,7 +97,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
       await dailyDeclarationApi.updateNewDailyDeclaration(declarationId, updateData);
 
       // 更新成功后清除编辑状态
-      setEditingStates(prev => ({ ...prev, [key]: false }));
+      setEditingStates((prev) => ({ ...prev, [key]: false }));
       // 只在明确需要刷新整个列表时才触发onUpdate回调
       // if (onUpdate) {
       //   onUpdate();
@@ -105,26 +105,14 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
     } catch (error) {
       console.log('更新失败:', error);
     } finally {
-      setLoadingStates(prev => ({ ...prev, [key]: false }));
+      setLoadingStates((prev) => ({ ...prev, [key]: false }));
     }
-  };
-
-  // 取消编辑
-  const cancelEditing = (sectionTitle: string, itemIndex: number) => {
-    const key = `${sectionTitle}-${itemIndex}`;
-    setEditingStates(prev => ({ ...prev, [key]: false }));
-    setTempContents(prev => ({ ...prev, [key]: '' }));
   };
 
   // 处理文本输入变更
   const handleTextChange = (sectionTitle: string, itemIndex: number, text: string) => {
     const key = `${sectionTitle}-${itemIndex}`;
-    setTempContents(prev => ({ ...prev, [key]: text }));
-  };
-
-  // 处理回车保存
-  const handleSubmitEditing = (sectionTitle: string, itemIndex: number) => {
-    saveEditing(sectionTitle, itemIndex);
+    setTempContents((prev) => ({ ...prev, [key]: text }));
   };
 
   // 处理失去焦点保存
@@ -159,7 +147,7 @@ export default function MorningDeclaration({ date, timeSlots, expanded = true, s
 
       {/* 只在展开状态下显示时间段列表区域 */}
       {expanded && (
-        <View className="p-4 gap-4">
+        <View className="gap-4 p-4">
           {timeSlots.map((section, sectionIndex) => (
             <View key={section.title} className=" flex-row">
               {/* 左侧时间段标题和装饰条 */}

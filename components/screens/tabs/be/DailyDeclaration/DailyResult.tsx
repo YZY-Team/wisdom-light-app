@@ -3,7 +3,7 @@ import { View, Text, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { BlurView } from 'expo-blur';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
 
 // 启用nativewind的CSS类名支持
@@ -32,22 +32,12 @@ export default function DailyResult({
   goals,
   showHeader = true,
   declarationId,
-  onUpdate,
   readOnly = false,
 }: DailyResultProps) {
-  // 编辑状态管理
-  const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
   // 临时内容管理
   const [tempContents, setTempContents] = useState<{ [key: string]: string }>({});
   // 加载状态管理
   const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
-
-  // 开始编辑
-  const startEditing = (index: number, content: string) => {
-    if (readOnly) return; // 只读模式下不允许编辑
-    setEditingStates((prev) => ({ ...prev, [index]: true }));
-    setTempContents((prev) => ({ ...prev, [index]: content }));
-  };
 
   // 保存编辑
   const saveEditing = async (index: number) => {
@@ -73,24 +63,11 @@ export default function DailyResult({
       await dailyDeclarationApi.updateNewDailyDeclaration(declarationId, {
         dailyGoals: updatedGoals,
       } as any);
-
-      // 更新成功后清除编辑状态
-      setEditingStates((prev) => ({ ...prev, [index]: false }));
-      // 只在明确需要刷新整个列表时才触发onUpdate回调
-      // if (onUpdate) {
-      //   onUpdate();
-      // }
     } catch (error) {
       console.log('更新失败:', error);
     } finally {
       setLoadingStates((prev) => ({ ...prev, [index]: false }));
     }
-  };
-
-  // 取消编辑
-  const cancelEditing = (index: number) => {
-    setEditingStates((prev) => ({ ...prev, [index]: false }));
-    setTempContents((prev) => ({ ...prev, [index]: '' }));
   };
 
   // 处理文本输入变更

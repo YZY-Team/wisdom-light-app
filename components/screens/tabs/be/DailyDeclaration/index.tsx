@@ -27,7 +27,7 @@ type EveningReportItem = {
 
 // 定义每日数据的类型接口
 type DailyData = {
-  id?: string; // 添加id字段
+  id: string; // 添加id字段
   date: Date; // 日期
   timeSlots: TimeSlotSection[]; // 时间段数据
   eveningContent: string; // 晚间内容
@@ -66,6 +66,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
     const utc8Today = utc8Date.toISOString().split('T')[0];
     const itemDate = new Date(item.date.getTime() + 8 * 60 * 60 * 1000);
     const itemDateStr = itemDate.toISOString().split('T')[0];
+    console.log('isToday', utc8Today === itemDateStr);
     return utc8Today === itemDateStr;
   };
 
@@ -203,13 +204,6 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
     return <NoMemberTip tipText="充值会员之后才能拥有日宣告哦～" />;
   }
 
-  // 获取今日宣告
-  const {
-    data: todayDeclarationRes,
-    isLoading: isTodayLoading,
-    refetch: refetchToday,
-  } = useTodayDeclaration(bookId);
-
   // 获取历史宣告列表
   const {
     data: historyResponse,
@@ -220,17 +214,15 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
   // 刷新数据的回调函数
   const fetchDeclarations = useCallback(() => {
     if (bookId) {
-      refetchToday();
       refetchHistory();
     }
-  }, [refetchToday, refetchHistory, bookId]);
+  }, [refetchHistory, bookId]);
 
   // 处理历史宣告数据
   const historicalDailyData = useMemo(() => {
     if (!historyResponse?.data) return [];
-
-    const today = new Date().toISOString().split('T')[0];
     return historyResponse.data.map((declaration) => ({
+      id: declaration.id,
       date: new Date(declaration.declarationDate),
       timeSlots: [
         {
@@ -263,9 +255,12 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
       dailyResult: {
         goals:
           declaration.dailyGoals?.map((goal) => ({
+            goalId: goal.goalId,
             title: goal.title,
             completedQuantity: goal.completedQuantity,
             unit: goal.unit,
+            weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
+            totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
           })) || [],
         weeklyProgress: '0/0',
         monthlyProgress: '0/0',
@@ -293,66 +288,7 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
         </View>
       ) : (
         <FlashList
-          data={[
-            ...(todayDeclarationRes?.data
-              ? [
-                  {
-                    id: todayDeclarationRes.data.id,
-                    date: new Date(todayDeclarationRes.data.declarationDate),
-                    timeSlots: [
-                      {
-                        title: '上午',
-                        items: [
-                          { content: todayDeclarationRes.data.morningPlan || '', time: '7:00' },
-                        ],
-                      },
-                      {
-                        title: '中午',
-                        items: [
-                          { content: todayDeclarationRes.data.noonPlan || '', time: '12:00' },
-                        ],
-                      },
-                      {
-                        title: '下午',
-                        items: [
-                          { content: todayDeclarationRes.data.afternoonPlan || '', time: '14:00' },
-                        ],
-                      },
-                      {
-                        title: '晚上',
-                        items: [
-                          { content: todayDeclarationRes.data.eveningPlan || '', time: '19:00' },
-                        ],
-                      },
-                    ],
-                    eveningContent: '',
-                    eveningStatus: 'pending' as const,
-                    eveningReport: [
-                      { label: '打分', value: todayDeclarationRes.data.dayScore || '' },
-                      { label: '体验', value: todayDeclarationRes.data.dayExperience || '' },
-                      { label: '行得通', value: todayDeclarationRes.data.whatWorked || '' },
-                      { label: '行不通', value: todayDeclarationRes.data.whatDidntWork || '' },
-                      { label: '学习到', value: todayDeclarationRes.data.whatLearned || '' },
-                      { label: '下一步', value: todayDeclarationRes.data.whatNext || '' },
-                    ],
-                    dailyResult: {
-                      goals:
-                        todayDeclarationRes.data.dailyGoals?.map((goal) => ({
-                          goalId: goal.goalId,
-                          title: goal.title,
-                          completedQuantity: goal.completedQuantity,
-                          unit: goal.unit,
-                          weeklyProgress: `${goal.weeklyCompletedQuantity || 0}/${goal.weeklyTargetQuantity || 0}`,
-                          totalProgress: `${goal.totalCompletedQuantity || 0}/${goal.totalTargetQuantity || 0}`,
-                        })) || [],
-                      weeklyProgress: '0/0',
-                      monthlyProgress: '0/0',
-                    },
-                  },
-                ]
-              : []),
-            ...historicalDailyData,
-          ]}
+          data={historicalDailyData}
           renderItem={({ item }) => (
             <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />
           )}

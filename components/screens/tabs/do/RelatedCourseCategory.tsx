@@ -15,7 +15,7 @@ enum SecondaryCategoryType {
   MORAL_ENLIGHTENMENT = '德明',
   AWARENESS = '觉知',
   YOUTH_DREAM_FACTORY = '青少年梦工厂',
-  READING_CLUB = '读书会',
+  READING_CLUB = '正见读书会',
   YOUTH_CHINA_DREAM = '少年梦·中国梦',
   MOTHER_WAY = '娘道',
   PRACTITIONER = '践行者',

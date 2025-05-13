@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import DailyDeclaration from '../../../components/screens/tabs/be/DailyDeclaration';
 import WeeklyDeclaration from '../../../components/screens/tabs/be/WeeklyDeclaration';
@@ -57,6 +57,8 @@ export default function BeIndex() {
   const achievementBookId = achievementBookResponse?.data?.id || '';
   const achievementBook = achievementBookResponse?.data;
   
+  // 添加一个引用来跟踪是否正在创建日宣告
+  const isCreatingDailyDeclaration = useRef(false);
   
   // 周宣告相关
   const { data: currentWeeklyDeclaration, isLoading: weeklyDeclarationLoading, refetch: refetchWeeklyDeclaration } = useCurrentWeeklyDeclaration(achievementBookId);
@@ -146,7 +148,7 @@ export default function BeIndex() {
 
   // 创建日宣告的函数
   const handleCreateDailyDeclaration = async (weeklyDeclarationId: string) => {
-    console.log("userInfo",achievementBookId);
+    console.log("create daily declaration",achievementBookId);
     if (!userInfo?.globalUserId || !achievementBookId) return;
 
     const newDeclaration: NewDailyDeclarationDTO = {
@@ -187,25 +189,31 @@ export default function BeIndex() {
     const initializeDeclarations = async () => {
       // 如果没有成就书ID或用户不是会员，则不执行
       if (!achievementBookId || !userInfo?.isMember || !userInfo?.globalUserId) return;
-      // console.log("achievementBookId",weeklyDeclarationLoading);
+      
       // 检查并创建周宣告和日宣告
       if (!weeklyDeclarationLoading && !currentWeeklyDeclaration) {
         // 创建周宣告
         const weeklyDeclaration = await handleCreateWeeklyDeclaration();
         const weeklyDeclarationId = weeklyDeclaration?.id;
-        // console.log("weeklyDeclarationId",weeklyDeclarationId);
         
         // 如果周宣告创建成功且没有今日宣告，则创建日宣告
-        if (weeklyDeclarationId && !todayDeclarationLoading && todayDeclarationRes?.code === 404) {
-          await handleCreateDailyDeclaration(weeklyDeclarationId);
+        if (weeklyDeclarationId && !todayDeclarationLoading && todayDeclarationRes?.code === 404 && !isCreatingDailyDeclaration.current) {
+          isCreatingDailyDeclaration.current = true;
+          try {
+            await handleCreateDailyDeclaration(weeklyDeclarationId);
+          } finally {
+            isCreatingDailyDeclaration.current = false;
+          }
         }
-      } else if (currentWeeklyDeclaration && !todayDeclarationLoading && todayDeclarationRes?.code === 404) {
+      } else if (currentWeeklyDeclaration && !todayDeclarationLoading && todayDeclarationRes?.code === 404 && !isCreatingDailyDeclaration.current) {
         // 如果已有周宣告但没有今日宣告，则创建日宣告
         console.log("创建日宣告");
-        // console.log("currentWeeklyDeclaration",currentWeeklyDeclaration);
-      const dailyDeclaration = await handleCreateDailyDeclaration(currentWeeklyDeclaration.id);
-      console.log("e42342342",dailyDeclaration);
-
+        isCreatingDailyDeclaration.current = true;
+        try {
+          await handleCreateDailyDeclaration(currentWeeklyDeclaration.id);
+        } finally {
+          isCreatingDailyDeclaration.current = false;
+        }
       }
     };
 

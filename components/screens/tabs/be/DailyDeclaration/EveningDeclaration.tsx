@@ -12,35 +12,33 @@ cssInterop(BlurView, { className: 'style' });
 
 // 定义晚总结报告项的类型接口
 type EveningReportItem = {
-  label: string;  // 报告项标签（如：打分、体验等）
-  value: string;  // 报告项内容
+  label: string; // 报告项标签（如：打分、体验等）
+  value: string; // 报告项内容
 };
 
 // 定义组件的属性类型接口
 type EveningDeclarationProps = {
-  date: Date;                    // 日期
+  date: Date; // 日期
   eveningReport: EveningReportItem[]; // 晚总结报告数据
-  showHeader?: boolean;          // 是否显示标题栏
-  declarationId?: string;        // 宣告ID
-  onUpdate?: () => void;         // 更新回调
-  readOnly?: boolean;            // 是否只读模式
+  showHeader?: boolean; // 是否显示标题栏
+  declarationId?: string; // 宣告ID
+  onUpdate?: () => void; // 更新回调
+  readOnly?: boolean; // 是否只读模式
 };
 
 // 晚总结组件：展示每日晚间的总结报告
-export default function EveningDeclaration({ date, eveningReport, showHeader = true, declarationId, onUpdate, readOnly = false }: EveningDeclarationProps) {
-  // 编辑状态管理
-  const [editingStates, setEditingStates] = useState<{ [key: string]: boolean }>({});
+export default function EveningDeclaration({
+  date,
+  eveningReport,
+  showHeader = true,
+  declarationId,
+  onUpdate,
+  readOnly = false,
+}: EveningDeclarationProps) {
   // 临时内容管理
   const [tempContents, setTempContents] = useState<{ [key: string]: string }>({});
   // 加载状态管理
   const [loadingStates, setLoadingStates] = useState<{ [key: string]: boolean }>({});
-
-  // 开始编辑
-  const startEditing = (label: string, content: string) => {
-    if (readOnly) return; // 只读模式下不允许编辑
-    setEditingStates(prev => ({ ...prev, [label]: true }));
-    setTempContents(prev => ({ ...prev, [label]: content }));
-  };
 
   // 保存编辑
   const saveEditing = async (label: string) => {
@@ -49,7 +47,7 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
     const content = tempContents[label];
 
     try {
-      setLoadingStates(prev => ({ ...prev, [label]: true }));
+      setLoadingStates((prev) => ({ ...prev, [label]: true }));
 
       // 根据标签更新对应的字段
       const updateData: any = {};
@@ -75,30 +73,17 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
       }
 
       await dailyDeclarationApi.updateNewDailyDeclaration(declarationId, updateData);
-
-      // 更新成功后清除编辑状态
-      setEditingStates(prev => ({ ...prev, [label]: false }));
-      // 只在明确需要刷新整个列表时才触发onUpdate回调
-      // if (onUpdate) {
-      //   onUpdate();
-      // }
     } catch (error) {
       console.log('更新失败:', error);
     } finally {
-      setLoadingStates(prev => ({ ...prev, [label]: false }));
+      setLoadingStates((prev) => ({ ...prev, [label]: false }));
     }
-  };
-
-  // 取消编辑
-  const cancelEditing = (label: string) => {
-    setEditingStates(prev => ({ ...prev, [label]: false }));
-    setTempContents(prev => ({ ...prev, [label]: '' }));
   };
 
   // 处理文本输入变更
   const handleTextChange = (label: string, text: string) => {
     if (text.length <= 100) {
-      setTempContents(prev => ({ ...prev, [label]: text }));
+      setTempContents((prev) => ({ ...prev, [label]: text }));
     }
   };
 
@@ -132,10 +117,10 @@ export default function EveningDeclaration({ date, eveningReport, showHeader = t
       )}
 
       {/* 报告项列表区域 */}
-      <View className="p-4 gap-4">
+      <View className="gap-4 p-4">
         {eveningReport.map((reportItem, index) => {
           const isLoading = loadingStates[reportItem.label];
-          
+
           return (
             <View key={reportItem.label} className=" flex flex-row items-start">
               {/* 左侧标签 */}

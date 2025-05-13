@@ -103,7 +103,7 @@ export interface DailyGoalDTO {
  */
 export interface NewDailyDeclarationDTO {
   /** 唯一标识符 */
-  id?: string;
+  id: string;
   /** 用户ID */
   userId: string;
   /** 书籍ID */

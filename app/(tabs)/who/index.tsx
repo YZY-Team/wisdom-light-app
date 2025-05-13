@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
 import { useState } from 'react';
@@ -11,16 +11,16 @@ import { Modal, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fileApi } from '~/api/who/file';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
 import { cssInterop } from 'nativewind';
 import { clearDatabase } from '~/services/database';
 import { useDatabase } from '~/contexts/DatabaseContext';
 import { dialogApi } from '~/api/have/dialog';
-import { NativeWechatConstants, sendAuthRequest, shareText } from 'expo-native-wechat';
+import { NativeWechatConstants, shareText } from 'expo-native-wechat';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { useAuthStore } from '~/store/authStore';
 import { useActiveAchievementBook } from '~/queries/achievement';
 import { useQuery } from '@tanstack/react-query';
+import { dailyDeclarationApi } from '~/api/be/dailyDeclaration';
 
 const testCreateGroupDialog = ({
   title,
@@ -82,7 +82,7 @@ export default function WhoIndex() {
     queryKey: ['userinfo'],
     queryFn: () => userApi.me().then((res) => res.data),
   });
-
+  const [deletingDeclarations, setDeletingDeclarations] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -94,7 +94,7 @@ export default function WhoIndex() {
           setUserInfo(res.data);
         }
       });
-    }, []),
+    }, [])
   );
 
   const handleEdit = (type: 'nickname' | 'username') => {
@@ -187,8 +187,7 @@ export default function WhoIndex() {
       alert('选择图片失败，请重试');
     }
   };
-  console.log("userInfo",userInfo);
-  
+
   // 添加退出登录处理函数
   const handleLogout = async () => {
     try {
@@ -238,8 +237,6 @@ export default function WhoIndex() {
   };
   const { data: activeAchievementBook, refetch } = useActiveAchievementBook();
 
-  console.log('activeAchievementBook', activeAchievementBook);
-
   // 处理创建成就书
   const handleCreateAchievementBook = async () => {
     console.log('创建成就书', activeAchievementBook);
@@ -266,9 +263,96 @@ export default function WhoIndex() {
     });
     // await verifyWechatCode(code);
   };
+
+  // 处理删除全部日宣告
+  const handleDeleteAllDailyDeclarations = async () => {
+    try {
+      Alert.alert('确认删除', '确定要删除所有日宣告吗？', [
+        {
+          text: '取消',
+          style: 'cancel',
+        },
+        {
+          text: '确定',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingDeclarations(true);
+
+              // 获取当前激活的成就书
+              const activeBookRes = await achievementBookApi.getActiveAchievementBook();
+
+              if (activeBookRes.code !== 200 || !activeBookRes.data) {
+                Alert.alert('提示', '未找到激活的成就书');
+                setDeletingDeclarations(false);
+                return;
+              }
+
+              // 检查成就书ID是否存在
+              if (!activeBookRes.data.id) {
+                Alert.alert('提示', '成就书ID无效');
+                setDeletingDeclarations(false);
+                return;
+              }
+
+              const bookId = activeBookRes.data.id;
+
+              // 获取该成就书下的所有日宣告
+              const declarationsRes = await dailyDeclarationApi.getBookDailyDeclarations(bookId);
+
+              if (!declarationsRes || !declarationsRes.data || declarationsRes.data.length === 0) {
+                Alert.alert('提示', '没有找到日宣告');
+                setDeletingDeclarations(false);
+                return;
+              }
+
+              // 循环删除所有日宣告
+              const declarations = declarationsRes.data;
+              let successCount = 0;
+              let failCount = 0;
+
+              for (const declaration of declarations) {
+                if (declaration.id) {
+                  try {
+                    const deleteRes = await dailyDeclarationApi.deleteDailyDeclaration(
+                      declaration.id
+                    );
+                    if (deleteRes && deleteRes.code === 200) {
+                      successCount++;
+                    } else {
+                      failCount++;
+                    }
+                  } catch (error) {
+                    console.log('删除日宣告失败:', error);
+                    failCount++;
+                  }
+                }
+              }
+
+              setDeletingDeclarations(false);
+
+              if (failCount === 0) {
+                Alert.alert('成功', `已成功删除全部${successCount}条日宣告`);
+              } else {
+                Alert.alert('完成', `成功删除${successCount}条日宣告，失败${failCount}条`);
+              }
+            } catch (error) {
+              console.log('删除日宣告失败:', error);
+              Alert.alert('提示', '删除失败，请稍后重试');
+              setDeletingDeclarations(false);
+            }
+          },
+        },
+      ]);
+    } catch (error) {
+      console.log('删除日宣告失败:', error);
+      Alert.alert('提示', '操作失败，请稍后重试');
+    }
+  };
+
   return (
     <View className="flex-1 bg-[#F5F8FC]">
-      {(loggingOut || isInitializing) && (
+      {(loggingOut || isInitializing || deletingDeclarations) && (
         <View className="absolute inset-0 z-50 items-center justify-center bg-black/30">
           <ActivityIndicator color="#fff" size="large" />
           <Text className="mt-2 text-white">正在处理，请稍候...</Text>
@@ -338,7 +422,7 @@ export default function WhoIndex() {
             title="会员充值"
             href="/membership"
           />
-          {!userInfo?.isTutor  ? (
+          {!userInfo?.isTutor ? (
             <MenuItem
               icon={require('~/assets/images/who/join.png')}
               title="申请入驻"
@@ -381,6 +465,16 @@ export default function WhoIndex() {
               contentFit="contain"
             />
             <Text className="ml-4 flex-1">测试创建成就书</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleDeleteAllDailyDeclarations}
+            className="flex-row items-center px-4 py-4">
+            <Image
+              source={require('~/assets/images/who/logout.png')}
+              className="h-5 w-5"
+              contentFit="contain"
+            />
+            <Text className="ml-4 flex-1">删除全部日宣告</Text>
           </Pressable>
           {/* <Pressable
             onPress={() => onButtonClicked()}

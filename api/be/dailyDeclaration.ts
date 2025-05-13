@@ -40,13 +40,19 @@ export const dailyDeclarationApi = {
     return request.patch<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
   },
 
+  // 删除指定成就书对应的日宣告 /wl/daily-declaration/{id}
+  
+  deleteDailyDeclaration: (id: string) => {
+    return request.delete<boolean>(`/wl/daily-declaration/${id}`);
+  },
+
   /**
    * 删除新格式的日宣告
    * @param id 日宣告ID
    * @returns 返回删除是否成功
    */
-  deleteNewDailyDeclaration: (id: number) => {
-    return request.delete<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
+  deleteNewDailyDeclaration: (id: string) => {
+    return request.delete<boolean>(`/wl/daily-declaration/${id}`);
   },
 
   /**

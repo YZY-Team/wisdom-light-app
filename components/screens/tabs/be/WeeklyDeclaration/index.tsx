@@ -1,9 +1,7 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import WeeklyDeclarationList from './WeeklyDeclarationList';
-import {
-  useCurrentWeeklyDeclaration,
-} from '~/queries/weeklyDeclaration';
+import { useCurrentWeeklyDeclaration } from '~/queries/weeklyDeclaration';
 import { Image } from 'react-native';
 import saveIcon from '~/assets/saveIcon.png';
 import { cssInterop } from 'nativewind';
@@ -24,22 +22,8 @@ type WeeklyDeclarationProps = {
 };
 
 export default function WeeklyDeclaration({ bookId, userInfo }: WeeklyDeclarationProps) {
-  const { data: currentDeclaration, isLoading } = useCurrentWeeklyDeclaration(bookId);
-  
   if (!userInfo?.isMember) {
-    return (
-      <NoMemberTip
-        tipText="充值会员之后才能拥有周宣告哦～"
-      />
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text>加载中...</Text>
-      </View>
-    );
+    return <NoMemberTip tipText="充值会员之后才能拥有周宣告哦～" />;
   }
 
   if (!bookId) {
@@ -51,7 +35,11 @@ export default function WeeklyDeclaration({ bookId, userInfo }: WeeklyDeclaratio
   }
 
   return (
-    <KeyboardAvoidingView keyboardVerticalOffset={50} className="flex-1"  behavior={'padding'} style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      keyboardVerticalOffset={50}
+      className="flex-1"
+      behavior={'padding'}
+      style={{ flex: 1 }}>
       {bookId ? (
         <WeeklyDeclarationList bookId={bookId} />
       ) : (
