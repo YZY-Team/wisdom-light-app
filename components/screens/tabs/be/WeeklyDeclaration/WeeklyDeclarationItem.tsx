@@ -24,20 +24,19 @@ export default function WeeklyDeclarationItem({
   const [selectedDay, setSelectedDay] = useState(0);
   const [localDeclaration, setLocalDeclaration] = useState(declaration);
   const updateMutation = useUpdateWeeklyDeclaration();
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [titleModalVisible, setTitleModalVisible] = useState(false);
   const [tempTitle, setTempTitle] = useState('');
 
   // 当declaration属性改变时，更新本地状态
   useEffect(() => {
     setLocalDeclaration(declaration);
-    console.log('declaration',new Date().toISOString(), declaration);
+    console.log('declaration', new Date().toISOString(), declaration);
   }, [declaration]);
 
-  // 自动保存函数
-  const autoSave = async () => {
+  // 失去焦点时保存函数
+  const handleBlur = async () => {
     if (readOnly || !localDeclaration.id) return;
-    console.log('autoSave', new Date().toISOString());
+    console.log('handleBlur', new Date().toISOString());
     try {
       await updateMutation.mutateAsync({
         id: localDeclaration.id.toString(),
@@ -47,15 +46,6 @@ export default function WeeklyDeclarationItem({
       console.log('保存周宣告失败:', error);
     }
   };
-
-  // 组件卸载时清除定时器
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
@@ -83,29 +73,27 @@ export default function WeeklyDeclarationItem({
   // 添加修改周目标的函数
   const updateWeeklyGoal = (index: number, text: string) => {
     if (readOnly) return;
-    
+
     const numericValue = text.trim() === '' ? 0 : parseFloat(text);
     console.log('numericValue', numericValue);
     if (isNaN(numericValue)) return;
-    
+
     const updatedGoals = [...localDeclaration.weeklyGoals];
     updatedGoals[index] = {
       ...updatedGoals[index],
-      targetQuantity: numericValue
+      targetQuantity: numericValue,
     };
 
-    
-    setLocalDeclaration(prev =>{
-
-      return  ({
+    setLocalDeclaration((prev) => {
+      return {
         ...prev,
-        weeklyGoals: updatedGoals
-      })
+        weeklyGoals: updatedGoals,
+      };
     });
-    
+
     onUpdateDeclaration({
       ...localDeclaration,
-      weeklyGoals: updatedGoals
+      weeklyGoals: updatedGoals,
     });
   };
 
@@ -149,7 +137,7 @@ export default function WeeklyDeclarationItem({
             {updateMutation.isPending && (
               <Text className="mr-2 text-xs text-gray-500">保存中...</Text>
             )}
-            <Pressable 
+            <Pressable
               className="ml-2 flex-row items-center justify-center"
               onPress={openTitleModal}>
               <Ionicons name="create-outline" size={16} color="#1483fd" />
@@ -164,25 +152,21 @@ export default function WeeklyDeclarationItem({
         transparent={true}
         visible={titleModalVisible}
         onRequestClose={() => setTitleModalVisible(false)}>
-        <View className="flex-1 justify-center items-center bg-[#00000080]">
-          <View className="bg-white w-[80%] rounded-lg p-6 shadow-lg">
-            <Text className="text-[18px] font-bold mb-4">编辑标题</Text>
+        <View className="flex-1 items-center justify-center bg-[#00000080]">
+          <View className="w-[80%] rounded-lg bg-white p-6 shadow-lg">
+            <Text className="mb-4 text-[18px] font-bold">编辑标题</Text>
             <TextInput
-              className="border border-[#1483FD33] rounded-lg p-3 mb-4"
+              className="mb-4 rounded-lg border border-[#1483FD33] p-3"
               placeholder="请输入标题"
               value={tempTitle}
               onChangeText={setTempTitle}
               maxLength={30}
             />
             <View className="flex-row justify-end">
-              <Pressable 
-                className="px-4 py-2 mr-2"
-                onPress={() => setTitleModalVisible(false)}>
+              <Pressable className="mr-2 px-4 py-2" onPress={() => setTitleModalVisible(false)}>
                 <Text className="text-[#666666]">取消</Text>
               </Pressable>
-              <Pressable 
-                className="px-4 py-2 bg-[#1483FD] rounded-lg"
-                onPress={saveTitle}>
+              <Pressable className="rounded-lg bg-[#1483FD] px-4 py-2" onPress={saveTitle}>
                 <Text className="text-white">确定</Text>
               </Pressable>
             </View>
@@ -236,7 +220,7 @@ export default function WeeklyDeclarationItem({
               multiline
               value={localDeclaration.declarationContent}
               onChangeText={(text) => handleTextChange('declarationContent', text, 150)}
-              onBlur={autoSave}
+              onBlur={handleBlur}
               maxLength={150}
               editable={!readOnly}
             />
@@ -262,7 +246,7 @@ export default function WeeklyDeclarationItem({
                       maxLength={10}
                       value={goal.targetQuantity.toString()}
                       onChangeText={(text) => updateWeeklyGoal(index, text)}
-                      onBlur={autoSave}
+                      onBlur={handleBlur}
                       editable={!readOnly}
                     />
                   </View>
@@ -315,7 +299,7 @@ export default function WeeklyDeclarationItem({
                   </View>
                   <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
                     <Text className="text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.morningPlan || "暂无计划"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.morningPlan || '暂无计划'}
                     </Text>
                   </View>
                 </View>
@@ -328,7 +312,7 @@ export default function WeeklyDeclarationItem({
                   </View>
                   <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
                     <Text className="text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.noonPlan || "暂无计划"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.noonPlan || '暂无计划'}
                     </Text>
                   </View>
                 </View>
@@ -341,7 +325,8 @@ export default function WeeklyDeclarationItem({
                   </View>
                   <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
                     <Text className="text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.afternoonPlan || "暂无计划"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.afternoonPlan ||
+                        '暂无计划'}
                     </Text>
                   </View>
                 </View>
@@ -354,7 +339,7 @@ export default function WeeklyDeclarationItem({
                   </View>
                   <View className="flex-1 rounded-lg bg-[#F5F8FF] p-3">
                     <Text className="text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.eveningPlan || "暂无计划"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.eveningPlan || '暂无计划'}
                     </Text>
                   </View>
                 </View>
@@ -367,64 +352,69 @@ export default function WeeklyDeclarationItem({
                   <View className="mb-2 flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">日评分:</Text>
                     <Text className="text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayScore || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayScore || '-'}
                     </Text>
                   </View>
                   <View className="mb-2 flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">日体验:</Text>
                     <Text className="flex-1 text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayExperience || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.dayExperience || '-'}
                     </Text>
                   </View>
                   <View className="mb-2 flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">行得通:</Text>
                     <Text className="flex-1 text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatWorked || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatWorked || '-'}
                     </Text>
                   </View>
                   <View className="mb-2 flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">行不通:</Text>
                     <Text className="flex-1 text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatDidntWork || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatDidntWork || '-'}
                     </Text>
                   </View>
                   <View className="mb-2 flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">学习到:</Text>
                     <Text className="flex-1 text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatLearned || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatLearned || '-'}
                     </Text>
                   </View>
                   <View className="flex-row">
                     <Text className="w-[100px] text-[14px] font-bold">下一步:</Text>
                     <Text className="flex-1 text-[14px]">
-                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatNext || "-"}
+                      {localDeclaration.dailyDeclarations?.[selectedDay]?.whatNext || '-'}
                     </Text>
                   </View>
                 </View>
               </View>
 
               {/* 日目标完成情况 */}
-              {localDeclaration.dailyDeclarations?.[selectedDay]?.dailyGoals && 
-               localDeclaration.dailyDeclarations[selectedDay].dailyGoals.length > 0 && (
-                <View className="mt-4">
-                  <Text className="mb-3 text-[16px] font-bold">周目标完成情况</Text>
-                  {localDeclaration.dailyDeclarations[selectedDay].dailyGoals.map((goal, index) => (
-                    <View key={goal.goalId || index} className="mb-2 rounded-lg bg-[#F5F8FF] p-3">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-[14px] font-bold">{goal.title || ""}:</Text>
-                        <View className="flex-row items-center">
-                          <Text className="text-[14px]">
-                            {goal.completedQuantity || 0} / {goal.weeklyTargetQuantity || 0} {goal.unit || ""}
-                          </Text>
-                          <Text className="ml-2 text-[14px] text-[#1483FD]">
-                            ({(goal.weeklyCompletionRate || 0).toFixed(1)}%)
-                          </Text>
+              {localDeclaration.dailyDeclarations?.[selectedDay]?.dailyGoals &&
+                localDeclaration.dailyDeclarations[selectedDay].dailyGoals.length > 0 && (
+                  <View className="mt-4">
+                    <Text className="mb-3 text-[16px] font-bold">周目标完成情况</Text>
+                    {localDeclaration.dailyDeclarations[selectedDay].dailyGoals.map(
+                      (goal, index) => (
+                        <View
+                          key={goal.goalId || index}
+                          className="mb-2 rounded-lg bg-[#F5F8FF] p-3">
+                          <View className="flex-row items-center justify-between">
+                            <Text className="text-[14px] font-bold">{goal.title || ''}:</Text>
+                            <View className="flex-row items-center">
+                              <Text className="text-[14px]">
+                                {goal.completedQuantity || 0} / {goal.weeklyTargetQuantity || 0}{' '}
+                                {goal.unit || ''}
+                              </Text>
+                              <Text className="ml-2 text-[14px] text-[#1483FD]">
+                                ({(goal.weeklyCompletionRate || 0).toFixed(1)}%)
+                              </Text>
+                            </View>
+                          </View>
                         </View>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
+                      )
+                    )}
+                  </View>
+                )}
             </View>
           </View>
         </View>
@@ -455,13 +445,13 @@ export default function WeeklyDeclarationItem({
                     end={{ x: 1, y: 0 }}
                     className="h-full"
                     style={{
-                      width: `${Math.min(localDeclaration.averageCompletionRate,100)}%`,
+                      width: `${Math.min(localDeclaration.averageCompletionRate, 100)}%`,
                       borderRadius: 2.5,
                     }}
                   />
                 </View>
                 <Text className="w-[16%] text-center text-[20px] font-bold text-[#FF9F21]">
-                  {Math.min(localDeclaration.averageCompletionRate,100)}%
+                  {Math.min(localDeclaration.averageCompletionRate, 100)}%
                 </Text>
               </View>
             </View>
@@ -479,7 +469,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.achievement}
                     onChangeText={(text) => handleTextChange('achievement', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View>
@@ -497,7 +487,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.selfSummary}
                     onChangeText={(text) => handleTextChange('selfSummary', text, 300)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -521,7 +511,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.summary123456}
                     onChangeText={(text) => handleTextChange('summary123456', text, 300)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -545,7 +535,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.nextStep}
                     onChangeText={(text) => handleTextChange('nextStep', text, 300)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                   <Text className="absolute bottom-2 right-3 text-[14px]">
@@ -565,7 +555,7 @@ export default function WeeklyDeclarationItem({
                     placeholderTextColor="rgba(0, 0, 0, 0.5)"
                     value={localDeclaration.weekScore}
                     onChangeText={(text) => handleTextChange('weekScore', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View>
@@ -580,7 +570,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.weekExperience}
                     onChangeText={(text) => handleTextChange('weekExperience', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View>
@@ -595,7 +585,7 @@ export default function WeeklyDeclarationItem({
                     multiline
                     value={localDeclaration.whatWorked}
                     onChangeText={(text) => handleTextChange('whatWorked', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View>
@@ -610,7 +600,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.whatLearned}
                     onChangeText={(text) => handleTextChange('whatLearned', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View>
@@ -625,7 +615,7 @@ export default function WeeklyDeclarationItem({
                     textAlignVertical="top"
                     value={localDeclaration.whatNext}
                     onChangeText={(text) => handleTextChange('whatNext', text)}
-                    onBlur={autoSave}
+                    onBlur={handleBlur}
                     editable={!readOnly}
                   />
                 </View> */}
