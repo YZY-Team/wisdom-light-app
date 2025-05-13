@@ -9,13 +9,7 @@ import DailyResult from './DailyResult';
 import { cssInterop } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import {
-  useTodayDeclaration,
-  useBookDeclarations,
-  useCreateDeclaration,
-} from '~/queries/dailyDeclaration';
-import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
-import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
+import { useTodayDeclaration, useBookDeclarations } from '~/queries/dailyDeclaration';
 import NoMemberTip from '../NoMemberTip';
 import { UserInfo } from '~/store/userStore';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -66,10 +60,17 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
   };
 
   // 判断是否为今天的宣告
-  const isToday = new Date().toISOString().split('T')[0] === item.date.toISOString().split('T')[0];
+  const isToday = () => {
+    const now = new Date();
+    const utc8Date = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    const utc8Today = utc8Date.toISOString().split('T')[0];
+    const itemDate = new Date(item.date.getTime() + 8 * 60 * 60 * 1000);
+    const itemDateStr = itemDate.toISOString().split('T')[0];
+    return utc8Today === itemDateStr;
+  };
 
   return (
-    <View className="" style={{ opacity: isToday ? 1 : 0.5 }}>
+    <View className="" style={{ opacity: isToday() ? 1 : 0.5 }}>
       {/* 日期头部 */}
       <View className="flex-row items-center justify-center  px-4 py-4">
         <View className="mt-1 flex-row items-end">
@@ -128,7 +129,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
             showHeader={false}
             declarationId={item.id}
             onUpdate={onRefresh}
-            readOnly={!isToday}
+            readOnly={!isToday()}
           />
         )}
       </View>
@@ -161,7 +162,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
             showHeader={false}
             declarationId={item.id}
             onUpdate={onRefresh}
-            readOnly={!isToday}
+            readOnly={!isToday()}
           />
         </View>
       )}
@@ -174,7 +175,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
           showHeader={true}
           declarationId={item.id}
           onUpdate={onRefresh}
-          readOnly={!isToday}
+          readOnly={!isToday()}
         />
       ) : (
         /* 收起状态 - 仅显示目标列表内容，不带标题 */
@@ -183,7 +184,7 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
           showHeader={false}
           declarationId={item.id}
           onUpdate={onRefresh}
-          readOnly={!isToday}
+          readOnly={!isToday()}
         />
       )}
     </View>
@@ -198,8 +199,6 @@ type DailyDeclarationProps = {
 
 // 主组件：每日宣告列表
 export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationProps) {
-  const createDeclaration = useCreateDeclaration();
-
   if (!userInfo?.isMember) {
     return <NoMemberTip tipText="充值会员之后才能拥有日宣告哦～" />;
   }
@@ -231,136 +230,48 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
     if (!historyResponse?.data) return [];
 
     const today = new Date().toISOString().split('T')[0];
-    return historyResponse.data
-      .filter((declaration) => declaration.declarationDate !== today)
-      .sort((a, b) => new Date(b.declarationDate).getTime() - new Date(a.declarationDate).getTime())
-      .map((declaration) => ({
-        date: new Date(declaration.declarationDate),
-        timeSlots: [
-          {
-            title: '上午',
-            items: [{ content: declaration.morningPlan || '', time: '7:00' }],
-          },
-          {
-            title: '中午',
-            items: [{ content: declaration.noonPlan || '', time: '12:00' }],
-          },
-          {
-            title: '下午',
-            items: [{ content: declaration.afternoonPlan || '', time: '14:00' }],
-          },
-          {
-            title: '晚上',
-            items: [{ content: declaration.eveningPlan || '', time: '19:00' }],
-          },
-        ],
-        eveningContent: '',
-        eveningStatus: 'completed' as const,
-        eveningReport: [
-          { label: '打分', value: declaration.dayScore || '' },
-          { label: '体验', value: declaration.dayExperience || '' },
-          { label: '行得通', value: declaration.whatWorked || '' },
-          { label: '行不通', value: declaration.whatDidntWork || '' },
-          { label: '学习到', value: declaration.whatLearned || '' },
-          { label: '下一步', value: declaration.whatNext || '' },
-        ],
-        dailyResult: {
-          goals:
-            declaration.dailyGoals?.map((goal) => ({
-              title: goal.title,
-              completedQuantity: goal.completedQuantity,
-              unit: goal.unit,
-            })) || [],
-          weeklyProgress: '0/0',
-          monthlyProgress: '0/0',
+    return historyResponse.data.map((declaration) => ({
+      date: new Date(declaration.declarationDate),
+      timeSlots: [
+        {
+          title: '上午',
+          items: [{ content: declaration.morningPlan || '', time: '7:00' }],
         },
-      }));
+        {
+          title: '中午',
+          items: [{ content: declaration.noonPlan || '', time: '12:00' }],
+        },
+        {
+          title: '下午',
+          items: [{ content: declaration.afternoonPlan || '', time: '14:00' }],
+        },
+        {
+          title: '晚上',
+          items: [{ content: declaration.eveningPlan || '', time: '19:00' }],
+        },
+      ],
+      eveningContent: '',
+      eveningStatus: 'completed' as const,
+      eveningReport: [
+        { label: '打分', value: declaration.dayScore || '' },
+        { label: '体验', value: declaration.dayExperience || '' },
+        { label: '行得通', value: declaration.whatWorked || '' },
+        { label: '行不通', value: declaration.whatDidntWork || '' },
+        { label: '学习到', value: declaration.whatLearned || '' },
+        { label: '下一步', value: declaration.whatNext || '' },
+      ],
+      dailyResult: {
+        goals:
+          declaration.dailyGoals?.map((goal) => ({
+            title: goal.title,
+            completedQuantity: goal.completedQuantity,
+            unit: goal.unit,
+          })) || [],
+        weeklyProgress: '0/0',
+        monthlyProgress: '0/0',
+      },
+    }));
   }, [historyResponse?.data]);
-
-  // 创建今日宣告的处理函数
-  const handleCreateTodayDeclaration = async (weeklyDeclarationId: string) => {
-    if (!userInfo?.globalUserId || !bookId) return;
-
-    const newDeclaration: NewDailyDeclarationDTO = {
-      userId: userInfo.globalUserId, // 使用用户的 globalUserId
-      bookId: bookId,
-      weeklyDeclarationId: weeklyDeclarationId,
-      dayNumber: 1, // TODO: 根据实际情况计算
-      declarationDate: new Date().toISOString().split('T')[0],
-      morningPlan: '',
-      noonPlan: '',
-      afternoonPlan: '',
-      eveningPlan: '',
-      dayScore: '',
-      dayExperience: '',
-      whatWorked: '',
-      whatDidntWork: '',
-      whatLearned: '',
-      whatNext: '',
-      dailyGoals: [],
-    };
-
-    try {
-      await createDeclaration.mutateAsync(newDeclaration);
-    } catch (error) {
-      console.log('创建今日宣告失败:', error);
-    }
-  };
-
-  // 如果没有今日宣告，创建新的宣告
-  useEffect(() => {
-    if (todayDeclarationRes?.code === 404 && bookId && userInfo?.globalUserId) {
-      const createWeeklyDeclarationAndDaily = async () => {
-        try {
-          const currentWeekResponse =
-            await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
-          let weeklyDeclarationId: string;
-
-          if (currentWeekResponse.code === 404) {
-            const newWeeklyDeclaration = {
-              bookId: bookId,
-              userId: userInfo.globalUserId, // 使用用户的 globalUserId
-              weekNumber: 1, // TODO: 计算当前是第几周
-              title: '',
-              declarationContent: '',
-              weekStartDate: new Date().toISOString().split('T')[0],
-              weekEndDate: new Date().toISOString().split('T')[0], // TODO: 计算周结束日期
-              achievement: '',
-              selfSummary: '',
-              summary123456: '',
-              nextStep: '',
-              weekScore: '',
-              weekExperience: '',
-              whatWorked: '',
-              whatDidntWork: '',
-              whatLearned: '',
-              whatNext: '',
-              weeklyGoals: [],
-              averageCompletionRate: 0,
-              createTime: new Date().toISOString(),
-              updateTime: new Date().toISOString(),
-            };
-
-            const createWeeklyResponse = await weeklyDeclarationApi.createWeeklyDeclaration(
-              newWeeklyDeclaration as any
-            );
-            if (createWeeklyResponse.code !== 200) {
-              throw new Error('创建周宣告失败');
-            }
-            weeklyDeclarationId = createWeeklyResponse.data.toString();
-          } else {
-            weeklyDeclarationId = currentWeekResponse.data.id;
-          }
-
-          await handleCreateTodayDeclaration(weeklyDeclarationId);
-        } catch (error) {
-          console.log('创建周宣告失败:', error);
-        }
-      };
-
-      createWeeklyDeclarationAndDaily();
-    }
-  }, [todayDeclarationRes?.code, bookId, userInfo?.globalUserId]);
 
   if (!bookId) {
     return (

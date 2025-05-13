@@ -28,12 +28,14 @@ export const useCurrentWeeklyDeclaration = (bookId: string) => {
   return useQuery({
     queryKey: weeklyDeclarationKeys.current(bookId),
     queryFn: async () => {
+      if (!bookId) throw new Error('BookId is required');
       const response = await weeklyDeclarationApi.getCurrentWeeklyDeclaration(bookId);
       if (response.code === 200) {
         return response.data;
       }
       return null;
     },
+    enabled: !!bookId,
   });
 };
 

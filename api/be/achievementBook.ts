@@ -126,7 +126,6 @@ export const achievementBookApi = {
     updateGoal: (id: string, data: {
         bookId: string;
         title: string;
-        commitment: string;
         targetQuantity: number;
         unit: string;
         purpose: string;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import DailyDeclaration from '../../../components/screens/tabs/be/DailyDeclaration';
 import WeeklyDeclaration from '../../../components/screens/tabs/be/WeeklyDeclaration';
@@ -8,6 +8,19 @@ import { cssInterop } from 'nativewind';
 import { useActiveAchievementBook } from '~/queries/achievement';
 import { useUserStore } from '~/store/userStore';
 import NoMemberTip from '~/components/screens/tabs/be/NoMemberTip';
+import { 
+  useCurrentWeeklyDeclaration, 
+  useCreateWeeklyDeclaration, 
+  weeklyDeclarationKeys 
+} from '~/queries/weeklyDeclaration';
+import { 
+  useTodayDeclaration, 
+  useCreateDeclaration 
+} from '~/queries/dailyDeclaration';
+import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { NewDailyDeclarationDTO, WeeklyDeclarationDTO } from '~/types/be/declarationType';
+import { useFocusEffect } from 'expo-router';
 
 cssInterop(LinearGradient, { className: 'style' });
 type TabProps = {
@@ -40,9 +53,172 @@ const Tab = ({ title, isActive, href, onPress }: TabProps) => (
 export default function BeIndex() {
   const [activeTab, setActiveTab] = useState('daily');
   const { userInfo } = useUserStore();
-  const { data: achievementBookResponse, isLoading: achievementBookLoading } = useActiveAchievementBook();
+  const { data: achievementBookResponse, isLoading: achievementBookLoading, refetch: refetchAchievementBook } = useActiveAchievementBook();
   const achievementBookId = achievementBookResponse?.data?.id || '';
   const achievementBook = achievementBookResponse?.data;
+  
+  
+  // 周宣告相关
+  const { data: currentWeeklyDeclaration, isLoading: weeklyDeclarationLoading, refetch: refetchWeeklyDeclaration } = useCurrentWeeklyDeclaration(achievementBookId);
+  const createWeeklyDeclaration = useCreateWeeklyDeclaration();
+  
+  // 日宣告相关
+  const { data: todayDeclarationRes, isLoading: todayDeclarationLoading, refetch: refetchTodayDeclaration } = useTodayDeclaration(achievementBookId);
+  const createDailyDeclaration = useCreateDeclaration();
+  console.log("todayDeclarationRes",todayDeclarationRes);
+  
+
+  // 使用 useFocusEffect 来在组件挂载时刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      refetchAchievementBook();
+      refetchWeeklyDeclaration();
+      refetchTodayDeclaration();
+    }, [])
+  );
+  
+  // 创建周宣告的函数
+  const handleCreateWeeklyDeclaration = async () => {
+    if (!userInfo?.globalUserId || !achievementBookId) return null;
+    
+    const newWeeklyDeclaration: Omit<WeeklyDeclarationDTO, 'id'> = {
+      bookId: achievementBookId,
+      userId: userInfo.globalUserId,
+      weekNumber: 1, // TODO: 计算当前是第几周
+      title: '',
+      declarationContent: '',
+      weekStartDate: (() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0是周日，1是周一，以此类推
+        const diff = now.getDate() - dayOfWeek;
+        const firstDayOfWeek = new Date(now);
+        firstDayOfWeek.setDate(diff);
+        // 调整为北京时间
+        const utcDate = new Date(firstDayOfWeek.getTime() + 8 * 60 * 60 * 1000);
+        return utcDate.toISOString().split('T')[0];
+      })(),
+      weekEndDate: (() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const diff = now.getDate() - dayOfWeek;
+        const firstDayOfWeek = new Date(now);
+        firstDayOfWeek.setDate(diff);
+        const lastDayOfWeek = new Date(firstDayOfWeek);
+        lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+        // 调整为北京时间
+        const utcDate = new Date(lastDayOfWeek.getTime() + 8 * 60 * 60 * 1000);
+        return utcDate.toISOString().split('T')[0];
+      })(),
+      achievement: '',
+      selfSummary: '',
+      summary123456: '',
+      nextStep: '',
+      weekScore: '',
+      weekExperience: '',
+      whatWorked: '',
+      whatDidntWork: '',
+      whatLearned: '',
+      whatNext: '',
+      weeklyGoals: [],
+      averageCompletionRate: 0,
+      createTime: (() => {
+        const date = new Date();
+        // 获取ISO字符串并调整为北京时间
+        const utcDate = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+        return utcDate.toISOString();
+      })(),
+      updateTime: (() => {
+        const date = new Date();
+        // 获取ISO字符串并调整为北京时间
+        const utcDate = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+        return utcDate.toISOString();
+      })(),
+    };
+
+    try {
+      const result = await createWeeklyDeclaration.mutateAsync(newWeeklyDeclaration as WeeklyDeclarationDTO);
+      return result;
+    } catch (error) {
+      console.log('创建周宣告失败:', error);
+      return null;
+    }
+  };
+
+  // 创建日宣告的函数
+  const handleCreateDailyDeclaration = async (weeklyDeclarationId: string) => {
+    console.log("userInfo",achievementBookId);
+    if (!userInfo?.globalUserId || !achievementBookId) return;
+
+    const newDeclaration: NewDailyDeclarationDTO = {
+      userId: userInfo.globalUserId,
+      bookId: achievementBookId,
+      weeklyDeclarationId: weeklyDeclarationId,
+      dayNumber: 1, // TODO: 根据实际情况计算
+      declarationDate: (() => {
+        const date = new Date();
+        // 获取ISO字符串并调整为北京时间
+        const utcDate = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+        return utcDate.toISOString().split('.')[0];
+      })(),
+      morningPlan: '',
+      noonPlan: '',
+      afternoonPlan: '',
+      eveningPlan: '',
+      dayScore: '',
+      dayExperience: '',
+      whatWorked: '',
+      whatDidntWork: '',
+      whatLearned: '',
+      whatNext: '',
+      dailyGoals: [],
+    };
+
+    try {
+      const result = await createDailyDeclaration.mutateAsync(newDeclaration);
+      console.log("创建日宣告",result);
+      return result;
+    } catch (error) {
+      console.log('创建今日宣告失败:', error);
+    }
+  };
+
+  // 初始化宣告数据
+  useEffect(() => {
+    const initializeDeclarations = async () => {
+      // 如果没有成就书ID或用户不是会员，则不执行
+      if (!achievementBookId || !userInfo?.isMember || !userInfo?.globalUserId) return;
+      // console.log("achievementBookId",weeklyDeclarationLoading);
+      // 检查并创建周宣告和日宣告
+      if (!weeklyDeclarationLoading && !currentWeeklyDeclaration) {
+        // 创建周宣告
+        const weeklyDeclaration = await handleCreateWeeklyDeclaration();
+        const weeklyDeclarationId = weeklyDeclaration?.id;
+        // console.log("weeklyDeclarationId",weeklyDeclarationId);
+        
+        // 如果周宣告创建成功且没有今日宣告，则创建日宣告
+        if (weeklyDeclarationId && !todayDeclarationLoading && todayDeclarationRes?.code === 404) {
+          await handleCreateDailyDeclaration(weeklyDeclarationId);
+        }
+      } else if (currentWeeklyDeclaration && !todayDeclarationLoading && todayDeclarationRes?.code === 404) {
+        // 如果已有周宣告但没有今日宣告，则创建日宣告
+        console.log("创建日宣告");
+        // console.log("currentWeeklyDeclaration",currentWeeklyDeclaration);
+      const dailyDeclaration = await handleCreateDailyDeclaration(currentWeeklyDeclaration.id);
+      console.log("e42342342",dailyDeclaration);
+
+      }
+    };
+
+    initializeDeclarations();
+  }, [
+    achievementBookId, 
+    userInfo?.isMember, 
+    userInfo?.globalUserId, 
+    weeklyDeclarationLoading, 
+    currentWeeklyDeclaration, 
+    todayDeclarationLoading, 
+    todayDeclarationRes?.code
+  ]);
 
   // 判断用户是否是会员
   if (!userInfo?.isMember) {

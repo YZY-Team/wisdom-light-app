@@ -7,7 +7,42 @@ import { BlurView } from 'expo-blur';
 import { memo, useState, useEffect } from 'react';
 import { useCourseList, useCourseVideos } from '~/queries/course';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 cssInterop(Image, { className: 'style' });
+
+// 新增 VideoDescription 组件
+const VideoDescription = memo(({ description }: { description: string | null }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [shouldShowButton, setShouldShowButton] = useState(false);
+  const [textHeight, setTextHeight] = useState(0);
+
+  // 检测文本是否需要展开按钮
+  const onTextLayout = (event: any) => {
+    const height = event.nativeEvent.lines.length * 20; // 假设每行高度为20
+    setTextHeight(height);
+    setShouldShowButton(event.nativeEvent.lines.length > 2);
+  };
+
+  if (!description) return null;
+
+  return (
+    <View>
+      <Text
+        className={`mt-1 text-xs text-[#00000066]`}
+        numberOfLines={isExpanded ? undefined : 2}
+        onTextLayout={onTextLayout}>
+        {description}
+      </Text>
+      {shouldShowButton && (
+        <Pressable onPress={() => setIsExpanded(!isExpanded)}>
+          <Text className="mt-1 text-xs text-blue-500">
+            {isExpanded ? '收起' : '展开'}
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  );
+});
 
 const CourseItem = memo(
   ({
@@ -76,20 +111,23 @@ const CourseItem = memo(
             <Text>加载中...</Text> // 修改为用 <Text> 包裹
           ) : (
             videoList.map((video, index) => (
-              <Pressable
+              <Pressable key={index} onPress={(e) => e.stopPropagation()}>
+                <View
                 key={index}
-                className="mb-2 flex-row items-center  rounded-lg px-1"
-                onPress={() =>
-                  router.push({
-                    pathname: '/videoDetail',
-                    params: { videoUrl: video.videoUrl },
-                  })
-                }>
-                <View className="flex-row items-center">
+              
+                className="mb-2 flex-row items-center rounded-lg px-1">
+                <View className="flex-row items-start">
                   <View>
                     <Text className="text-[#00000066]">{index + 1}</Text>
                   </View>
-                  <View className="relative border rounded-lg border-[#D9D9D9]/10 ml-2 w-[30%]">
+                  <Pressable
+                    className="relative border  rounded-lg border-[#D9D9D9]/10 ml-2 w-[30%]"
+                    onPress={() =>
+                      router.push({
+                        pathname: '/videoDetail',
+                        params: { videoUrl: video.videoUrl },
+                      })
+                    }>
                     <Image
                       source={{
                         uri: video.coverUrl,
@@ -100,34 +138,20 @@ const CourseItem = memo(
                       cachePolicy="memory-disk"
                       priority="normal"
                     />
-                    <View className="absolute left-0 top-0 flex h-full w-full items-center justify-center px-1">
-                      <View className="max-w-[80%]">
-                        <Text
-                          className="truncate  p-1 text-[2vw] font-[700] text-black"
-                          numberOfLines={1}>
-                          {video.title}
-                        </Text>
+                    <View className="absolute inset-0 items-center justify-center bg-black/20">
+                      <View className="rounded-full bg-black/40 p-2">
+                        <Ionicons name="play" size={20} color="white" />
                       </View>
                     </View>
-                    <View className="absolute bottom-1 right-1">
-                      {/* <BlurView
-                        experimentalBlurMethod="dimezisBlurView"
-                        intensity={10}
-                        tint="dark"
-                        className="flex items-center justify-center overflow-hidden rounded bg-[#0000004D]">
-                        <Text className="px-2 py-1 text-[10px] text-white">{video.duration}</Text>
-                      </BlurView> */}
-                    </View>
-                  </View>
+                  </Pressable>
                   <View className="ml-3 flex-1">
                     <Text className="text-sm font-[600]" numberOfLines={1}>
                       {video.title}
                     </Text>
-                    <Text className="mt-1 text-xs text-[#00000066]" numberOfLines={2}>
-                      {video.description}
-                    </Text>
+                    <VideoDescription description={video.description} />
                   </View>
                 </View>
+              </View>
               </Pressable>
             ))
           )}

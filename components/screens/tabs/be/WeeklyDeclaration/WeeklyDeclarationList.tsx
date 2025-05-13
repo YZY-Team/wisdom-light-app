@@ -10,28 +10,30 @@ interface WeeklyDeclarationListProps {
 }
 
 export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListProps) {
-  const { data: declarations = [], isLoading, error,refetch:refetchDeclarations } = useWeeklyDeclarationList(bookId);
-  const declarationList=declarations
-  const { data: currentDeclaration,refetch:refetchCurrentDeclaration } = useCurrentWeeklyDeclaration(bookId);
+  const {
+    data: declarations = [],
+    isLoading,
+    error,
+    refetch: refetchDeclarations,
+  } = useWeeklyDeclarationList(bookId);
+  const { data: currentDeclaration, refetch: refetchCurrentDeclaration } =
+    useCurrentWeeklyDeclaration(bookId);
   const queryClient = useQueryClient();
-  
+  console.log("currentDeclaration", currentDeclaration);
+  console.log("declarations", declarations);
   // 判断宣告是否是当前周的宣告
   const isCurrentDeclaration = (declaration: WeeklyDeclarationDTO) => {
+
     return currentDeclaration && currentDeclaration.id === declaration.id;
   };
 
   // 处理更新宣告
   const handleUpdateDeclaration = (updatedDeclaration: WeeklyDeclarationDTO) => {
+    console.log('handleUpdateDeclaration', updatedDeclaration);
     // 更新本地缓存中的数据
-    queryClient.setQueryData(
-      ['weeklyDeclarations', bookId],
-      (oldData: WeeklyDeclarationDTO[] | undefined) => {
-        if (!oldData) return [updatedDeclaration];
-        return oldData.map(declaration =>
-          declaration.id === updatedDeclaration.id ? updatedDeclaration : declaration
-        );
-      }
-    );
+    queryClient.invalidateQueries({
+      queryKey: ['weeklyDeclarations', bookId],
+    });
   };
 
   if (isLoading) {
@@ -59,21 +61,20 @@ export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListP
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 py-4">
       <FlashList
-        data={declarationList}
+        data={declarations}
         contentContainerStyle={{
           paddingBottom: 160,
         }}
         estimatedItemSize={200}
         renderItem={({ item }) => (
-          <View 
+          <View
             className="mb-6"
-            style={{ 
-              opacity: isCurrentDeclaration(item) ? 1 : 0.5 
-            }}
-          >
-            <WeeklyDeclarationItem 
+            style={{
+              opacity: isCurrentDeclaration(item) ? 1 : 0.5,
+            }}>
+            <WeeklyDeclarationItem
               declaration={item}
               onUpdateDeclaration={handleUpdateDeclaration}
               readOnly={!isCurrentDeclaration(item)}

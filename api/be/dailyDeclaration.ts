@@ -3,43 +3,6 @@ import { NewDailyDeclarationDTO } from '~/types/be/declarationType';
 
 export const dailyDeclarationApi = {
   /**
-   * 创建日宣告
-   * @param data 日宣告数据，包含宣告内容、日期等信息
-   * @returns 返回创建成功的日宣告ID
-   */
-  createDailyDeclaration: (data: NewDailyDeclarationDTO) => {
-    return request.post<NewDailyDeclarationDTO>('/wl/daily-declaration', data);
-  },
-
-  /**
-   * 获取日宣告详情
-   * @param id 日宣告ID
-   * @returns 返回日宣告的详细信息
-   */
-  getDailyDeclarationDetail: (id: number) => {
-    return request.get<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
-  },
-
-  /**
-   * 更新日宣告
-   * @param id 日宣告ID
-   * @param data 更新的日宣告数据
-   * @returns 返回更新是否成功
-   */
-  updateDailyDeclaration: (id: number, data: NewDailyDeclarationDTO) => {
-    return request.put<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`, data);
-  },
-
-  /**
-   * 删除日宣告
-   * @param id 日宣告ID
-   * @returns 返回删除是否成功
-   */
-  deleteDailyDeclaration: (id: number) => {
-    return request.delete<NewDailyDeclarationDTO>(`/wl/daily-declaration/${id}`);
-  },
-
-  /**
    * 创建新格式的日宣告
    * @param data 日宣告数据，包含详细的计划内容和日目标
    * @returns 返回创建成功的日宣告ID

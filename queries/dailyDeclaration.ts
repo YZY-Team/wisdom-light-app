@@ -10,18 +10,24 @@ const QUERY_KEYS = {
 } as const;
 
 // 获取今
-export const useTodayDeclaration = (bookId: string) => {
+export const useTodayDeclaration = (bookId: string | undefined) => {
+  console.log('bookId', !!bookId);
   return useQuery({
     queryKey: [QUERY_KEYS.TODAY_DECLARATION, bookId],
-    queryFn: () => dailyDeclarationApi.getTodayDailyDeclaration(bookId),
+    queryFn: () => {
+      if (!bookId) throw new Error('BookId is required');
+      return dailyDeclarationApi.getTodayDailyDeclaration(bookId);
+    },
+    enabled: !!bookId,
   });
 };
 
 // 获取成就书的所有日宣告
 export const useBookDeclarations = (bookId: string) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.BOOK_DECLARATIONS, bookId],
+    queryKey: [QUERY_KEYS.BOOK_DECLARATIONS],
     queryFn: () => dailyDeclarationApi.getBookDailyDeclarations(bookId),
+    enabled: !!bookId,
   });
 };
 

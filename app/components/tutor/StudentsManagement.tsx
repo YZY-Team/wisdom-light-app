@@ -6,10 +6,14 @@ import {
   StyleSheet,
   Dimensions,
   GestureResponderEvent,
+  ActivityIndicator,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { cssInterop } from 'nativewind';
 import { Image } from 'expo-image';
+import { tutorApi } from '~/api/who/tutor';
+import { friendApi } from '~/api/have/friend';
+import { pinyin } from 'pinyin-pro';
 cssInterop(Image, { className: 'style' });
 // 字母索引数据
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -18,6 +22,29 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 interface Student {
   id: string;
   name: string;
+  avatarUrl?: string;
+}
+
+// API返回的学员数据结构
+interface ApiStudent {
+  id?: string;
+  userId?: string;
+  studentId?: string;
+  name: string;
+  avatarUrl?: string;
+  [key: string]: any;
+}
+
+// API返回的好友数据结构
+interface Friend {
+  nickname: string;
+  [key: string]: any;
+}
+
+// API响应类型
+interface ApiResponse<T> {
+  records?: T[];
+  [key: string]: any;
 }
 
 interface StudentsByLetter {
@@ -31,159 +58,122 @@ interface Item {
   students?: Student[];
 }
 
-// 模拟的学员数据
-const STUDENTS: StudentsByLetter = {
-  A: [
-    { id: 'a1', name: '安妮' },
-    { id: 'a2', name: '艾伦' },
-    { id: 'a3', name: '阿里' },
-    { id: 'a4', name: '艾米' },
-    { id: 'a5', name: '艾莉' },
-  ],
-  B: [
-    { id: 'b1', name: '白倩' },
-    { id: 'b2', name: '鲍勃' },
-    { id: 'b3', name: '比尔' },
-    { id: 'b4', name: '贝蒂' },
-  ],
-  C: [
-    { id: 'c1', name: '陈明' },
-    { id: 'c2', name: '陈亮' },
-    { id: 'c3', name: '程颖' },
-    { id: 'c4', name: '崔静' },
-    { id: 'c5', name: '曹丽' },
-    { id: 'c6', name: '陈曦' },
-    { id: 'c7', name: '陈欣' },
-  ],
-  D: [
-    { id: 'd1', name: '董杰' },
-    { id: 'd2', name: '杜鹃' },
-    { id: 'd3', name: '戴维' },
-  ],
-  E: [
-    { id: 'e1', name: '恩里克' },
-    { id: 'e2', name: '埃文' },
-  ],
-  F: [
-    { id: 'f1', name: '冯华' },
-    { id: 'f2', name: '方圆' },
-    { id: 'f3', name: '范晴' },
-    { id: 'f4', name: '费雯' },
-  ],
-  G: [
-    { id: 'g1', name: '高峰' },
-    { id: 'g2', name: '郭敏' },
-    { id: 'g3', name: '甘琳' },
-  ],
-  H: [
-    { id: 'h1', name: '何强' },
-    { id: 'h2', name: '韩梅' },
-    { id: 'h3', name: '胡杰' },
-    { id: 'h4', name: '黄莉' },
-    { id: 'h5', name: '霍华德' },
-  ],
-  J: [
-    { id: 'j1', name: '金鑫' },
-    { id: 'j2', name: '贾楠' },
-    { id: 'j3', name: '姜晖' },
-  ],
-  K: [
-    { id: 'k1', name: '柯南' },
-    { id: 'k2', name: '凯文' },
-  ],
-  L: [
-    { id: 'l1', name: '李明' },
-    { id: 'l2', name: '刘洋' },
-    { id: 'l3', name: '林峰' },
-    { id: 'l4', name: '罗玲' },
-    { id: 'l5', name: '梁静' },
-    { id: 'l6', name: '卢浩' },
-  ],
-  M: [
-    { id: 'm1', name: '马超' },
-    { id: 'm2', name: '孟庆' },
-    { id: 'm3', name: '穆清' },
-  ],
-  N: [
-    { id: 'n1', name: '宁波' },
-    { id: 'n2', name: '牛莉' },
-  ],
-  P: [
-    { id: 'p1', name: '潘杰' },
-    { id: 'p2', name: '彭芳' },
-  ],
-  Q: [
-    { id: 'q1', name: '秦勇' },
-    { id: 'q2', name: '钱海' },
-    { id: 'q3', name: '曲悦' },
-  ],
-  R: [
-    { id: 'r1', name: '任强' },
-    { id: 'r2', name: '饶敏' },
-  ],
-  S: [
-    { id: 's1', name: '孙志' },
-    { id: 's2', name: '沈莹' },
-    { id: 's3', name: '宋达' },
-    { id: 's4', name: '苏楠' },
-  ],
-  T: [
-    { id: 't1', name: '唐进' },
-    { id: 't2', name: '田甜' },
-    { id: 't3', name: '陶然' },
-  ],
-  W: [
-    { id: 'w1', name: '王伟' },
-    { id: 'w2', name: '吴敏' },
-    { id: 'w3', name: '魏峰' },
-    { id: 'w4', name: '汪洋' },
-    { id: 'w5', name: '温婷' },
-  ],
-  X: [
-    { id: 'x1', name: '徐亮' },
-    { id: 'x2', name: '谢菲' },
-    { id: 'x3', name: '熊猛' },
-    { id: 'x4', name: '夏雨' },
-  ],
-  Y: [
-    { id: 'y1', name: '杨光' },
-    { id: 'y2', name: '叶青' },
-    { id: 'y3', name: '袁媛' },
-    { id: 'y4', name: '于海' },
-  ],
-  Z: [
-    { id: 'z1', name: '张华' },
-    { id: 'z2', name: '赵明' },
-    { id: 'z3', name: '朱丽' },
-    { id: 'z4', name: '周杰' },
-    { id: 'z5', name: '郑涛' },
-    { id: 'z6', name: '邹静' },
-  ],
-};
+interface StudentsManagementProps {
+  onRefresh?: () => void;
+}
 
-// 展平数据为 FlashList 格式
-const flattenedData: Item[] = Object.entries(STUDENTS).reduce((acc: Item[], [letter, students]) => {
-  // 添加分组头
-  acc.push({ type: 'header', title: letter, key: `header-${letter}` });
-  // 添加学员项（按原布局，每行最多 3 个）
-  const rows: Item[] = [];
-  for (let i = 0; i < students.length; i += 3) {
-    rows.push({
-      type: 'row',
-      students: students.slice(i, i + 3),
-      key: `row-${letter}-${i}`,
-    });
-  }
-  acc.push(...rows);
-  return acc;
-}, []);
-
-const StudentsManagementWithFlashList = () => {
+const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps) => {
   const flashListRef = useRef<FlashList<Item>>(null);
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const alphabetContainerRef = useRef<View>(null);
   const [alphabetLayout, setAlphabetLayout] = useState({ height: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [flattenedData, setFlattenedData] = useState<Item[]>([]);
+
+  // 获取学员数据
+  const fetchStudents = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await tutorApi.getTutorStudents();
+      console.log("response", response);
+      const students = response.records || [];
+      
+      // 将学员按首字母分组
+      const groupedStudents: StudentsByLetter = {};
+      
+      // 初始化字母分组
+      ALPHABET.forEach((letter) => {
+        groupedStudents[letter] = [];
+      });
+      
+      // 添加特殊字符分组
+      groupedStudents['#'] = [];
+      
+      // 处理每个学生数据
+      for (const student of students as ApiStudent[]) {
+        try {
+          const friend = await friendApi.getFriend(student.studentId || '');
+          // 获取姓名首字母（拼音首字母）
+          let name = friend.data.nickname;
+          let firstLetter = '';
+          
+          // 检查是否是中文
+          const isChinese = /[\u4e00-\u9fa5]/.test(name);
+          
+          if (isChinese) {
+            // 使用pinyin-pro获取拼音首字母
+            const pinyinStr = pinyin(name, { toneType: 'none' });
+            firstLetter = pinyinStr.charAt(0).toUpperCase();
+          } else {
+            // 非中文直接获取首字母
+            firstLetter = name.charAt(0).toUpperCase();
+          }
+          
+          // 确定分组字母
+          const letter = ALPHABET.includes(firstLetter) ? firstLetter : '#';
+          
+          // 初始化分组（如果不存在）
+          if (!groupedStudents[letter]) {
+            groupedStudents[letter] = [];
+          }
+          
+          // 添加到对应分组
+          console.log("student.nickname",name);
+          
+          groupedStudents[letter].push({
+            id: student.id || student.userId || '',
+            name: friend.data.nickname,
+            avatarUrl: friend.data.avatarUrl,
+          });
+        } catch (err) {
+          console.error('处理学生数据失败:', err);
+        }
+      }
+      
+      // 按字母排序
+      const sortedLetters = Object.keys(groupedStudents).sort((a, b) => {
+        if (a === '#') return 1; // '#'放在最后
+        if (b === '#') return -1;
+        return a.localeCompare(b);
+      });
+      
+      // 展平数据为 FlashList 格式
+      const newFlattenedData: Item[] = [];
+      sortedLetters.forEach((letter) => {
+        // 只添加有学生的分组
+        if (groupedStudents[letter].length > 0) {
+          // 添加分组头
+          newFlattenedData.push({ type: 'header', title: letter, key: `header-${letter}` });
+          
+          // 添加学员项
+          const studentsInLetter = groupedStudents[letter];
+          for (let i = 0; i < studentsInLetter.length; i += 3) {
+            newFlattenedData.push({
+              type: 'row',
+              students: studentsInLetter.slice(i, i + 3),
+              key: `row-${letter}-${i}`,
+            });
+          }
+        }
+      });
+      
+      setFlattenedData(newFlattenedData);
+    } catch (err) {
+      console.error('获取学员列表失败:', err);
+      setError('获取学员列表失败，请稍后再试');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 首次加载和刷新时获取数据
+  useEffect(() => {
+    fetchStudents();
+  }, [onRefresh]);
 
   // 处理字母选择，滚动到对应分组
   const handleLetterSelect = (letter: string) => {
@@ -311,7 +301,7 @@ const StudentsManagementWithFlashList = () => {
     if (item.type === 'header') {
       return (
         <View className="mb-2 px-2">
-          <View className="h-6 w-6  items-center justify-center rounded-sm">
+          <View className="h-6 w-6 items-center justify-center rounded-sm">
             <Text className="text-[14px] text-black">{item.title}</Text>
           </View>
         </View>
@@ -322,12 +312,19 @@ const StudentsManagementWithFlashList = () => {
         {item.students?.map((student) => (
           <TouchableOpacity
             key={student.id}
-            className="h-[40px] gap-3 w-full  flex-row items-center rounded-[12px] ">
-            <View className=" w-10 h-10 rounded-full ">
-              <Image
-                source={require('~/assets/images/who/tutor/image.png')}
-                className="h-full w-full"
-              />
+            className="h-[40px] gap-3 w-full flex-row items-center rounded-[12px]">
+            <View className="w-10 h-10 rounded-full">
+              {student.avatarUrl ? (
+                <Image
+                  source={{ uri: student.avatarUrl }}
+                  className="h-full w-full rounded-full"
+                />
+              ) : (
+                <Image
+                  source={require('~/assets/images/who/tutor/image.png')}
+                  className="h-full w-full"
+                />
+              )}
             </View>
             <Text className="text-[14px] text-black">{student.name}</Text>
           </TouchableOpacity>
@@ -342,8 +339,42 @@ const StudentsManagementWithFlashList = () => {
     return 48; // 学员行高度（40 + 8 间距）
   };
 
+  // 渲染加载状态
+  if (isLoading && flattenedData.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#1483FD" />
+        <Text className="mt-2 text-gray-500">加载中...</Text>
+      </View>
+    );
+  }
+
+  // 渲染错误状态
+  if (error && flattenedData.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500">{error}</Text>
+        <TouchableOpacity className="mt-4 px-4 py-2 bg-[#1483FD] rounded-lg" onPress={fetchStudents}>
+          <Text className="text-white">重试</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // 渲染空状态
+  if (flattenedData.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-gray-500">暂无学员</Text>
+        <TouchableOpacity className="mt-4 px-4 py-2 bg-[#1483FD] rounded-lg" onPress={fetchStudents}>
+          <Text className="text-white">刷新</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1  flex-row">
+    <View className="flex-1 flex-row">
       {/* FlashList 渲染分组列表 */}
       <FlashList
         ref={flashListRef}
@@ -365,10 +396,10 @@ const StudentsManagementWithFlashList = () => {
         {renderLetterBubble()}
 
         {/* 字母索引列表 */}
-        <View className="h-full w-12 items-center justify-center ">
+        <View className="h-full w-12 items-center justify-center">
           <View
             ref={alphabetContainerRef}
-            className=" items-center  justify-center"
+            className="items-center justify-center"
             onLayout={() => {
               // 布局完成时测量容器位置
               setTimeout(() => {
@@ -392,3 +423,4 @@ const StudentsManagementWithFlashList = () => {
 };
 
 export default StudentsManagementWithFlashList;
+

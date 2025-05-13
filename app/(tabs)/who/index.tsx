@@ -187,7 +187,8 @@ export default function WhoIndex() {
       alert('选择图片失败，请重试');
     }
   };
-
+  console.log("userInfo",userInfo);
+  
   // 添加退出登录处理函数
   const handleLogout = async () => {
     try {
@@ -337,7 +338,7 @@ export default function WhoIndex() {
             title="会员充值"
             href="/membership"
           />
-          {userInfo?.tutorType === '用户' ? (
+          {!userInfo?.isTutor  ? (
             <MenuItem
               icon={require('~/assets/images/who/join.png')}
               title="申请入驻"

@@ -78,7 +78,7 @@ const AchievementItem = ({
       </View>
       <View className="space-y-4 px-3 py-4">
         {/* 承诺内容 */}
-        <View className="rounded-md">
+        {/* <View className="rounded-md">
           <Text className="text-sm font-bold text-black">承诺内容：</Text>
           <TextInput
             className="rounded-md bg-[rgba(20,131,253,0.05)] p-3 text-xs text-black/50"
@@ -86,7 +86,7 @@ const AchievementItem = ({
             value={data.commitment}
             onChangeText={(text) => onChange({ ...data, commitment: text })}
           />
-        </View>
+        </View> */}
 
         {/* 目的 */}
         <View>
@@ -184,7 +184,6 @@ interface Achievement {
   id?: string;
   bookId: string;
   title: string;
-  commitment: string;
   targetQuantity: number;
   unit: string;
   purpose: string;
@@ -233,7 +232,6 @@ export default function Achievement() {
     const newData: Achievement = {
       bookId: bookId as string,
       title: '目标' + (achievements.length + 1),
-      commitment: '',
       targetQuantity: 0,
       unit: '',
       purpose: '',
@@ -306,7 +304,6 @@ export default function Achievement() {
         const response = await achievementBookApi.updateGoal(data.id, {
           bookId: bookId as string,
           title: data.title,
-          commitment: data.commitment,
           targetQuantity: data.targetQuantity,
           unit: data.unit,
           purpose: data.purpose,
@@ -349,7 +346,6 @@ export default function Achievement() {
             const response = await achievementBookApi.updateGoal(achievement.id, {
               bookId: achievement.bookId,
               title: achievement.title,
-              commitment: achievement.commitment,
               targetQuantity: achievement.targetQuantity,
               unit: achievement.unit,
               purpose: achievement.purpose,

@@ -23,6 +23,7 @@ export type UserInfo = {
   status: 'ACTIVE' | 'INACTIVE';
   loginTime: string;
   tutorType: string;
+  isTutor: boolean;
 };
 
 type UserState = {

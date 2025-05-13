@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, StyleSheet, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,17 +25,19 @@ export default function WeeklyDeclarationItem({
   const [localDeclaration, setLocalDeclaration] = useState(declaration);
   const updateMutation = useUpdateWeeklyDeclaration();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [titleModalVisible, setTitleModalVisible] = useState(false);
+  const [tempTitle, setTempTitle] = useState('');
 
   // 当declaration属性改变时，更新本地状态
   useEffect(() => {
-    console.log('declaration', declaration);
     setLocalDeclaration(declaration);
+    console.log('declaration',new Date().toISOString(), declaration);
   }, [declaration]);
 
   // 自动保存函数
   const autoSave = async () => {
     if (readOnly || !localDeclaration.id) return;
-
+    console.log('autoSave', new Date().toISOString());
     try {
       await updateMutation.mutateAsync({
         id: localDeclaration.id.toString(),
@@ -44,19 +46,6 @@ export default function WeeklyDeclarationItem({
     } catch (error) {
       console.log('保存周宣告失败:', error);
     }
-  };
-
-  // 设置防抖保存
-  const debouncedSave = () => {
-    // 清除之前的定时器
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // 设置新的定时器，3秒后保存
-    saveTimeoutRef.current = setTimeout(() => {
-      autoSave();
-    }, 3000);
   };
 
   // 组件卸载时清除定时器
@@ -72,37 +61,55 @@ export default function WeeklyDeclarationItem({
     setIsExpanded(!isExpanded);
   };
 
+  // 打开标题编辑模态框
+  const openTitleModal = () => {
+    setTempTitle(localDeclaration.title || '');
+    setTitleModalVisible(true);
+  };
+
+  // 保存标题
+  const saveTitle = () => {
+    handleTextChange('title', tempTitle);
+    updateMutation.mutateAsync({
+      id: localDeclaration.id.toString(),
+      declaration: {
+        ...localDeclaration,
+        title: tempTitle,
+      },
+    });
+    setTitleModalVisible(false);
+  };
+
   // 添加修改周目标的函数
   const updateWeeklyGoal = (index: number, text: string) => {
     if (readOnly) return;
     
     const numericValue = text.trim() === '' ? 0 : parseFloat(text);
+    console.log('numericValue', numericValue);
     if (isNaN(numericValue)) return;
     
-    // 创建新的周目标数组，避免直接修改原数组
     const updatedGoals = [...localDeclaration.weeklyGoals];
     updatedGoals[index] = {
       ...updatedGoals[index],
       targetQuantity: numericValue
     };
+
     
-    // 更新本地状态
-    setLocalDeclaration(prev => ({
-      ...prev,
-      weeklyGoals: updatedGoals
-    }));
+    setLocalDeclaration(prev =>{
+
+      return  ({
+        ...prev,
+        weeklyGoals: updatedGoals
+      })
+    });
     
-    // 通知父组件
     onUpdateDeclaration({
       ...localDeclaration,
       weeklyGoals: updatedGoals
     });
-    
-    // 添加防抖保存
-    debouncedSave();
   };
 
-  // 修改 handleTextChange，添加防抖保存
+  // 修改 handleTextChange，移除防抖保存
   const handleTextChange = (
     field: keyof WeeklyDeclarationDTO,
     value: string,
@@ -111,20 +118,15 @@ export default function WeeklyDeclarationItem({
     if (readOnly) return;
     if (maxLength && value.length > maxLength) return;
 
-    // 更新本地状态
     setLocalDeclaration((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // 通知父组件
     onUpdateDeclaration({
       ...localDeclaration,
       [field]: value,
     });
-    
-    // 添加防抖保存
-    debouncedSave();
   };
 
   return (
@@ -147,12 +149,46 @@ export default function WeeklyDeclarationItem({
             {updateMutation.isPending && (
               <Text className="mr-2 text-xs text-gray-500">保存中...</Text>
             )}
-            <Pressable className="ml-2 flex-row items-center justify-center">
+            <Pressable 
+              className="ml-2 flex-row items-center justify-center"
+              onPress={openTitleModal}>
               <Ionicons name="create-outline" size={16} color="#1483fd" />
             </Pressable>
           </View>
         )}
       </View>
+
+      {/* 标题编辑模态框 */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={titleModalVisible}
+        onRequestClose={() => setTitleModalVisible(false)}>
+        <View className="flex-1 justify-center items-center bg-[#00000080]">
+          <View className="bg-white w-[80%] rounded-lg p-6 shadow-lg">
+            <Text className="text-[18px] font-bold mb-4">编辑标题</Text>
+            <TextInput
+              className="border border-[#1483FD33] rounded-lg p-3 mb-4"
+              placeholder="请输入标题"
+              value={tempTitle}
+              onChangeText={setTempTitle}
+              maxLength={30}
+            />
+            <View className="flex-row justify-end">
+              <Pressable 
+                className="px-4 py-2 mr-2"
+                onPress={() => setTitleModalVisible(false)}>
+                <Text className="text-[#666666]">取消</Text>
+              </Pressable>
+              <Pressable 
+                className="px-4 py-2 bg-[#1483FD] rounded-lg"
+                onPress={saveTitle}>
+                <Text className="text-white">确定</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View className={`flex-col ${isExpanded ? '' : ' rounded-b-[12px] bg-white'}`}>
         {/* 成果宣告 */}

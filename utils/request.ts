@@ -89,10 +89,7 @@ instance.interceptors.response.use(
     // 处理响应错误
     if (error.response) {
       // 501状态码直接返回响应数据，不抛出异常
-      if (error.response.status === 501) {
-        console.log("501 error:", error.response.data);
-        return error.response.data;
-      }
+      return error.response.data;
       
       const errorMessage = (() => {
         switch (error.response.status) {
