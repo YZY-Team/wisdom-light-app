@@ -9,9 +9,10 @@ import { useDatabase } from '~/contexts/DatabaseContext';
 import * as React from 'react';
 import { WebRTCProvider } from '~/contexts/WebRTCContext';
 import { ClientProvider } from '~/components/Providers/ClientProvider';
-import { registerApp, sendAuthRequest } from "expo-native-wechat";
+import { registerApp, sendAuthRequest } from 'expo-native-wechat';
 import { useEffect } from 'react';
 import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -31,11 +32,9 @@ const queryClient = new QueryClient({
 //   return studioInstance;
 // };
 
-
-
 export default function RootLayout() {
   React.useEffect(() => {
-    registerApp({ appid: "wx5544421face5824b" });
+    registerApp({ appid: 'wx5544421face5824b' });
   }, []);
   return (
     <DatabaseProvider>
@@ -44,15 +43,12 @@ export default function RootLayout() {
           <WebSocketProvider>
             <KeyboardProvider>
               <ClientProvider>
-                <>
-                  {/* <DrizzleStudioComponent /> */}
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      animation: 'none',
-                    }}
-                  />
-                </>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    animation: 'none',
+                  }}
+                />
               </ClientProvider>
             </KeyboardProvider>
           </WebSocketProvider>

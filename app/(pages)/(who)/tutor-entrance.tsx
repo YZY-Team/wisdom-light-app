@@ -3,9 +3,9 @@ import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import StudentsManagement from '../../components/tutor/StudentsManagement';
-import IncomeManagement from '../../components/tutor/IncomeManagement';
-import AddStudentModal from '../../components/tutor/AddStudentModal';
+import StudentsManagement from '~/components/tutor/StudentsManagement';
+import IncomeManagement from '~/components/tutor/IncomeManagement';
+import AddStudentModal from '~/components/tutor/AddStudentModal';
 
 // 定义标签类型
 type TabType = 'students' | 'income';

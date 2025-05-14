@@ -98,7 +98,8 @@ export default function Login() {
         setIsLoggedIn(true);
         router.replace('(tabs)/have');
       } else {
-        alert('登录失败：' + loginRes.message);
+        // @ts-expect-error 登录失败
+        alert('登录失败：' + loginRes.error + loginRes.code);
       }
     } catch (error) {
       alert('登录失败：' + error);

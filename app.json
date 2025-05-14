@@ -44,8 +44,7 @@
           }
         }
       ],
-      "expo-native-wechat",
-      "expo-audio"
+      "expo-native-wechat"
     ],
     "orientation": "portrait",
     "icon": "./assets/adaptive.png",
@@ -55,9 +54,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anjiuwenhua.chengxinwangluoapp"
@@ -68,10 +65,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.anjiuwenhua.chengxinwangluoapp",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.INTERNET"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.INTERNET"]
     },
     "extra": {
       "router": {
