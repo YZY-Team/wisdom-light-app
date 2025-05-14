@@ -44,7 +44,8 @@
           }
         }
       ],
-      "expo-native-wechat"
+      "expo-native-wechat",
+      "expo-audio"
     ],
     "orientation": "portrait",
     "icon": "./assets/adaptive.png",

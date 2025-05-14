@@ -67,7 +67,7 @@ export default function BeIndex() {
   // 日宣告相关
   const { data: todayDeclarationRes, isLoading: todayDeclarationLoading, refetch: refetchTodayDeclaration } = useTodayDeclaration(achievementBookId);
   const createDailyDeclaration = useCreateDeclaration();
-  console.log("todayDeclarationRes",todayDeclarationRes);
+
   
 
   // 使用 useFocusEffect 来在组件挂载时刷新数据

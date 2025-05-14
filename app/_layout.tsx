@@ -22,14 +22,14 @@ const queryClient = new QueryClient({
 });
 
 // DrizzleStudio组件
-const DrizzleStudioComponent = () => {
+// const DrizzleStudioComponent = () => {
 
-  const { useDrizzleStudio, isInitialized } = useDatabase();
-  // 始终调用hook，但只在初始化后才会有效果
-  const studioInstance = useDrizzleStudio();
+//   const { useDrizzleStudio, isInitialized } = useDatabase();
+//   // 始终调用hook，但只在初始化后才会有效果
+//   const studioInstance = useDrizzleStudio();
 
-  return studioInstance;
-};
+//   return studioInstance;
+// };
 
 
 
@@ -45,7 +45,7 @@ export default function RootLayout() {
             <KeyboardProvider>
               <ClientProvider>
                 <>
-                  <DrizzleStudioComponent />
+                  {/* <DrizzleStudioComponent /> */}
                   <Stack
                     screenOptions={{
                       headerShown: false,

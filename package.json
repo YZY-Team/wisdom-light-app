@@ -27,6 +27,7 @@
     "babel-plugin-inline-import": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "drizzle-orm": "^0.42.0",
     "expo": "~52.0.46",
     "expo-av": "~15.0.2",
@@ -53,6 +54,7 @@
     "react": "18.3.1",
     "react-native": "0.76.9",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-gifted-chat": "^2.8.1",
     "react-native-keyboard-controller": "^1.17.1",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-reanimated": "~3.16.1",
@@ -62,7 +64,8 @@
     "react-native-webrtc": "^124.0.5",
     "react-use-websocket": "^4.13.0",
     "tailwind-merge": "^3.1.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-audio": "~0.3.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

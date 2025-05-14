@@ -66,7 +66,6 @@ const DailyDeclarationItem = ({ item, onRefresh }: { item: DailyData; onRefresh:
     const utc8Today = utc8Date.toISOString().split('T')[0];
     const itemDate = new Date(item.date.getTime() + 8 * 60 * 60 * 1000);
     const itemDateStr = itemDate.toISOString().split('T')[0];
-    console.log('isToday', utc8Today === itemDateStr);
     return utc8Today === itemDateStr;
   };
 

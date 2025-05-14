@@ -133,7 +133,7 @@ export default function ChatList() {
       }
     } catch (error) {
       // 如果解析失败，直接显示原始内容
-      console.warn('消息解析失败:', { content: messageContent, error });
+      // console.warn('消息解析失败:', { content: messageContent, error });
       return messageContent;
     }
   };

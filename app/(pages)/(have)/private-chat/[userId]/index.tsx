@@ -217,7 +217,7 @@ export default function PrivateChat() {
       } catch (error) {
         // 如果解析失败，直接显示原始内容
         content = msg.textContent;
-        console.warn('消息解析失败:', { content, error });
+        // console.warn('消息解析失败:', { content, error });
       }
 
       return {

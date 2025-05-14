@@ -62,7 +62,7 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
             parsedMessage.readBy = parsedMessage.senderId === currentUserId ? [currentUserId] : [];
           }
         } catch (e) {
-          console.log('消息解析失败:', message);
+          // console.log('消息解析失败:', message);
           return state;
         }
       } else {
