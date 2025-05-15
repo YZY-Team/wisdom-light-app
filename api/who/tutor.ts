@@ -37,6 +37,90 @@ export interface MyTutorData {
   tutorType: string | null;
   updateTime: string;
 }
+// 成就书接口定义
+interface AchievementBook {
+  id: string;
+  userId: string;
+  name: string;
+  nickname: string;
+  gender: string;
+  age: number | null;
+  maritalStatus: string;
+  childrenStatus: string;
+  phone: string;
+  email: string;
+  companyName: string;
+  position: string;
+  companySize: string;
+  annualIncome: string;
+  companyAddress: string;
+  emergencyContact: string;
+  homeAddress: string;
+  oath: string;
+  promise: string | null;
+  isActive: boolean;
+  membershipStartDate: string | null;
+  membershipEndDate: string | null;
+  coachIds: string | null;
+  createTime: string;
+  updateTime: string;
+}
+
+// 日宣告接口定义
+interface DailyDeclaration {
+  id: string;
+  userId: string;
+  bookId: string;
+  weeklyDeclarationId: string;
+  dayNumber: number;
+  declarationDate: string;
+  morningPlan: string;
+  noonPlan: string;
+  afternoonPlan: string;
+  eveningPlan: string;
+  dayScore: string;
+  dayExperience: string;
+  whatWorked: string;
+  whatDidntWork: string;
+  whatLearned: string;
+  whatNext: string;
+  createTime: string;
+  updateTime: string;
+}
+
+// 周宣告接口定义
+interface WeeklyDeclaration {
+  id: string;
+  userId: string;
+  bookId: string;
+  weekNumber: number;
+  title: string;
+  declarationContent: string;
+  weekStartDate: string;
+  weekEndDate: string;
+  achievement: string;
+  selfSummary: string;
+  summary123456: string;
+  nextStep: string;
+  weekScore: string;
+  weekExperience: string;
+  whatWorked: string;
+  whatDidntWork: string;
+  whatLearned: string;
+  whatNext: string;
+  createTime: string;
+  updateTime: string;
+}
+
+// 学员宣告完整数据接口
+export interface StudentDeclaration {
+  studentId: string;
+  studentNickname: string;
+  studentAvatarUrl: string;
+  achievementBook: AchievementBook;
+  recentDailyDeclarations: DailyDeclaration[];
+  recentWeeklyDeclarations: WeeklyDeclaration[];
+}
 
 export const tutorApi = {
   getTutorList: async () => {
@@ -59,18 +143,25 @@ export const tutorApi = {
     return response.data;
   },
   // 添加学员
-  addTutorStudent: async(studentId:string)=>{
+  addTutorStudent: async (studentId: string) => {
     const response = await request.post(`/wl/tutor/student/add/${studentId}`);
     return response;
   },
   // 获取我的导师列表 /wl/tutor/student/my-tutors
-  getMyTutors: async()=>{
+  getMyTutors: async () => {
     const response = await request.get<MyTutorData[]>('/wl/tutor/student/my-tutors');
     return response.data;
   },
   // post /wl/achievement-book/{id}/coaches 绑定教练
-  bindCoach: async(id:string, coachIds:string[])=>{
+  bindCoach: async (id: string, coachIds: string[]) => {
     const response = await request.post(`/wl/achievement-book/${id}/coaches`, coachIds);
     return response;
-  }
+  },
+  // get /wl/tutor/student/student/declarations/{studentId} 获取学员的日宣告，周宣告，成就书
+  getStudentDeclarations: async (studentId: string) => {
+    const response = await request.get<StudentDeclaration>(
+      `/wl/tutor/student/student/declarations/${studentId}`
+    );
+    return response;
+  },
 };

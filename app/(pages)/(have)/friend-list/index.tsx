@@ -11,7 +11,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import type { Friend } from '~/types/have/friendType';
 import { useFriendList } from '~/queries/friend';
@@ -22,6 +22,7 @@ import { eq } from 'drizzle-orm';
 import { useDatabase } from '~/contexts/DatabaseContext';
 import FriendTab from '~/components/screens/tabs/have/FriendTab';
 import GroupTab from '~/components/screens/tabs/have/GroupTab';
+import { useQueryClient } from '@tanstack/react-query';
 
 // 字母索引数据
 const ALPHABET = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''); // 添加 '#' 用于特殊情况
@@ -135,6 +136,7 @@ const GroupHeader = memo(({ letter }: { letter: string }) => (
 export default function FriendList() {
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends');
+  const queryClient = useQueryClient();
   const { data: friendResponse, isLoading, error } = useFriendList();
   
   // 使用DatabaseContext
@@ -144,6 +146,18 @@ export default function FriendList() {
   const currentUserId = useUserStore((state) => state.userInfo?.globalUserId);
   // 本地存储的好友数据
   const [localFriends, setLocalFriends] = useState<Friend[]>([]);
+
+  // 每次页面获得焦点时刷新好友列表数据
+  useFocusEffect(
+    useCallback(() => {
+      // 当页面获得焦点时，刷新好友列表数据
+      queryClient.invalidateQueries({ queryKey: ['friendList'] });
+      
+      return () => {
+        // 页面失去焦点时的清理工作（如果需要）
+      };
+    }, [queryClient])
+  );
 
   // 从本地数据库加载好友数据
   useEffect(() => {
@@ -175,7 +189,7 @@ export default function FriendList() {
             console.log('本地数据库中没有找到好友数据');
           }
         } catch (error) {
-          console.error('从本地数据库加载好友数据失败:', error);
+          console.error('从本地数据库加载好友数据失败:', 'error', error);
         }
       }
     };

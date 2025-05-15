@@ -13,6 +13,7 @@ import { cssInterop } from 'nativewind';
 import { Image } from 'expo-image';
 import { tutorApi } from '~/api/who/tutor';
 import { pinyin } from 'pinyin-pro';
+import { router } from 'expo-router';
 cssInterop(Image, { className: 'style' });
 // 字母索引数据
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -64,39 +65,47 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
   const [error, setError] = useState<string | null>(null);
   const [flattenedData, setFlattenedData] = useState<Item[]>([]);
 
+  // 处理学员点击，跳转到详情页面
+  const handleStudentPress = (studentId: string) => {
+    console.log('点击学员:', studentId);
+    router.push(`/studentInfo/${studentId}`);
+  };
+
   // 获取学员数据
   const fetchStudents = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await tutorApi.getTutorStudents();
-      console.log("response", response);
+      if (response == null) {
+        setFlattenedData([]);
+        return;
+      }
+
       const students = (response as ApiResponse<ApiStudent>).records || [];
-      
-      console.log("students", students.length);
-      
+
       // 将学员按首字母分组
       const groupedStudents: StudentsByLetter = {};
-      
+
       // 初始化字母分组
       ALPHABET.forEach((letter) => {
         groupedStudents[letter] = [];
       });
-      
+
       // 添加特殊字符分组
       groupedStudents['#'] = [];
-      
+
       // 处理每个学生数据
       for (const student of students) {
         try {
           // 获取姓名首字母（拼音首字母）
           let name = student.studentNickname;
           let firstLetter = '';
-          
+
           // 检查是否是中文
           const isChinese = /[\u4e00-\u9fa5]/.test(name);
-          
+
           if (isChinese) {
             // 使用pinyin-pro获取拼音首字母
             const pinyinStr = pinyin(name, { toneType: 'none' });
@@ -105,20 +114,20 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
             // 非中文直接获取首字母
             firstLetter = name.charAt(0).toUpperCase();
           }
-          
+
           // 确定分组字母
           const letter = ALPHABET.includes(firstLetter) ? firstLetter : '#';
-          
+
           // 初始化分组（如果不存在）
           if (!groupedStudents[letter]) {
             groupedStudents[letter] = [];
           }
-          
+
           // 添加到对应分组
-          console.log("student.nickname", name);
-          
+          console.log('student.nickname', name);
+
           groupedStudents[letter].push({
-            id: student.relationId || student.studentId || '',
+            id: student.studentId || '',
             name: student.studentNickname,
             avatarUrl: student.studentAvatarUrl,
           });
@@ -126,14 +135,14 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
           console.error('处理学生数据失败:', err);
         }
       }
-      
+
       // 按字母排序
       const sortedLetters = Object.keys(groupedStudents).sort((a, b) => {
         if (a === '#') return 1; // '#'放在最后
         if (b === '#') return -1;
         return a.localeCompare(b);
       });
-      
+
       // 展平数据为 FlashList 格式
       const newFlattenedData: Item[] = [];
       sortedLetters.forEach((letter) => {
@@ -141,7 +150,7 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
         if (groupedStudents[letter].length > 0) {
           // 添加分组头
           newFlattenedData.push({ type: 'header', title: letter, key: `header-${letter}` });
-          
+
           // 添加学员项
           const studentsInLetter = groupedStudents[letter];
           for (let i = 0; i < studentsInLetter.length; i += 3) {
@@ -153,7 +162,7 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
           }
         }
       });
-      
+
       setFlattenedData(newFlattenedData);
     } catch (err) {
       console.error('获取学员列表失败:', err);
@@ -301,17 +310,15 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
       );
     }
     return (
-      <View className="mb-4 flex-col px-2 flex-wrap gap-3">
+      <View className="mb-4 flex-col flex-wrap gap-3 px-2">
         {item.students?.map((student) => (
           <TouchableOpacity
             key={student.id}
-            className="h-[40px] gap-3 w-full flex-row items-center rounded-[12px]">
-            <View className="w-10 h-10 rounded-full">
+            className="h-[40px] w-full flex-row items-center gap-3 rounded-[12px]"
+            onPress={() => handleStudentPress(student.id)}>
+            <View className="h-10 w-10 rounded-full">
               {student.avatarUrl ? (
-                <Image
-                  source={{ uri: student.avatarUrl }}
-                  className="h-full w-full rounded-full"
-                />
+                <Image source={{ uri: student.avatarUrl }} className="h-full w-full rounded-full" />
               ) : (
                 <Image
                   source={require('~/assets/images/who/tutor/image.png')}
@@ -335,7 +342,7 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
   // 渲染加载状态
   if (isLoading && flattenedData.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#1483FD" />
         <Text className="mt-2 text-gray-500">加载中...</Text>
       </View>
@@ -345,9 +352,11 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
   // 渲染错误状态
   if (error && flattenedData.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-red-500">{error}</Text>
-        <TouchableOpacity className="mt-4 px-4 py-2 bg-[#1483FD] rounded-lg" onPress={fetchStudents}>
+        <TouchableOpacity
+          className="mt-4 rounded-lg bg-[#1483FD] px-4 py-2"
+          onPress={fetchStudents}>
           <Text className="text-white">重试</Text>
         </TouchableOpacity>
       </View>
@@ -357,9 +366,11 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
   // 渲染空状态
   if (flattenedData.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-gray-500">暂无学员</Text>
-        <TouchableOpacity className="mt-4 px-4 py-2 bg-[#1483FD] rounded-lg" onPress={fetchStudents}>
+        <TouchableOpacity
+          className="mt-4 rounded-lg bg-[#1483FD] px-4 py-2"
+          onPress={fetchStudents}>
           <Text className="text-white">刷新</Text>
         </TouchableOpacity>
       </View>
@@ -416,4 +427,3 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
 };
 
 export default StudentsManagementWithFlashList;
-

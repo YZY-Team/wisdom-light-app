@@ -7,6 +7,8 @@ export const useFriendList = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['friendList'],
     queryFn: friendApi.getFriends,
+    staleTime: 0, // 数据始终被视为过时，确保每次都重新获取
+    refetchOnMount: 'always', // 每次组件挂载时都重新获取数据
   });
   return { data, isLoading, error };
 };

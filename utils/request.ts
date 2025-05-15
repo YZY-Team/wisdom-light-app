@@ -82,7 +82,7 @@ instance.interceptors.response.use(
   },
   // 如果响应状态码不为 2xx, 则返回错误
   (error) => {
-    console.log({ error });
+    console.log({ "出现错误": error.error });
     if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
       return Promise.reject(new Error("请求超时"));
     }
