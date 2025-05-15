@@ -1,33 +1,59 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+} from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { tutorApi, StudentDeclaration } from '~/api/who/tutor';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 cssInterop(Image, { className: 'style' });
+cssInterop(LinearGradient, { className: 'style' });
 
-const initialLayout = { width: Dimensions.get('window').width };
+type TabProps = {
+  title: string;
+  isActive?: boolean;
+  onPress: () => void;
+};
+
+const Tab = ({ title, isActive, onPress }: TabProps) => (
+  <Pressable
+    className={`flex-1 items-center transition-all duration-200 ${!isActive && 'border-b-2 border-transparent hover:bg-gray-50'}`}
+    onPress={onPress}>
+    {isActive ? (
+      <LinearGradient
+        colors={['#1687FD', '#20A3FB']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        className="w-full items-center rounded-[6px] py-3">
+        <Text className="text-base font-medium text-white">{title}</Text>
+      </LinearGradient>
+    ) : (
+      <View className="w-full items-center py-3">
+        <Text className="text-base font-medium text-black/50">{title}</Text>
+      </View>
+    )}
+  </Pressable>
+);
 
 export default function StudentInfoPage() {
   const { studentId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [studentData, setStudentData] = useState<StudentDeclaration | null>(null);
-  
-  const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'daily', title: '日宣告' },
-    { key: 'weekly', title: '周宣告' },
-    { key: 'achievement', title: '成就书' },
-  ]);
 
-  console.log("studentData", studentData);
+  const [activeTab, setActiveTab] = useState('daily');
+
   useEffect(() => {
     if (!studentId) return;
-    
+
     const fetchStudentData = async () => {
       try {
         setLoading(true);
@@ -56,62 +82,75 @@ export default function StudentInfoPage() {
     <ScrollView className="flex-1 p-4">
       {studentData?.recentDailyDeclarations && studentData.recentDailyDeclarations.length > 0 ? (
         studentData.recentDailyDeclarations.map((declaration) => (
-          <View key={declaration.id} className="mb-6 p-4 bg-white rounded-lg shadow">
-            <Text className="text-lg font-bold mb-2">第 {declaration.dayNumber} 天 ({new Date(declaration.declarationDate).toLocaleDateString()})</Text>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">早晨计划</Text>
-              <Text className="text-gray-700">{declaration.morningPlan}</Text>
+          <View key={declaration.id} className="mb-6 rounded-lg bg-white p-4 shadow">
+            <View className="mb-4 flex-row items-center justify-center">
+              <View className="flex-row items-center">
+                <Text className="text-[16px] font-bold text-black">第</Text>
+                <Text className="text-[20px] font-bold text-[#F18318]">
+                  {declaration.dayNumber}
+                </Text>
+                <Text className="text-[16px] font-bold text-black">天</Text>
+                <Text className="ml-2 text-[14px] text-gray-500">
+                  ({new Date(declaration.declarationDate).toLocaleDateString()})
+                </Text>
+              </View>
             </View>
-            
+
             <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">中午计划</Text>
-              <Text className="text-gray-700">{declaration.noonPlan}</Text>
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+                <Text className="text-[16px] font-bold text-white">早宣告</Text>
+              </LinearGradient>
+              <View className="rounded-b-xl border border-gray-100 bg-white p-4">
+                <Text className="mb-1 text-base font-semibold">早晨计划</Text>
+                <Text className="mb-4 text-gray-700">{declaration.morningPlan}</Text>
+
+                <Text className="mb-1 text-base font-semibold">中午计划</Text>
+                <Text className="mb-4 text-gray-700">{declaration.noonPlan}</Text>
+
+                <Text className="mb-1 text-base font-semibold">下午计划</Text>
+                <Text className="mb-4 text-gray-700">{declaration.afternoonPlan}</Text>
+
+                <Text className="mb-1 text-base font-semibold">晚上计划</Text>
+                <Text className="text-gray-700">{declaration.eveningPlan}</Text>
+              </View>
             </View>
-            
+
             <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">下午计划</Text>
-              <Text className="text-gray-700">{declaration.afternoonPlan}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">晚上计划</Text>
-              <Text className="text-gray-700">{declaration.eveningPlan}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">当天评分</Text>
-              <Text className="text-gray-700">{declaration.dayScore}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">当天体验</Text>
-              <Text className="text-gray-700">{declaration.dayExperience}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">有效方法</Text>
-              <Text className="text-gray-700">{declaration.whatWorked}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">无效方法</Text>
-              <Text className="text-gray-700">{declaration.whatDidntWork}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">学到的经验</Text>
-              <Text className="text-gray-700">{declaration.whatLearned}</Text>
-            </View>
-            
-            <View>
-              <Text className="text-base font-semibold mb-1">下一步行动</Text>
-              <Text className="text-gray-700">{declaration.whatNext}</Text>
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+                <Text className="text-[16px] font-bold text-white">晚总结</Text>
+              </LinearGradient>
+              <View className="rounded-b-xl border border-gray-100 bg-white p-4">
+                <Text className="mb-1 text-base font-semibold">当天评分</Text>
+                <Text className="mb-4 text-gray-700">{declaration.dayScore}</Text>
+
+                <Text className="mb-1 text-base font-semibold">当天体验</Text>
+                <Text className="mb-4 text-gray-700">{declaration.dayExperience}</Text>
+
+                <Text className="mb-1 text-base font-semibold">有效方法</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatWorked}</Text>
+
+                <Text className="mb-1 text-base font-semibold">无效方法</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatDidntWork}</Text>
+
+                <Text className="mb-1 text-base font-semibold">学到的经验</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatLearned}</Text>
+
+                <Text className="mb-1 text-base font-semibold">下一步行动</Text>
+                <Text className="text-gray-700">{declaration.whatNext}</Text>
+              </View>
             </View>
           </View>
         ))
       ) : (
-        <View className="flex-1 justify-center items-center py-10">
+        <View className="flex-1 items-center justify-center py-10">
           <Text className="text-gray-500">暂无日宣告记录</Text>
         </View>
       )}
@@ -123,72 +162,97 @@ export default function StudentInfoPage() {
     <ScrollView className="flex-1 p-4">
       {studentData?.recentWeeklyDeclarations && studentData.recentWeeklyDeclarations.length > 0 ? (
         studentData.recentWeeklyDeclarations.map((declaration) => (
-          <View key={declaration.id} className="mb-6 p-4 bg-white rounded-lg shadow">
-            <Text className="text-lg font-bold mb-2">第 {declaration.weekNumber} 周 ({new Date(declaration.weekStartDate).toLocaleDateString()} - {new Date(declaration.weekEndDate).toLocaleDateString()})</Text>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">标题</Text>
-              <Text className="text-gray-700">{declaration.title}</Text>
+          <View key={declaration.id} className="mb-6 rounded-lg bg-white shadow">
+            <View className="mb-4 flex-row items-center justify-center p-4">
+              <View className="flex-row items-center">
+                <Text className="text-[16px] font-bold text-black">第</Text>
+                <Text className="text-[20px] font-bold text-[#F18318]">
+                  {declaration.weekNumber}
+                </Text>
+                <Text className="mr-4 text-[16px] font-bold text-black">周宣告</Text>
+                <Text className="text-[16px] font-bold text-[#1483FD]">
+                  {declaration.title || '未设置标题'}
+                </Text>
+              </View>
             </View>
-            
+
             <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">宣告内容</Text>
-              <Text className="text-gray-700">{declaration.declarationContent}</Text>
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+                <Text className="text-[16px] font-bold text-white">成果宣告</Text>
+                <Text className="ml-auto text-[14px] text-white">
+                  {new Date(declaration.weekStartDate).toLocaleDateString()} -{' '}
+                  {new Date(declaration.weekEndDate).toLocaleDateString()}
+                </Text>
+              </LinearGradient>
+              <View className="border border-gray-100 bg-white p-4">
+                <View className="mb-4 flex-row items-center">
+                  <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
+                  <Text className="text-[16px] font-bold">本周宣告</Text>
+                </View>
+                <Text className="mb-6 text-gray-700">{declaration.declarationContent}</Text>
+
+                <View className="mb-4 flex-row items-center">
+                  <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
+                  <Text className="text-[16px] font-bold">成就</Text>
+                </View>
+                <Text className="mb-6 text-gray-700">{declaration.achievement}</Text>
+
+                <View className="mb-4 flex-row items-center">
+                  <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
+                  <Text className="text-[16px] font-bold">自我总结</Text>
+                </View>
+                <Text className="mb-6 text-gray-700">{declaration.selfSummary}</Text>
+
+                <View className="mb-4 flex-row items-center">
+                  <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
+                  <Text className="text-[16px] font-bold">六步总结</Text>
+                </View>
+                <Text className="mb-6 text-gray-700">{declaration.summary123456}</Text>
+
+                <View className="mb-4 flex-row items-center">
+                  <View className="mr-2 h-7 w-1 bg-[#1483FD]" />
+                  <Text className="text-[16px] font-bold">下一步</Text>
+                </View>
+                <Text className="text-gray-700">{declaration.nextStep}</Text>
+              </View>
             </View>
-            
+
             <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">成就</Text>
-              <Text className="text-gray-700">{declaration.achievement}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">自我总结</Text>
-              <Text className="text-gray-700">{declaration.selfSummary}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">六步总结</Text>
-              <Text className="text-gray-700">{declaration.summary123456}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">下一步</Text>
-              <Text className="text-gray-700">{declaration.nextStep}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">周评分</Text>
-              <Text className="text-gray-700">{declaration.weekScore}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">周体验</Text>
-              <Text className="text-gray-700">{declaration.weekExperience}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">有效方法</Text>
-              <Text className="text-gray-700">{declaration.whatWorked}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">无效方法</Text>
-              <Text className="text-gray-700">{declaration.whatDidntWork}</Text>
-            </View>
-            
-            <View className="mb-3">
-              <Text className="text-base font-semibold mb-1">学到的经验</Text>
-              <Text className="text-gray-700">{declaration.whatLearned}</Text>
-            </View>
-            
-            <View>
-              <Text className="text-base font-semibold mb-1">下一步行动</Text>
-              <Text className="text-gray-700">{declaration.whatNext}</Text>
+              <LinearGradient
+                colors={['#20B4F3', '#5762FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+                <Text className="text-[16px] font-bold text-white">周总结</Text>
+              </LinearGradient>
+              <View className="rounded-b-xl border border-gray-100 bg-white p-4">
+                <Text className="mb-1 text-base font-semibold">周评分</Text>
+                <Text className="mb-4 text-gray-700">{declaration.weekScore}</Text>
+
+                <Text className="mb-1 text-base font-semibold">周体验</Text>
+                <Text className="mb-4 text-gray-700">{declaration.weekExperience}</Text>
+
+                <Text className="mb-1 text-base font-semibold">有效方法</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatWorked}</Text>
+
+                <Text className="mb-1 text-base font-semibold">无效方法</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatDidntWork}</Text>
+
+                <Text className="mb-1 text-base font-semibold">学到的经验</Text>
+                <Text className="mb-4 text-gray-700">{declaration.whatLearned}</Text>
+
+                <Text className="mb-1 text-base font-semibold">下一步行动</Text>
+                <Text className="text-gray-700">{declaration.whatNext}</Text>
+              </View>
             </View>
           </View>
         ))
       ) : (
-        <View className="flex-1 justify-center items-center py-10">
+        <View className="flex-1 items-center justify-center py-10">
           <Text className="text-gray-500">暂无周宣告记录</Text>
         </View>
       )}
@@ -199,12 +263,12 @@ export default function StudentInfoPage() {
   const AchievementBookScene = () => (
     <ScrollView className="flex-1 p-4">
       {studentData?.achievementBook ? (
-        <View className="p-4 bg-white rounded-lg shadow">
-          <View className="flex-row items-center mb-4">
-            <View className="w-20 h-20 rounded-full overflow-hidden mr-4">
+        <View className="rounded-lg bg-white p-4 shadow">
+          <View className="mb-6 flex-row items-center">
+            <View className="mr-4 h-20 w-20 overflow-hidden rounded-full">
               <Image
                 source={{ uri: studentData.studentAvatarUrl || undefined }}
-                className="w-full h-full"
+                className="h-full w-full"
                 placeholder={require('~/assets/images/who/tutor/image.png')}
               />
             </View>
@@ -213,119 +277,170 @@ export default function StudentInfoPage() {
               <Text className="text-gray-600">昵称: {studentData.achievementBook.nickname}</Text>
             </View>
           </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">性别</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.gender}</Text>
+
+          <View className="mb-4">
+            <LinearGradient
+              colors={['#20B4F3', '#5762FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+              <Text className="text-[16px] font-bold text-white">个人信息</Text>
+            </LinearGradient>
+            <View className="border border-gray-100 bg-white p-4">
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">性别</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.gender}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">年龄</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.age}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">婚姻状况</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.maritalStatus}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">子女状况</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.childrenStatus}</Text>
+              </View>
+            </View>
           </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">年龄</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.age}</Text>
+
+          <View className="mb-4">
+            <LinearGradient
+              colors={['#20B4F3', '#5762FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+              <Text className="text-[16px] font-bold text-white">联系方式</Text>
+            </LinearGradient>
+            <View className="border border-gray-100 bg-white p-4">
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">联系电话</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.phone}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">电子邮箱</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.email}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">家庭住址</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.homeAddress}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">紧急联系人</Text>
+                <Text className="text-gray-700">
+                  {studentData.achievementBook.emergencyContact}
+                </Text>
+              </View>
+            </View>
           </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">婚姻状况</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.maritalStatus}</Text>
+
+          <View className="mb-4">
+            <LinearGradient
+              colors={['#20B4F3', '#5762FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+              <Text className="text-[16px] font-bold text-white">职业信息</Text>
+            </LinearGradient>
+            <View className="border border-gray-100 bg-white p-4">
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">公司名称</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.companyName}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">职位</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.position}</Text>
+              </View>
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">公司地址</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.companyAddress}</Text>
+              </View>
+            </View>
           </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">子女状况</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.childrenStatus}</Text>
+
+          <View className="mb-4">
+            <LinearGradient
+              colors={['#20B4F3', '#5762FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+              <Text className="text-[16px] font-bold text-white">誓言与承诺</Text>
+            </LinearGradient>
+            <View className="border border-gray-100 bg-white p-4">
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">誓言</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.oath}</Text>
+              </View>
+
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">承诺</Text>
+                <Text className="text-gray-700">{studentData.achievementBook.promise}</Text>
+              </View>
+            </View>
           </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">联系电话</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.phone}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">电子邮箱</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.email}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">公司名称</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.companyName}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">职位</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.position}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">公司规模</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.companySize}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">年收入</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.annualIncome}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">公司地址</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.companyAddress}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">紧急联系人</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.emergencyContact}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">家庭住址</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.homeAddress}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">誓言</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.oath}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">承诺</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.promise}</Text>
-          </View>
-          
-          <View className="mb-3">
-            <Text className="text-base font-semibold mb-1">会员开始日期</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.membershipStartDate ? new Date(studentData.achievementBook.membershipStartDate).toLocaleDateString() : '无'}</Text>
-          </View>
-          
+
           <View>
-            <Text className="text-base font-semibold mb-1">会员结束日期</Text>
-            <Text className="text-gray-700">{studentData.achievementBook.membershipEndDate ? new Date(studentData.achievementBook.membershipEndDate).toLocaleDateString() : '无'}</Text>
+            <LinearGradient
+              colors={['#20B4F3', '#5762FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="flex h-[38px] flex-row items-center rounded-t-xl px-4">
+              <Text className="text-[16px] font-bold text-white">会员信息</Text>
+            </LinearGradient>
+            <View className="rounded-b-xl border border-gray-100 bg-white p-4">
+              <View className="mb-3">
+                <Text className="mb-1 text-base font-semibold">会员开始日期</Text>
+                <Text className="text-gray-700">
+                  {studentData.achievementBook.membershipStartDate
+                    ? new Date(studentData.achievementBook.membershipStartDate).toLocaleDateString()
+                    : '无'}
+                </Text>
+              </View>
+
+              <View>
+                <Text className="mb-1 text-base font-semibold">会员结束日期</Text>
+                <Text className="text-gray-700">
+                  {studentData.achievementBook.membershipEndDate
+                    ? new Date(studentData.achievementBook.membershipEndDate).toLocaleDateString()
+                    : '无'}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
       ) : (
-        <View className="flex-1 justify-center items-center py-10">
+        <View className="flex-1 items-center justify-center py-10">
           <Text className="text-gray-500">暂无成就书记录</Text>
         </View>
       )}
     </ScrollView>
   );
 
-  const renderScene = SceneMap({
-    daily: DailyDeclarationScene,
-    weekly: WeeklyDeclarationScene,
-    achievement: AchievementBookScene,
-  });
-
-  const renderTabBar = (props: any) => (
-    <TabBar
-      {...props}
-      indicatorStyle={{ backgroundColor: '#1483FD' }}
-      style={{ backgroundColor: 'white' }}
-      labelStyle={{ color: 'black', fontWeight: '600' }}
-      activeColor="#1483FD"
-    />
-  );
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'daily':
+        return <DailyDeclarationScene />;
+      case 'weekly':
+        return <WeeklyDeclarationScene />;
+      case 'achievement':
+        return <AchievementBookScene />;
+      default:
+        return null;
+    }
+  };
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#1483FD" />
         <Text className="mt-2 text-gray-500">加载中...</Text>
       </View>
@@ -334,26 +449,26 @@ export default function StudentInfoPage() {
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-red-500">{error}</Text>
-        <TouchableOpacity 
-          className="mt-4 px-4 py-2 bg-[#1483FD] rounded-lg"
+        <TouchableOpacity
+          className="mt-4 rounded-lg bg-[#1483FD] px-4 py-2"
           onPress={() => {
             if (studentId) {
-              tutorApi.getStudentDeclarations(studentId as string)
-                .then(response => {
+              tutorApi
+                .getStudentDeclarations(studentId as string)
+                .then((response) => {
                   if (response && response.data) {
                     setStudentData(response.data);
                     setError(null);
                   }
                 })
-                .catch(err => {
+                .catch((err) => {
                   console.error('重试获取学员详情失败:', err);
                   setError('获取学员详情失败，请稍后再试');
                 });
             }
-          }}
-        >
+          }}>
           <Text className="text-white">重试</Text>
         </TouchableOpacity>
       </View>
@@ -361,14 +476,14 @@ export default function StudentInfoPage() {
   }
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-[#F5F8FC]">
       {/* 学员基本信息头部 */}
-      <View className="p-4 bg-white border-b border-gray-200">
+      <View className="border-b border-gray-200 bg-white p-4">
         <View className="flex-row items-center">
-          <View className="w-16 h-16 rounded-full overflow-hidden mr-4">
+          <View className="mr-4 h-16 w-16 overflow-hidden rounded-full">
             <Image
               source={{ uri: studentData?.studentAvatarUrl || undefined }}
-              className="w-full h-full"
+              className="h-full w-full"
               placeholder={require('~/assets/images/who/tutor/image.png')}
             />
           </View>
@@ -379,14 +494,27 @@ export default function StudentInfoPage() {
         </View>
       </View>
 
-      {/* 标签页内容 */}
-      <TabView
-        navigationState={{ index, routes }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={initialLayout}
-        renderTabBar={renderTabBar}
-      />
+      {/* 导航栏 */}
+      <View className="mx-4 mt-3 flex-row gap-[36px] rounded-[8px] bg-[#1687fd]/10 p-2">
+        <Tab
+          title="日宣告"
+          isActive={activeTab === 'daily'}
+          onPress={() => setActiveTab('daily')}
+        />
+        <Tab
+          title="周宣告"
+          isActive={activeTab === 'weekly'}
+          onPress={() => setActiveTab('weekly')}
+        />
+        <Tab
+          title="成就书"
+          isActive={activeTab === 'achievement'}
+          onPress={() => setActiveTab('achievement')}
+        />
+      </View>
+
+      {/* 内容区域 */}
+      {renderContent()}
     </View>
   );
 }

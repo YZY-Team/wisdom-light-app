@@ -78,6 +78,7 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
 
     try {
       const response = await tutorApi.getTutorStudents();
+      console.log('response', response);
       if (response == null) {
         setFlattenedData([]);
         return;

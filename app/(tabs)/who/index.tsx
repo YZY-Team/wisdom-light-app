@@ -446,11 +446,11 @@ export default function WhoIndex() {
             title="人工客服"
             href="/support"
           />
-          <MenuItem
+          {/* <MenuItem
             icon={require('~/assets/images/who/platform-message.png')}
             title="平台消息"
             href="/platform-message"
-          />
+          /> */}
           <Pressable
             onPress={() => setShowCreateGroupModal(true)}
             className="flex-row items-center px-4 py-4">

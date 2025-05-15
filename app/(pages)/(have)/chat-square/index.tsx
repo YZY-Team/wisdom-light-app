@@ -27,13 +27,61 @@ import ChatToolbar from '~/components/chat/ChatToolbar';
 // 设置dayjs语言为中文
 dayjs.locale('zh-cn');
 
+
+// 创建音频消息渲染器
+function AudioMessage(props: any) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [sound, setSound] = useState(null);
+
+  useEffect(() => {
+    const loadAudio = async () => {
+      const { sound: newSound } = await Audio.Sound.createAsync({ uri: props.currentMessage.audio });
+      setSound(newSound);
+    };
+    loadAudio();
+
+    return () => sound && sound.unloadAsync(); 
+  }, [props.currentMessage.audio]);
+
+  const handlePlayPause = async () => {
+    if (isPlaying) {
+      await sound.pauseAsync();
+    } else {
+      await sound.playAsync();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    // Your audio message UI with a play/pause button
+    <View >
+      <TouchableOpacity onPress={handlePlayPause}>
+        <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+
 export default function ChatSquare() {
   const insets = useSafeAreaInsets();
   const [isRecording, setIsRecording] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const { sendMessage, lastMessage } = useWebSocketContext();
   const userInfo = useUserStore((state) => state.userInfo);
-  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [messages, setMessages] = useState<IMessage[]>([
+    {
+      _id: '1',
+      text: '你好',
+      createdAt: new Date(),
+      user: {
+        _id: '1',
+        name: '张三',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown',
+      },
+      audio: 'http://119.29.188.102:9000/image/a7785d7db2fe426f8932e4e2f70daa13.mp3',
+    },
+  ]);
   const [dialogId, setDialogId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   // 音频播放状态
@@ -365,10 +413,8 @@ export default function ChatSquare() {
     }
   };
 
-  // 创建音频消息渲染器
-  const renderMessageAudio = createRenderMessageAudio({
-    userGlobalId: userInfo?.globalUserId
-  });
+  
+  
 
   try {
     return (
@@ -390,7 +436,7 @@ export default function ChatSquare() {
             {loading && (
               <Text className="px-4 py-2 text-center text-sm text-[#757575]">正在加入聊天广场...</Text>
             )}
-  
+            
             {/* GiftedChat 消息区域 */}
             <GiftedChat
               messageIdGenerator={() => Date.now().toString() + Math.random().toString()}
@@ -409,7 +455,9 @@ export default function ChatSquare() {
               renderInputToolbar={renderInputToolbar}
               renderComposer={renderComposer}
               renderActions={(props) => renderActions(props, () => setShowToolbar(!showToolbar))}
-              renderMessageAudio={renderMessageAudio}
+              // renderMessageAudio={(props: any) => <AudioMessage currentMessage={{
+              //   audio: 'http://119.29.188.102:9000/image/a7785d7db2fe426f8932e4e2f70daa13.mp3',
+              // }} />}
               renderAvatarOnTop
               showAvatarForEveryMessage
               alwaysShowSend
@@ -439,7 +487,7 @@ export default function ChatSquare() {
                   />
                 ) : null
               }
-              renderMessage={renderMessage}
+              renderMessage={(props: any) => renderMessage(props)}
               renderChatEmpty={() => renderChatEmpty({ loading })}
             />
           </View>

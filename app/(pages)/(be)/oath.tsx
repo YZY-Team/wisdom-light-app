@@ -75,7 +75,7 @@ export default function Oath() {
         
         // @ts-ignore - 添加 coachIds
        const res = await tutorApi.bindCoach(activeBook.data.id, [selectedTutor.id]);
-       console.log('res', res);
+       console.log('bindCoach', res);
       }
 
       const res = await achievementBookApi.updateAchievementBook(activeBook.data.id, updateData);
