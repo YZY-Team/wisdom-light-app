@@ -2,7 +2,7 @@ import { View, Text, Pressable, Platform, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
@@ -19,7 +19,12 @@ import { AudioContext } from '~/components/chat/AudioContext';
 import { IAudioMessage } from '~/components/chat/types';
 import renderMessage from '~/components/chat/MessageRenderer';
 import renderBubble from '~/components/chat/ChatBubble';
-import { renderSend, renderInputToolbar, renderComposer, renderActions } from '~/components/chat/InputComponents';
+import {
+  renderSend,
+  renderInputToolbar,
+  renderComposer,
+  renderActions,
+} from '~/components/chat/InputComponents';
 import renderChatEmpty from '~/components/chat/EmptyChat';
 import createRenderMessageAudio from '~/components/chat/AudioMessageRenderer';
 import ChatToolbar from '~/components/chat/ChatToolbar';
@@ -27,41 +32,190 @@ import ChatToolbar from '~/components/chat/ChatToolbar';
 // 设置dayjs语言为中文
 dayjs.locale('zh-cn');
 
-
-// 创建音频消息渲染器
-function AudioMessage(props: any) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState(null);
-
-  useEffect(() => {
-    const loadAudio = async () => {
-      const { sound: newSound } = await Audio.Sound.createAsync({ uri: props.currentMessage.audio });
-      setSound(newSound);
-    };
-    loadAudio();
-
-    return () => sound && sound.unloadAsync(); 
-  }, [props.currentMessage.audio]);
-
-  const handlePlayPause = async () => {
-    if (isPlaying) {
-      await sound.pauseAsync();
-    } else {
-      await sound.playAsync();
-    }
-    setIsPlaying(!isPlaying);
+interface AudioMessageProps {
+  currentMessage: {
+    audio?: string;
+    _id: string | number;
   };
-
-  return (
-    // Your audio message UI with a play/pause button
-    <View >
-      <TouchableOpacity onPress={handlePlayPause}>
-        <Ionicons name={isPlaying ? 'pause' : 'play'} size={30} />
-      </TouchableOpacity>
-    </View>
-  );
 }
 
+// function AudioMessage(props: AudioMessageProps) {
+//   const [isPlaying, setIsPlaying] = useState(false);
+//   const [sound, setSound] = useState<Audio.Sound | null>(null);
+//   const [playbackPosition, setPlaybackPosition] = useState(0);
+//   const [playbackDuration, setPlaybackDuration] = useState(0);
+//   const [playbackFinished, setPlaybackFinished] = useState(false);
+
+//   // 加载音频
+//   useEffect(() => {
+//     let soundObject: Audio.Sound | null = null;
+
+//     const loadAudio = async () => {
+//       if (props.currentMessage.audio) {
+//         try {
+//           const { sound: newSound } = await Audio.Sound.createAsync(
+//             { uri: props.currentMessage.audio },
+//             { shouldPlay: false }
+//           );
+          
+//           setupPlaybackStatusListener(newSound);
+//           setSound(newSound);
+//           soundObject = newSound;
+          
+//           // 获取并记录音频时长
+//           const status = await newSound.getStatusAsync();
+//           if (status.isLoaded && status.durationMillis) {
+//             setPlaybackDuration(status.durationMillis / 1000);
+//           }
+//         } catch (error) {
+//           console.error('加载音频失败:', error);
+//         }
+//       }
+//     };
+    
+//     loadAudio();
+    
+//     return () => {
+//       if (soundObject) {
+//         soundObject.unloadAsync()
+//           .catch(err => console.error('音频资源释放失败:', err));
+//       }
+//     };
+//   }, [props.currentMessage.audio]);
+  
+//   const setupPlaybackStatusListener = (soundObj: Audio.Sound) => {
+//     soundObj.setOnPlaybackStatusUpdate(status => {
+//       if (status.isLoaded && status.durationMillis) {
+//         setPlaybackPosition(status.positionMillis / 1000);
+        
+//         if (status.isPlaying) {
+//           setIsPlaying(true);
+//         } else {
+//           setIsPlaying(false);
+          
+//           if (status.didJustFinish) {
+//             setPlaybackPosition(0);
+//             setPlaybackFinished(true);
+//           }
+//         }
+//       }
+//     });
+//   };
+  
+//   const handlePlayPause = async () => {
+//     if (!sound) return;
+    
+//     try {
+//       if (isPlaying) {
+//         await sound.pauseAsync();
+//         setIsPlaying(false);
+//         return;
+//       }
+      
+//       const status = await sound.getStatusAsync();
+      
+//       if (playbackFinished || 
+//           (status.isLoaded && 
+//            status.durationMillis && 
+//            status.positionMillis && 
+//            status.positionMillis >= status.durationMillis - 500)) {
+//         await sound.setPositionAsync(0);
+//         setPlaybackPosition(0);
+//         setPlaybackFinished(false);
+//       }
+      
+//       await Audio.setAudioModeAsync({
+//         playsInSilentModeIOS: true,
+//         staysActiveInBackground: true,
+//         allowsRecordingIOS: false,
+//         shouldDuckAndroid: true,
+//         playThroughEarpieceAndroid: false,
+//       });
+      
+//       await sound.playAsync();
+//       setIsPlaying(true);
+//     } catch (error) {
+//       console.error('播放/暂停操作失败:', error);
+      
+//       if (props.currentMessage.audio) {
+//         try {
+//           if (sound) {
+//             await sound.unloadAsync();
+//           }
+          
+//           const { sound: newSound } = await Audio.Sound.createAsync(
+//             { uri: props.currentMessage.audio },
+//             { shouldPlay: true }
+//           );
+          
+//           setupPlaybackStatusListener(newSound);
+//           setSound(newSound);
+//           setIsPlaying(true);
+//           setPlaybackFinished(false);
+//         } catch (reloadError) {
+//           console.error('重新加载音频失败:', reloadError);
+//         }
+//       }
+//     }
+//   };
+  
+//   if (!props.currentMessage.audio) {
+//     return null;
+//   }
+  
+//   // 格式化时间函数
+//   const formatTime = (seconds: number) => {
+//     if (!seconds) return '00:00';
+//     const minutes = Math.floor(seconds / 60);
+//     const remainingSeconds = Math.floor(seconds % 60);
+//     return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+//   };
+  
+//   return (
+//     <View style={{
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       padding: 8,
+//       backgroundColor: '#e0e0e0',
+//       borderRadius: 10,
+//       minHeight: 50, // 固定最小高度
+//       width: '100%', // 固定宽度
+//     }}>
+//       <TouchableOpacity 
+//         onPress={handlePlayPause} 
+//         style={{
+//           width: 40,  // 固定宽度
+//           height: 40, // 固定高度
+//           justifyContent: 'center',
+//           alignItems: 'center',
+//           marginRight: 8
+//         }}
+//       >
+//         <Ionicons 
+//           name={isPlaying ? 'pause-circle' : 'play-circle'} 
+//           size={30} 
+//           color="#007AFF" 
+//         />
+//       </TouchableOpacity>
+      
+//       <View style={{ flex: 1 }}>
+//         {/* 使用固定高度的容器来避免文本切换时的抖动 */}
+//         <View style={{ height: 20, justifyContent: 'center' }}>
+//           <Text style={{ fontSize: 14 }}>
+//             {isPlaying ? '正在播放...' : '点击播放语音'}
+//           </Text>
+//         </View>
+        
+//         {/* 总是显示时间信息，即使是0:00/0:00，避免布局变化 */}
+//         <View style={{ height: 16, justifyContent: 'center', marginTop: 4 }}>
+//           <Text style={{ fontSize: 12, color: '#666' }}>
+//             {formatTime(playbackPosition)} / {formatTime(playbackDuration || 0)}
+//           </Text>
+//         </View>
+//       </View>
+//     </View>
+//   );
+// }
 
 export default function ChatSquare() {
   const insets = useSafeAreaInsets();
@@ -70,23 +224,23 @@ export default function ChatSquare() {
   const { sendMessage, lastMessage } = useWebSocketContext();
   const userInfo = useUserStore((state) => state.userInfo);
   const [messages, setMessages] = useState<IMessage[]>([
-    {
-      _id: '1',
-      text: '你好',
-      createdAt: new Date(),
-      user: {
-        _id: '1',
-        name: '张三',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown',
-      },
-      audio: 'http://119.29.188.102:9000/image/a7785d7db2fe426f8932e4e2f70daa13.mp3',
-    },
+    // {
+    //   _id: '1',
+    //   text: '你好',
+    //   createdAt: new Date(),
+    //   user: {
+    //     _id: '1',
+    //     name: '张三',
+    //     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Unknown',
+    //   },
+    //   audio: 'http://119.29.188.102:9000/image/a7785d7db2fe426f8932e4e2f70daa13.mp3',
+    // },
   ]);
   const [dialogId, setDialogId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   // 音频播放状态
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
-  
+
   // 使用expo-av的Recording对象
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
 
@@ -282,19 +436,19 @@ export default function ChatSquare() {
         console.error('没有麦克风权限');
         return;
       }
-      
+
       // 设置音频模式
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-      
+
       // 准备录音
       console.log('准备录音');
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
-      
+
       setRecording(recording);
       setIsRecording(true);
     } catch (err) {
@@ -308,7 +462,7 @@ export default function ChatSquare() {
         console.log('没有录音对象');
         return;
       }
-      
+
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       console.log('录制的语音URI:', uri);
@@ -320,7 +474,7 @@ export default function ChatSquare() {
 
       // 显示上传中状态
       const randomId = Date.now().toString();
-      
+
       // 添加临时本地消息表示上传中
       const tempMessage: IMessage = {
         _id: randomId,
@@ -332,11 +486,11 @@ export default function ChatSquare() {
           avatar:
             userInfo?.avatarUrl ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
-        }
+        },
       };
-      
+
       setMessages((previousMessages) => GiftedChat.append(previousMessages, [tempMessage]));
-      
+
       // 上传录音文件
       const response = await fileApi.uploadImage({
         file: {
@@ -346,7 +500,7 @@ export default function ChatSquare() {
         },
         relatedId: randomId,
       });
-      
+
       if (response.code === 200 && response.data) {
         const textContent = JSON.stringify({
           type: 'audio',
@@ -367,14 +521,14 @@ export default function ChatSquare() {
         );
 
         // 更新本地消息(替换临时消息)
-        setMessages(prev => {
-          const updatedMessages = prev.map(msg => 
-            msg._id === randomId 
-              ? {
+        setMessages((prev) => {
+          const updatedMessages = prev.map((msg) =>
+            msg._id === randomId
+              ? ({
                   ...msg,
                   text: '[语音消息]',
                   audio: response.data.url,
-                } as IAudioMessage
+                } as IAudioMessage)
               : msg
           );
           return updatedMessages;
@@ -385,9 +539,9 @@ export default function ChatSquare() {
       } else {
         console.error('语音上传失败:', response);
         // 更新临时消息显示失败状态
-        setMessages(prev => {
-          const updatedMessages = prev.map(msg => 
-            msg._id === randomId 
+        setMessages((prev) => {
+          const updatedMessages = prev.map((msg) =>
+            msg._id === randomId
               ? {
                   ...msg,
                   text: '[语音上传失败]',
@@ -413,9 +567,6 @@ export default function ChatSquare() {
     }
   };
 
-  
-  
-
   try {
     return (
       <AudioContext.Provider value={{ currentPlayingId, setCurrentPlayingId }}>
@@ -431,12 +582,14 @@ export default function ChatSquare() {
               </Pressable>
               <Text className="flex-1 text-center text-lg font-medium">聊天广场</Text>
             </View>
-  
+
             {/* 加载提示 */}
             {loading && (
-              <Text className="px-4 py-2 text-center text-sm text-[#757575]">正在加入聊天广场...</Text>
+              <Text className="px-4 py-2 text-center text-sm text-[#757575]">
+                正在加入聊天广场...
+              </Text>
             )}
-            
+
             {/* GiftedChat 消息区域 */}
             <GiftedChat
               messageIdGenerator={() => Date.now().toString() + Math.random().toString()}
@@ -455,9 +608,6 @@ export default function ChatSquare() {
               renderInputToolbar={renderInputToolbar}
               renderComposer={renderComposer}
               renderActions={(props) => renderActions(props, () => setShowToolbar(!showToolbar))}
-              // renderMessageAudio={(props: any) => <AudioMessage currentMessage={{
-              //   audio: 'http://119.29.188.102:9000/image/a7785d7db2fe426f8932e4e2f70daa13.mp3',
-              // }} />}
               renderAvatarOnTop
               showAvatarForEveryMessage
               alwaysShowSend
@@ -480,7 +630,7 @@ export default function ChatSquare() {
               loadEarlier={false}
               renderChatFooter={() =>
                 showToolbar ? (
-                  <ChatToolbar 
+                  <ChatToolbar
                     isRecording={isRecording}
                     onPickImage={pickImage}
                     onToggleRecording={handleRecordingToggle}

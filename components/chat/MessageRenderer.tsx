@@ -152,7 +152,7 @@ export const renderMessage = (props: MessageRendererProps) => {
             maxWidth: '95%',
           }}>
             {/* 文本消息 */}
-            {currentMessage.text && (
+            {currentMessage.text && !currentMessage?.audio && !currentMessage?.image && (
               <Text style={{ fontSize: 15, color: '#333' }}>
                 {currentMessage.text}
               </Text>

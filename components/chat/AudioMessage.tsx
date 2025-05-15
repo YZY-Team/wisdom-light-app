@@ -1,194 +1,189 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import Sound from 'react-native-sound';
 import { IAudioMessage } from './types';
+import { Audio } from 'expo-av';
+
+// 确保Sound可以在静音模式下播放
+Sound.setCategory('Playback');
 
 interface AudioMessageProps {
   currentMessage?: IAudioMessage;
   position?: 'left' | 'right';
 }
 
-export const AudioMessage = ({ currentMessage, position }: AudioMessageProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [duration, setDuration] = useState<number | null>(null);
-  const [currentTime, setCurrentTime] = useState<number>(0);
+function AudioMessage(props: AudioMessageProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
-
-  // 确定消息位置，根据提供的position
-  const isUserMessage = position === 'right';
+  const [playbackPosition, setPlaybackPosition] = useState(0);
+  const [playbackDuration, setPlaybackDuration] = useState(0);
+  const [playbackFinished, setPlaybackFinished] = useState(false);
 
   // 加载音频
   useEffect(() => {
-    let isMounted = true;
+    let soundObject: Audio.Sound | null = null;
 
-    const loadSound = async () => {
-      if (!currentMessage?.audio) return;
-      console.log('1312121', currentMessage);
-      try {
-        const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: currentMessage.audio },
-          // { progressUpdateIntervalMillis: 100 },
-          // onPlaybackStatusUpdate
-        );
+    const loadAudio = async () => {
+      if (props.currentMessage.audio) {
+        try {
+          const { sound: newSound } = await Audio.Sound.createAsync(
+            { uri: props.currentMessage.audio },
+            { shouldPlay: false }
+          );
 
-        if (isMounted) {
+          setupPlaybackStatusListener(newSound);
           setSound(newSound);
-        } else {
-          // 如果组件已卸载，释放音频资源
-          await newSound.unloadAsync();
-        }
-      } catch (error) {
-        console.error('加载音频失败:', error);
-        if (isMounted) {
-          setLoadError('加载失败，请重试');
+          soundObject = newSound;
+
+          // 获取并记录音频时长
+          const status = await newSound.getStatusAsync();
+          if (status.isLoaded && status.durationMillis) {
+            setPlaybackDuration(status.durationMillis / 1000);
+          }
+        } catch (error) {
+          console.error('加载音频失败:', error);
         }
       }
     };
 
-    loadSound();
+    loadAudio();
 
     return () => {
-      isMounted = false;
-      // 卸载音频
-      if (sound) {
-        sound.unloadAsync();
+      if (soundObject) {
+        soundObject.unloadAsync().catch((err) => console.error('音频资源释放失败:', err));
       }
     };
-  }, [currentMessage?.audio]);
+  }, [props.currentMessage.audio]);
 
-  // 播放状态更新回调
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (!status.isLoaded) return;
+  const setupPlaybackStatusListener = (soundObj: Audio.Sound) => {
+    soundObj.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.durationMillis) {
+        setPlaybackPosition(status.positionMillis / 1000);
 
-    if (status.isPlaying) {
-      setCurrentTime(status.positionMillis / 1000);
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(false);
-    }
+        if (status.isPlaying) {
+          setIsPlaying(true);
+        } else {
+          setIsPlaying(false);
 
-    if (status.didJustFinish) {
-      setIsPlaying(false);
-    }
-
-    if (status.durationMillis && duration === null) {
-      setDuration(status.durationMillis / 1000);
-    }
+          if (status.didJustFinish) {
+            setPlaybackPosition(0);
+            setPlaybackFinished(true);
+          }
+        }
+      }
+    });
   };
 
-  const playSound = async () => {
+  const handlePlayPause = async () => {
+    if (!sound) return;
+
     try {
-      if (!currentMessage?.audio || !sound) return;
+      if (isPlaying) {
+        await sound.pauseAsync();
+        setIsPlaying(false);
+        return;
+      }
 
-      // 如果已经在加载中，不要重复操作
-      if (isLoading) return;
+      const status = await sound.getStatusAsync();
 
-      // 如果有错误，重置错误状态
-      if (loadError) setLoadError(null);
+      if (
+        playbackFinished ||
+        (status.isLoaded &&
+          status.durationMillis &&
+          status.positionMillis &&
+          status.positionMillis >= status.durationMillis - 500)
+      ) {
+        await sound.setPositionAsync(0);
+        setPlaybackPosition(0);
+        setPlaybackFinished(false);
+      }
 
-      // 设置音频模式
       await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
         playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
+        staysActiveInBackground: true,
+        allowsRecordingIOS: false,
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
       });
 
-      // 获取当前播放状态
-      const status = await sound.getStatusAsync();
+      await sound.playAsync();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('播放/暂停操作失败:', error);
 
-      // 播放或暂停
-      if (status.isLoaded && status.isPlaying) {
-        await sound.pauseAsync();
-        setIsPlaying(false);
-      } else {
-        setIsLoading(true);
+      if (props.currentMessage.audio) {
         try {
-          await sound.playAsync();
+          if (sound) {
+            await sound.unloadAsync();
+          }
+
+          const { sound: newSound } = await Audio.Sound.createAsync(
+            { uri: props.currentMessage.audio },
+            { shouldPlay: true }
+          );
+
+          setupPlaybackStatusListener(newSound);
+          setSound(newSound);
           setIsPlaying(true);
-        } catch (error) {
-          console.error('播放失败:', error);
-          setLoadError('播放失败，请重试');
-        } finally {
-          setIsLoading(false);
+          setPlaybackFinished(false);
+        } catch (reloadError) {
+          console.error('重新加载音频失败:', reloadError);
         }
       }
-    } catch (error) {
-      console.error('播放音频失败:', error);
-      setLoadError('播放失败，请重试');
-      setIsLoading(false);
     }
   };
 
-  // 组件卸载时释放资源
-  useEffect(() => {
-    return () => {
-      if (sound && isPlaying) {
-        sound.pauseAsync();
-      }
-    };
-  }, [sound, isPlaying]);
+  if (!props.currentMessage.audio) {
+    return null;
+  }
 
-  // 格式化时间为分:秒格式
-  const formatTime = (timeInSeconds: number | null) => {
-    if (timeInSeconds === null) return '00:00';
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  // 格式化时间函数
+  const formatTime = (seconds: number) => {
+    if (!seconds) return '00:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
-  if (!currentMessage?.audio) return null;
-
   return (
-    <TouchableOpacity
-      onPress={playSound}
-      disabled={isLoading}
-      className={`my-1 flex-row items-center rounded-lg px-4 py-3 ${isUserMessage ? 'bg-[#1483FD]' : 'bg-white'}`}
-      style={{ minWidth: 120 }}>
-      {isLoading ? (
-        <Ionicons name="ellipsis-horizontal" size={24} color={isUserMessage ? '#fff' : '#1483FD'} />
-      ) : (
-        <Ionicons
-          name={isPlaying ? 'pause-circle' : 'play-circle'}
-          size={24}
-          color={isUserMessage ? '#fff' : '#1483FD'}
-        />
-      )}
-      <View className={`ml-2 flex-1 ${isPlaying ? 'animate-pulse' : ''}`}>
-        <View className="flex-row items-center">
-          {[1, 2, 3, 4].map((i) => (
-            <View
-              key={i}
-              className={`mx-0.5 rounded-full ${isUserMessage ? 'bg-white' : 'bg-[#1483FD]'}`}
-              style={{
-                width: 3 + i * 2,
-                height: 4 + i * 2,
-                opacity: isPlaying ? 0.5 + i * 0.1 : 0.3 + i * 0.1,
-              }}
-            />
-          ))}
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 8,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 10,
+        minHeight: 50, // 固定最小高度
+        width: '100%', // 固定宽度
+      }}>
+      <TouchableOpacity
+        onPress={handlePlayPause}
+        style={{
+          width: 40, // 固定宽度
+          height: 40, // 固定高度
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: 8,
+        }}>
+        <Ionicons name={isPlaying ? 'pause-circle' : 'play-circle'} size={30} color="#007AFF" />
+      </TouchableOpacity>
+
+      <View style={{ flex: 1 }}>
+        {/* 使用固定高度的容器来避免文本切换时的抖动 */}
+        <View style={{ height: 20, justifyContent: 'center' }}>
+          <Text style={{ fontSize: 14 }}>{isPlaying ? '正在播放...' : '点击播放语音'}</Text>
         </View>
-        {loadError && (
-          <Text className={`mt-1 text-xs ${isUserMessage ? 'text-red-200' : 'text-red-500'}`}>
-            {loadError}
+
+        {/* 总是显示时间信息，即使是0:00/0:00，避免布局变化 */}
+        <View style={{ height: 16, justifyContent: 'center', marginTop: 4 }}>
+          <Text style={{ fontSize: 12, color: '#666' }}>
+            {formatTime(playbackPosition)} / {formatTime(playbackDuration || 0)}
           </Text>
-        )}
+        </View>
       </View>
-      <Text className={`ml-2 text-xs ${isUserMessage ? 'text-white' : 'text-gray-600'}`}>
-        {isPlaying
-          ? `${formatTime(currentTime)} / ${formatTime(duration)}`
-          : isLoading
-            ? '加载中...'
-            : duration
-              ? formatTime(duration)
-              : '语音消息'}
-      </Text>
-    </TouchableOpacity>
+    </View>
   );
-};
+}
 
 export default AudioMessage;
