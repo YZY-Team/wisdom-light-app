@@ -106,7 +106,7 @@ const FriendItem = memo(({ item }: { item: Friend }) => (
       cachePolicy="memory-disk"
     />
     <View className="ml-3 flex-1">
-      <Text className="text-base font-medium">{item.nickname}</Text>
+      <Text className="text-base font-medium">{`${item.nickname}(备注:${item.remark})`}</Text>
     </View>
   </Pressable>
 ));

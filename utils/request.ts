@@ -78,11 +78,12 @@ const instance: AxiosInstance = axios.create({
 instance.interceptors.response.use(
   // 如果响应状态码为 2xx, 则返回数据
   (response) => {
+    // console.log({ "出现错误2": response });
     return response.data;
   },
   // 如果响应状态码不为 2xx, 则返回错误
   (error) => {
-    console.log({ "出现错误": error.error });
+    console.log({ "出现错误1": error.response.error });
     if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
       return Promise.reject(new Error("请求超时"));
     }
