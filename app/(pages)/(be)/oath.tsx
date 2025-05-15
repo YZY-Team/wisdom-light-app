@@ -3,12 +3,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { tutorApi } from '~/api/who/tutor';
+import { tutorApi, MyTutorData } from '~/api/who/tutor';
 import { useEffect, useState } from 'react';
-import { friendApi } from '~/api/have/friend';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { Image } from 'expo-image';
-import type { TutorData } from '~/app/api/who/tutor';
 
 interface Tutor {
   id: string;
@@ -23,51 +21,40 @@ export default function Oath() {
   const [showTutorModal, setShowTutorModal] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [oath, setOath] = useState('');
-  const { data: tutors } = useQuery<TutorData[]>({
+  const { data: tutors } = useQuery<MyTutorData[]>({
     queryKey: ['getMyTutors'],
     queryFn: () => {
       return tutorApi.getMyTutors();
     },
   });
-
+  console.log('tutors', tutors);
+  
   const { data: activeBook } = useQuery({
     queryKey: ['activeAchievementBook'],
     queryFn: () => achievementBookApi.getActiveAchievementBook(),
   });
 
   useEffect(() => {
-    const getTutor = async () => {
-      if (tutors && tutors.length > 0) {
-        const newTutorList = [];
-        for (const tutor of tutors) {
-          console.log("tutor", tutor);
-          
-          if (tutor.tutorId) {
-            const friend = await friendApi.getFriend(tutor.tutorId);
-            newTutorList.push({
-              id: friend.data.userId,
-              name: friend.data.nickname,
-              avatarUrl: friend.data.avatarUrl,
-            });
-          }
-        }
-        console.log('newTutorList', newTutorList);
-        setTutorList(newTutorList);
-      }
-    };
-    getTutor();
+    if (tutors && tutors.length > 0) {
+      const newTutorList = tutors.map(tutor => ({
+        id: tutor.tutorId,
+        name: tutor.tutorNickname,
+        avatarUrl: tutor.tutorAvatarUrl || '',
+      }));
+      setTutorList(newTutorList);
+    }
   }, [tutors]);
 
   useEffect(() => {
     if (activeBook?.data) {
       setOath(activeBook.data.oath || '');
-      // if (activeBook.data.coachIds) {
-      //   const coachId = activeBook.data.coachIds;
-      //   const tutor = tutorList.find(t => t.id === coachId);
-      //   if (tutor) {
-      //     setSelectedTutor(tutor);
-      //   }
-      // }
+      if (activeBook.data.coachIds && activeBook.data.coachIds.length > 0) {
+        const coachId = activeBook.data.coachIds[0];
+        const tutor = tutorList.find(t => t.id === coachId);
+        if (tutor) {
+          setSelectedTutor(tutor);
+        }
+      }
     }
   }, [activeBook, tutorList]);
 
@@ -76,11 +63,22 @@ export default function Oath() {
     console.log('selectedTutor', selectedTutor);
     
     try {
-
-      const res = await achievementBookApi.updateAchievementBook(activeBook.data.id, {
-        ...activeBook.data,
+      // 更新参数中添加 coachIds
+      const updateData = {
+        // ...activeBook.data,
         oath: oath,
-      });
+      };
+      
+      // 如果选择了导师，添加 coachIds
+      if (selectedTutor) {
+        console.log('activeBook', activeBook.data.id, selectedTutor.id,selectedTutor);
+        
+        // @ts-ignore - 添加 coachIds
+       const res = await tutorApi.bindCoach(activeBook.data.id, [selectedTutor.id]);
+       console.log('res', res);
+      }
+
+      const res = await achievementBookApi.updateAchievementBook(activeBook.data.id, updateData);
       console.log('res', res);
       // 刷新成就书数据
       await queryClient.invalidateQueries({ queryKey: ['activeAchievementBook'] });

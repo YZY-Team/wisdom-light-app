@@ -12,7 +12,6 @@ import { FlashList } from '@shopify/flash-list';
 import { cssInterop } from 'nativewind';
 import { Image } from 'expo-image';
 import { tutorApi } from '~/api/who/tutor';
-import { friendApi } from '~/api/have/friend';
 import { pinyin } from 'pinyin-pro';
 cssInterop(Image, { className: 'style' });
 // 字母索引数据
@@ -27,17 +26,10 @@ interface Student {
 
 // API返回的学员数据结构
 interface ApiStudent {
-  id?: string;
-  userId?: string;
+  relationId?: string;
   studentId?: string;
-  name: string;
-  avatarUrl?: string;
-  [key: string]: any;
-}
-
-// API返回的好友数据结构
-interface Friend {
-  nickname: string;
+  studentNickname: string;
+  studentAvatarUrl?: string;
   [key: string]: any;
 }
 
@@ -80,7 +72,9 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
     try {
       const response = await tutorApi.getTutorStudents();
       console.log("response", response);
-      const students = response.records || [];
+      const students = (response as ApiResponse<ApiStudent>).records || [];
+      
+      console.log("students", students.length);
       
       // 将学员按首字母分组
       const groupedStudents: StudentsByLetter = {};
@@ -94,11 +88,10 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
       groupedStudents['#'] = [];
       
       // 处理每个学生数据
-      for (const student of students as ApiStudent[]) {
+      for (const student of students) {
         try {
-          const friend = await friendApi.getFriend(student.studentId || '');
           // 获取姓名首字母（拼音首字母）
-          let name = friend.data.nickname;
+          let name = student.studentNickname;
           let firstLetter = '';
           
           // 检查是否是中文
@@ -122,12 +115,12 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
           }
           
           // 添加到对应分组
-          console.log("student.nickname",name);
+          console.log("student.nickname", name);
           
           groupedStudents[letter].push({
-            id: student.id || student.userId || '',
-            name: friend.data.nickname,
-            avatarUrl: friend.data.avatarUrl,
+            id: student.relationId || student.studentId || '',
+            name: student.studentNickname,
+            avatarUrl: student.studentAvatarUrl,
           });
         } catch (err) {
           console.error('处理学生数据失败:', err);

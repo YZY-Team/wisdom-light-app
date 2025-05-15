@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, Text, TextInput, View, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -74,8 +74,9 @@ export default function Login() {
     try {
       console.log('注册信息：', { phone, verificationCode });
       const loginRes = await loginApi.login({ phone, code: verificationCode });
-      console.log('登录成功', loginRes);
+
       if (loginRes.code === 200) {
+        console.log('登录成功', loginRes);
         // 使用 AsyncStorage 存储 token
         await AsyncStorage.setItem('token', loginRes.data);
 
@@ -88,7 +89,7 @@ export default function Login() {
           await AsyncStorage.setItem('savedPhone', phone);
 
           // 使用用户ID初始化数据库
-          initialize(userRes.data.globalUserId);
+          await initialize(userRes.data.globalUserId);
 
           await wsContext.connect(userRes.data.globalUserId);
         }
@@ -98,11 +99,12 @@ export default function Login() {
         setIsLoggedIn(true);
         router.replace('(tabs)/have');
       } else {
+        console.log('登录失败：', loginRes);
         // @ts-expect-error 登录失败
-        alert('登录失败：' + loginRes.error + loginRes.code);
+        alert('登录失败1：' + loginRes.error);
       }
     } catch (error) {
-      alert('登录失败：' + error);
+      alert('登录失败2：' + error);
     } finally {
       setLoading(false);
     }

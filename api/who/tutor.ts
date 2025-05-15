@@ -22,6 +22,22 @@ export interface TutorApplicationParams {
   tutorType: string;
 }
 
+// 实际返回的导师数据类型
+export interface MyTutorData {
+  createTime: string;
+  joinTime: string;
+  relationId: string;
+  status: string;
+  studentAvatarUrl: string | null;
+  studentId: string;
+  studentNickname: string | null;
+  tutorAvatarUrl: string | null;
+  tutorId: string;
+  tutorNickname: string;
+  tutorType: string | null;
+  updateTime: string;
+}
+
 export const tutorApi = {
   getTutorList: async () => {
     const response = await request.get('/wl/tutor/list');
@@ -49,12 +65,12 @@ export const tutorApi = {
   },
   // 获取我的导师列表 /wl/tutor/student/my-tutors
   getMyTutors: async()=>{
-    const response = await request.get<TutorData[]>('/wl/tutor/student/my-tutors');
+    const response = await request.get<MyTutorData[]>('/wl/tutor/student/my-tutors');
     return response.data;
   },
   // post /wl/achievement-book/{id}/coaches 绑定教练
   bindCoach: async(id:string, coachIds:string[])=>{
-    const response = await request.post(`/wl/achievement-book/${id}/coaches`, { coachIds });
+    const response = await request.post(`/wl/achievement-book/${id}/coaches`, coachIds);
     return response;
   }
 };

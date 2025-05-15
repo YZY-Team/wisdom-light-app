@@ -82,6 +82,8 @@ export default function WhoIndex() {
     queryKey: ['userinfo'],
     queryFn: () => userApi.me().then((res) => res.data),
   });
+  console.log('userinfoQuery', userinfoQuery);
+
   const [deletingDeclarations, setDeletingDeclarations] = useState(false);
 
   useFocusEffect(
@@ -408,6 +410,9 @@ export default function WhoIndex() {
               <Text className="text-sm text-black">ID: {userInfo?.username || '设置ID'}</Text>
               <Ionicons name="create-outline" size={16} color="#1483FD" className="ml-1" />
             </Pressable>
+            <Text className="text-sm text-black">
+              导师类型：{userInfo?.tutorType}
+            </Text>
           </View>
         </View>
 

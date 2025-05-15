@@ -20,7 +20,6 @@ export const ChatToolbar = ({ isRecording, onPickImage, onToggleRecording }: Cha
 
       <TouchableOpacity
         onPress={onToggleRecording}
-        disabled={true}
         className="items-center">
         <View
           className={`h-12 w-12 items-center justify-center rounded-full ${isRecording ? 'bg-red-100' : 'bg-blue-100'}`}>
@@ -31,7 +30,7 @@ export const ChatToolbar = ({ isRecording, onPickImage, onToggleRecording }: Cha
           />
         </View>
         <Text className="mt-1 text-xs text-gray-600">
-          {isRecording ? '松开结束' : '语音修复中'}
+          {isRecording ? '松开结束' : '按住说话'}
         </Text>
       </TouchableOpacity>
     </View>

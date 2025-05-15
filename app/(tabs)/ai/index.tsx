@@ -25,11 +25,7 @@ import { useRouter } from 'expo-router';
 
 // AI工具卡片组件
 const AiToolCard = ({ title, icon, websiteUrl }: { title: string; icon: any; websiteUrl: string }) => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const router = useRouter();
-
-  const handleConfirm = async () => {
-    setModalVisible(false);
+  const handlePress = async () => {
     try {
       // 检查URL是否可以打开
       const canOpen = await Linking.canOpenURL(websiteUrl);
@@ -45,46 +41,12 @@ const AiToolCard = ({ title, icon, websiteUrl }: { title: string; icon: any; web
 
   return (
     <View className="items-center w-[33%] mb-6">
-      <Pressable onPress={() => setModalVisible(true)}>
+      <Pressable onPress={handlePress}>
         <View className="h-[72px] w-[72px] rounded-full bg-[#5264FF0D] items-center justify-center overflow-hidden self-center">
           <Image source={icon} className="h-12 w-12" contentFit="contain" />
         </View>
         <Text className="mt-1 text-base text-center text-[#000]">{title}</Text>
       </Pressable>
-
-      {/* 确认弹窗 */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-        statusBarTranslucent={true}
-      >
-        <View className="flex-1  justify-center items-center bg-black/50">
-          <View className="w-[280px] bg-white rounded-[14px] overflow-hidden">
-            <View className="items-center pt-8 pb-6">
-              <View className="h-[72px] w-[72px] rounded-full  items-center justify-center overflow-hidden self-center">
-                <Image source={icon} className="h-12 w-12" contentFit="contain" />
-              </View>
-              <Text className="mt-4 text-[16px]">确认跳转至{title}吗？</Text>
-            </View>
-            <View className="flex-row gap-[20%]  px-4 py-5">
-              <Pressable
-                onPress={() => setModalVisible(false)}
-                className="flex-1 py-[14px] items-center border border-[#0000001A] rounded-[6px]"
-              >
-                <Text className="text-black text-[16px]">取消</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleConfirm}
-                className="flex-1 py-[14px] items-center border border-[#0000001A] rounded-[6px]"
-              >
-                <Text className=" text-[16px]">确认</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };

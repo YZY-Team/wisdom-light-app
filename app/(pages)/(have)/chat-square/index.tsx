@@ -393,6 +393,7 @@ export default function ChatSquare() {
   
             {/* GiftedChat 消息区域 */}
             <GiftedChat
+              messageIdGenerator={() => Date.now().toString() + Math.random().toString()}
               messages={messages}
               onSend={onSend}
               user={{
