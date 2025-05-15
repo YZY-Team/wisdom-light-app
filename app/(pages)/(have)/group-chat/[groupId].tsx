@@ -19,13 +19,31 @@ import { useUserStore } from '~/store/userStore';
 import { usePathname } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { FlashList } from '@shopify/flash-list';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { fileApi } from '~/api/who/file';
 import { dialogApi } from '~/api/have/dialog';
-import MessageItem, { MessageProps, AudioProvider } from '~/app/components/MessageItem';
+import { GiftedChat, IMessage } from 'react-native-gifted-chat';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+
+// 导入聊天组件
+import { AudioContext } from '~/components/chat/AudioContext';
+import { IAudioMessage } from '~/components/chat/types';
+import renderMessage from '~/components/chat/MessageRenderer';
+import renderBubble from '~/components/chat/ChatBubble';
+import {
+  renderSend,
+  renderInputToolbar,
+  renderComposer,
+  renderActions,
+} from '~/components/chat/InputComponents';
+import renderChatEmpty from '~/components/chat/EmptyChat';
+import ChatToolbar from '~/components/chat/ChatToolbar';
+
+// 设置dayjs语言为中文
+dayjs.locale('zh-cn');
 
 type GroupMember = {
   userId: string;
@@ -54,22 +72,20 @@ type GroupMemberResponse = {
   isOnline: boolean;
 };
 
-// 使用导入的MessageItem组件
-const MessageItemWithPopupControl = (props: MessageProps) => <MessageItem {...props} />;
-
 export default function GroupChat() {
-  const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
   const userInfo = useUserStore((state) => state.userInfo);
   const { groupName, dialogId, groupAvatarUrl } = useLocalSearchParams();
-  const [inputMessage, setInputMessage] = useState('');
   const headerHeight = useHeaderHeight();
 
   // 新增的状态
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  // 音频播放状态
+  const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 
   // 模拟群成员数据
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
@@ -79,107 +95,76 @@ export default function GroupChat() {
 
   // 从 Zustand store 获取消息和添加消息的方法
   const { addMessage } = useWebSocketStore();
-  const messages = useWebSocketStore((state) => state.messages);
-  const chatMessages = messages[String(dialogId)] || [];
+  const storeMessages = useWebSocketStore((state) => state.messages);
+  const chatMessages = storeMessages[String(dialogId)] || [];
   console.log('当前对话ID:', dialogId);
-  console.log('所有消息键:', Object.keys(messages));
+  console.log('所有消息键:', Object.keys(storeMessages));
   console.log('当前对话消息数量:', chatMessages.length);
 
-  // 添加 FlashList 的引用
-  const flashListRef = useRef<FlashList<any>>(null);
+  // 加载历史消息
+  useEffect(() => {
+    if (chatMessages.length > 0 && messages.length === 0) {
+      // 将store中的消息转换为GiftedChat格式
+      const formattedMessages = chatMessages.map((msg) => {
+        const isSelf = msg.senderId === userInfo?.globalUserId;
+        
+        // 解析消息内容
+        let text = '';
+        let image;
+        let audio;
+        let nickname = '';
+        let avatar = '';
 
-  // 添加分页状态
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const PAGE_SIZE = 20;
-
-  // 优化消息获取逻辑
-  const visibleMessages = useMemo(() => {
-    if (!chatMessages.length) return [];
-    // 由于不再使用 inverted 属性，我们需要确保消息按时间顺序排列（旧的在上，新的在下）
-    const messages = [...chatMessages];
-    const start = Math.max(0, messages.length - page * PAGE_SIZE);
-    return messages.slice(start);
-  }, [chatMessages, page]);
-
-  const formattedMessages = useMemo(() => {
-    return visibleMessages.map((msg) => {
-      const isSelf = msg.senderId === userInfo?.globalUserId;
-
-      // 解析消息内容
-      let content = '';
-      let imageUrl;
-      let audioUrl;
-      let nickname = '';
-      let avatar = '';
-
-      try {
-        const parsedContent = JSON.parse(msg.textContent);
-        console.log('解析的消息内容:', new Date().toLocaleString(), parsedContent);
-        if (parsedContent.type === 'text') {
-          content = parsedContent.text;
-          nickname = parsedContent.nickname || '未知用户';
-          avatar =
-            parsedContent.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
-        } else if (parsedContent.type === 'image') {
-          content = '[图片消息]';
-          imageUrl = parsedContent.url;
-          nickname = parsedContent.nickname || '未知用户';
-          avatar =
-            parsedContent.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
-        } else if (parsedContent.type === 'audio') {
-          content = '[语音消息]';
-          audioUrl = parsedContent.url;
-          nickname = parsedContent.nickname || '未知用户';
-          avatar =
-            parsedContent.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+        try {
+          const parsedContent = JSON.parse(msg.textContent);
+          if (parsedContent.type === 'text') {
+            text = parsedContent.text;
+            nickname = parsedContent.nickname || '未知用户';
+            avatar = parsedContent.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+          } else if (parsedContent.type === 'image') {
+            text = '[图片消息]';
+            image = parsedContent.url;
+            nickname = parsedContent.nickname || '未知用户';
+            avatar = parsedContent.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+          } else if (parsedContent.type === 'audio') {
+            text = '[语音消息]';
+            audio = parsedContent.url;
+            nickname = parsedContent.nickname || '未知用户';
+            avatar = parsedContent.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
+          }
+        } catch (error) {
+          console.error('消息内容解析失败:', error, msg.textContent);
+          text = msg.textContent;
+          nickname = '未知用户';
+          avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
         }
-      } catch (error) {
-        console.error('消息内容解析失败:', error, msg.textContent);
-        content = msg.textContent;
-        nickname = '未知用户';
-        avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`;
-      }
 
-      // 格式化时间
-      const time = new Date(Number(msg.timestamp)).toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
+        const newMessage: IMessage = {
+          _id: `${msg.senderId}-${msg.timestamp}`,
+          text,
+          createdAt: new Date(Number(msg.timestamp)),
+          user: {
+            _id: msg.senderId,
+            name: nickname,
+            avatar,
+          },
+        };
+
+        if (image) {
+          newMessage.image = image;
+        }
+
+        if (audio) {
+          (newMessage as IAudioMessage).audio = audio;
+        }
+
+        return newMessage;
       });
 
-      // 计算已读状态
-      const readCount = msg.readBy?.length || 0;
-      const isRead = isSelf && readCount > 1; // 自己的消息至少有一个其他人已读
-      const readStatus = isSelf ? (isRead ? `${readCount - 1}人已读` : '未读') : '';
-
-      const messageProps: MessageProps = {
-        content,
-        time,
-        user: {
-          name: isSelf ? '我' : nickname,
-          avatar: isSelf ? userInfo?.avatarUrl || avatar : avatar,
-        },
-        isSelf,
-        imageUrl,
-        audioUrl,
-        messageId: `${msg.senderId}-${msg.timestamp}`, // 添加唯一ID
-        readStatus, // 添加已读状态
-      };
-
-      return messageProps;
-    });
-  }, [visibleMessages, userInfo?.globalUserId, userInfo?.avatarUrl]);
-
-  // 处理加载更多
-  const handleLoadMore = useCallback(() => {
-    if (loading) return;
-    setLoading(true);
-    setPage((prev) => prev + 1);
-    setLoading(false);
-  }, [loading]);
+      setMessages(formattedMessages);
+      setLoading(false);
+    }
+  }, [chatMessages, userInfo?.globalUserId, messages.length]);
 
   // WebSocket 消息处理
   useEffect(() => {
@@ -214,7 +199,7 @@ export default function GroupChat() {
                 const readReceiptMessage = {
                   type: 'READ_RECEIPT',
                   dialogId: dialogId as string,
-                  messageId: `${data.senderId}-${data.timestamp}`, // 使用相同的消息ID格式
+                  messageId: `${data.senderId}-${data.timestamp}`,
                   readBy: userInfo.globalUserId,
                 };
                 console.log('发送已读回执:', new Date().toLocaleString(), readReceiptMessage);
@@ -224,8 +209,44 @@ export default function GroupChat() {
                 const { markMessagesAsRead } = useWebSocketStore.getState();
                 markMessagesAsRead(dialogId as string, userInfo.globalUserId);
               }
-            } else {
-              console.log('跳过自己发送的消息，避免重复:', new Date().toLocaleString(), newMessage);
+
+              // 添加到GiftedChat消息列表
+              let text = '';
+              let image;
+              let audio;
+
+              if (parsedContent.type === 'text') {
+                text = parsedContent.text;
+              } else if (parsedContent.type === 'image') {
+                text = '[图片消息]';
+                image = parsedContent.url;
+              } else if (parsedContent.type === 'audio') {
+                text = '[语音消息]';
+                audio = parsedContent.url;
+              } else {
+                text = data.textContent;
+              }
+
+              const giftedMessage: IMessage = {
+                _id: `${data.senderId}-${data.timestamp}`,
+                text,
+                createdAt: new Date(Number(data.timestamp)),
+                user: {
+                  _id: data.senderId,
+                  name: parsedContent.nickname || '未知用户',
+                  avatar: parsedContent.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.senderId}`,
+                },
+              };
+
+              if (image) {
+                giftedMessage.image = image;
+              }
+
+              if (audio) {
+                (giftedMessage as IAudioMessage).audio = audio;
+              }
+
+              setMessages((previousMessages) => GiftedChat.append(previousMessages, [giftedMessage]));
             }
           } catch (error) {
             console.log('解析消息内容失败:', error);
@@ -254,46 +275,51 @@ export default function GroupChat() {
   }, [lastMessage, dialogId, addMessage, userInfo?.globalUserId, sendMessage]);
 
   // 发送消息处理
-  const handleSendMessage = useCallback(() => {
-    if (!inputMessage.trim() || !dialogId) return;
+  const onSend = useCallback(
+    (messages: IMessage[] = []) => {
+      if (!dialogId) return;
 
-    const timestamp = String(Date.now());
-    const textContent = JSON.stringify({
-      type: 'text',
-      text: inputMessage,
-      avatar:
-        userInfo?.avatarUrl ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
-      nickname: userInfo?.nickname || 'Me',
-    });
+      const message = messages[0];
+      const timestamp = String(Date.now());
 
-    // WebSocket消息格式
-    const wsMessage = {
-      type: 'GROUP_CHAT',
-      dialogId: dialogId as string,
-      textContent: textContent,
-    };
-    console.log('发送消息:', new Date().toLocaleString(), wsMessage);
+      const textContent = JSON.stringify({
+        type: 'text',
+        text: message.text,
+        avatar:
+          userInfo?.avatarUrl ||
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+        nickname: userInfo?.nickname || 'Me',
+      });
 
-    // 发送到WebSocket
-    sendMessage(JSON.stringify(wsMessage));
+      // WebSocket消息格式
+      const wsMessage = {
+        type: 'GROUP_CHAT',
+        dialogId: dialogId as string,
+        textContent: textContent,
+      };
+      console.log('发送消息:', new Date().toLocaleString(), wsMessage);
 
-    // 本地store消息格式
-    const storeMessage: Message = {
-      type: 'GROUP_CHAT',
-      dialogId: dialogId as string,
-      senderId: userInfo!.globalUserId,
-      textContent: textContent,
-      timestamp: timestamp,
-      status: 'READ',
-    };
+      // 发送到WebSocket
+      sendMessage(JSON.stringify(wsMessage));
 
-    // 直接添加到store，不等待WebSocket回调
-    console.log('添加自己的消息到store:', new Date().toLocaleString(), storeMessage);
-    addMessage(storeMessage);
+      // 本地store消息格式
+      const storeMessage: Message = {
+        type: 'GROUP_CHAT',
+        dialogId: dialogId as string,
+        senderId: userInfo!.globalUserId,
+        textContent: textContent,
+        timestamp: timestamp,
+        status: 'READ',
+      };
 
-    setInputMessage('');
-  }, [inputMessage, sendMessage, dialogId, userInfo, addMessage]);
+      // 直接添加到store，不等待WebSocket回调
+      console.log('添加自己的消息到store:', new Date().toLocaleString(), storeMessage);
+      addMessage(storeMessage);
+
+      setMessages((previousMessages) => GiftedChat.append(previousMessages, messages));
+    },
+    [dialogId, sendMessage, userInfo, addMessage]
+  );
 
   // 获取群成员列表
   useEffect(() => {
@@ -330,16 +356,6 @@ export default function GroupChat() {
       markMessagesAsRead(dialogId as string, userInfo.globalUserId);
     }
   }, [dialogId, userInfo?.globalUserId]);
-
-  const renderItem = useCallback(
-    ({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />,
-    []
-  );
-
-  const keyExtractor = useCallback(
-    (item: MessageProps) => item.messageId || `${item.user.name}-${item.time}-${Math.random()}`,
-    []
-  );
 
   // 图片选择器
   const pickImage = async () => {
@@ -400,6 +416,23 @@ export default function GroupChat() {
           // 保存消息到 store
           addMessage(storeMessage);
 
+          // 添加本地消息
+          const newMessage: IMessage = {
+            _id: randomId,
+            text: '[图片消息]',
+            createdAt: new Date(),
+            user: {
+              _id: userInfo?.globalUserId || 'Me',
+              name: userInfo?.nickname || 'Me',
+              avatar:
+                userInfo?.avatarUrl ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+            },
+            image: response.data.url,
+          };
+
+          setMessages((previousMessages) => GiftedChat.append(previousMessages, [newMessage]));
+
           // 收起工具栏
           setShowToolbar(false);
         } else {
@@ -441,14 +474,35 @@ export default function GroupChat() {
       setRecording(null);
       setIsRecording(false);
 
+      if (!uri) return;
+
+      // 显示上传中状态
       const randomId = Date.now().toString();
+
+      // 添加临时本地消息表示上传中
+      const tempMessage: IMessage = {
+        _id: randomId,
+        text: '[语音上传中...]',
+        createdAt: new Date(),
+        user: {
+          _id: userInfo?.globalUserId || 'Me',
+          name: userInfo?.nickname || 'Me',
+          avatar:
+            userInfo?.avatarUrl ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+        },
+      };
+
+      setMessages((previousMessages) => GiftedChat.append(previousMessages, [tempMessage]));
+
+      const randomId2 = Date.now().toString();
       const response = await fileApi.uploadImage({
         file: {
           uri,
           type: 'audio/mpeg',
           name: 'audio.mp3',
         },
-        relatedId: randomId,
+        relatedId: randomId2,
       });
       console.log('上传语音响应:', response);
 
@@ -483,130 +537,145 @@ export default function GroupChat() {
         // 保存消息到 store
         addMessage(storeMessage);
 
+        // 更新本地消息(替换临时消息)
+        setMessages((prev) => {
+          const updatedMessages = prev.map((msg) =>
+            msg._id === randomId
+              ? ({
+                  ...msg,
+                  text: '[语音消息]',
+                  audio: response.data.url,
+                } as IAudioMessage)
+              : msg
+          );
+          return updatedMessages;
+        });
+
         // 收起工具栏
         setShowToolbar(false);
+      } else {
+        console.error('语音上传失败:', response);
+        // 更新临时消息显示失败状态
+        setMessages((prev) => {
+          const updatedMessages = prev.map((msg) =>
+            msg._id === randomId
+              ? {
+                  ...msg,
+                  text: '[语音上传失败]',
+                }
+              : msg
+          );
+          return updatedMessages;
+        });
       }
     } catch (err) {
       console.error('停止录音失败:', err);
+      setIsRecording(false);
+      setRecording(null);
     }
   };
 
-  // 渲染消息列表
-  const renderMessageList = () => (
-    <AudioProvider>
-      <FlashList
-        inverted
-        ref={flashListRef}
-        data={[...formattedMessages].reverse()}
-        renderItem={({ item }: { item: MessageProps }) => <MessageItemWithPopupControl {...item} />}
-        keyExtractor={(item, index) => `${item.messageId || index}`}
-        estimatedItemSize={100}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-      />
-    </AudioProvider>
-  );
+  // 处理录音按钮点击
+  const handleRecordingToggle = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   return (
-    <KeyboardAvoidingView className="flex-1" behavior={'padding'} keyboardVerticalOffset={0}>
-      <View className="flex-1 bg-[#1483fd]/10 py-3">
-        {/* 头部导航栏 */}
-        <View
-          className="flex-row items-center justify-between px-4"
-          style={{ paddingTop: insets.top }}>
-          <Pressable
-            onPress={() => router.back()}
-            className="h-12 w-12 items-center justify-center">
-            <Ionicons name="chevron-back" size={24} color="#666" />
-          </Pressable>
+    <AudioContext.Provider value={{ currentPlayingId, setCurrentPlayingId }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={{ flex: 1 }}>
+        <View className="flex-1 bg-[#f5f8fc]">
+          {/* 头部导航栏 */}
+          <View
+            className="flex-row items-center justify-between px-4"
+            style={{ paddingTop: insets.top }}>
+            <Pressable
+              onPress={() => router.back()}
+              className="h-12 w-12 items-center justify-center">
+              <Ionicons name="chevron-back" size={24} color="#666" />
+            </Pressable>
 
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-lg font-medium">{groupName}</Text>
-          </View>
-
-          <Pressable
-            onPress={() => {
-              router.push({
-                pathname: `/group-chat/${dialogId}/info`,
-                params: { groupName, groupAvatarUrl },
-              });
-            }}
-            className="h-12 w-12 items-center justify-center">
-            <Ionicons name="ellipsis-horizontal" size={24} color="#666" />
-          </Pressable>
-        </View>
-
-        {/* 消息区域 */}
-        <View className="flex-1">{renderMessageList()}</View>
-
-        {/* 底部输入框 */}
-        <View className="px-4 pb-4" style={{ paddingBottom: insets.bottom + 20 || 20 }}>
-          <View className="flex-row items-center">
-            <View
-              style={{
-                boxShadow: '0px 4px 4px 0px rgba(82, 100, 255, 0.10)',
-              }}
-              className="flex-1 flex-row items-center rounded-[12px] bg-white px-6 py-3">
-              <TextInput
-                className="flex-1"
-                placeholder="请输入消息..."
-                placeholderTextColor="#999"
-                value={inputMessage}
-                onChangeText={setInputMessage}
-                onSubmitEditing={handleSendMessage}
-                returnKeyType="send"
-                multiline={false}
-                onFocus={() => {
-                  setIsKeyboardVisible(true);
-                  setShowToolbar(false);
-                }}
-              />
-              <Pressable onPress={handleSendMessage}>
-                <View className="h-8 w-8 items-center justify-center rounded-full bg-[#1483FD]">
-                  <Ionicons name="arrow-up" size={20} color="#fff" />
-                </View>
-              </Pressable>
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-lg font-medium">{groupName}</Text>
             </View>
-            <TouchableOpacity
+
+            <Pressable
               onPress={() => {
-                setShowToolbar(!showToolbar);
-                setIsKeyboardVisible(false);
+                router.push({
+                  pathname: `/group-chat/${dialogId}/info`,
+                  params: { groupName, groupAvatarUrl },
+                });
               }}
-              className="ml-2">
-              <Ionicons name="add-circle" size={32} color="#1483FD" />
-            </TouchableOpacity>
+              className="h-12 w-12 items-center justify-center">
+              <Ionicons name="ellipsis-horizontal" size={24} color="#666" />
+            </Pressable>
           </View>
 
-          {/* 工具栏 */}
-          {showToolbar && (
-            <View className="mt-2 flex-row justify-around rounded-lg bg-white p-4">
-              <TouchableOpacity onPress={pickImage} className="items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                  <Ionicons name="image" size={24} color="#1483FD" />
-                </View>
-                <Text className="mt-1 text-xs text-gray-600">图片</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={isRecording ? stopRecording : startRecording}
-                className="items-center">
-                <View
-                  className={`h-12 w-12 items-center justify-center rounded-full ${isRecording ? 'bg-red-100' : 'bg-blue-100'}`}>
-                  <Ionicons
-                    name={isRecording ? 'mic' : 'mic-outline'}
-                    size={24}
-                    color={isRecording ? '#FF0000' : '#1483FD'}
-                  />
-                </View>
-                <Text className="mt-1 text-xs text-gray-600">
-                  {isRecording ? '松开结束' : '按住说话'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+          {/* 加载提示 */}
+          {loading && (
+            <Text className="px-4 py-2 text-center text-sm text-[#757575]">
+              正在加载消息...
+            </Text>
           )}
+
+          {/* GiftedChat 消息区域 */}
+          <GiftedChat
+            messageIdGenerator={() => Date.now().toString() + Math.random().toString()}
+            messages={messages}
+            onSend={onSend}
+            user={{
+              _id: userInfo?.globalUserId || 'Me',
+              name: userInfo?.nickname || 'Me',
+              avatar:
+                userInfo?.avatarUrl ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInfo?.globalUserId || 'Me'}`,
+            }}
+            placeholder="请输入消息..."
+            renderSend={renderSend}
+            renderBubble={renderBubble}
+            renderInputToolbar={renderInputToolbar}
+            renderComposer={renderComposer}
+            renderActions={(props) => renderActions(props, () => setShowToolbar(!showToolbar))}
+            renderAvatarOnTop
+            showAvatarForEveryMessage
+            alwaysShowSend
+            scrollToBottomComponent={() => (
+              <Ionicons name="chevron-down-circle" size={36} color="#1483FD" />
+            )}
+            isKeyboardInternallyHandled={true}
+            inverted={true}
+            locale="zh-cn"
+            timeFormat="HH:mm"
+            dateFormat="YYYY-MM-DD"
+            minInputToolbarHeight={56}
+            maxComposerHeight={120}
+            bottomOffset={insets.bottom}
+            renderUsernameOnMessage
+            textInputProps={{
+              multiline: true,
+              returnKeyType: 'send',
+            }}
+            loadEarlier={false}
+            renderChatFooter={() =>
+              showToolbar ? (
+                <ChatToolbar
+                  isRecording={isRecording}
+                  onPickImage={pickImage}
+                  onToggleRecording={handleRecordingToggle}
+                />
+              ) : null
+            }
+            renderMessage={(props: any) => renderMessage(props)}
+            renderChatEmpty={() => renderChatEmpty({ loading, isGroupChat: true })}
+          />
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </AudioContext.Provider>
   );
 }

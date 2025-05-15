@@ -638,7 +638,7 @@ export default function ChatSquare() {
                 ) : null
               }
               renderMessage={(props: any) => renderMessage(props)}
-              renderChatEmpty={() => renderChatEmpty({ loading })}
+              renderChatEmpty={() => renderChatEmpty({ loading, isGroupChat: false })}
             />
           </View>
         </KeyboardAvoidingView>

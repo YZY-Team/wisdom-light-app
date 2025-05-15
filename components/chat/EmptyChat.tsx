@@ -4,9 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 interface EmptyChatProps {
   loading: boolean;
+  isGroupChat?: boolean;
 }
 
-export const renderChatEmpty = ({ loading }: EmptyChatProps) => {
+export const renderChatEmpty = ({ loading, isGroupChat = false }: EmptyChatProps) => {
   return (
     <View style={{ 
       flex: 1, 
@@ -22,7 +23,11 @@ export const renderChatEmpty = ({ loading }: EmptyChatProps) => {
         marginTop: 16,
         textAlign: 'center'
       }}>
-        {loading ? '正在加入聊天广场...' : '聊天广场里还没有消息，\n快来发送第一条吧!'}
+        {loading 
+          ? isGroupChat ? '正在加载群聊消息...' : '正在加入聊天广场...' 
+          : isGroupChat 
+            ? '群聊里还没有消息，\n快来发送第一条吧!' 
+            : '聊天广场里还没有消息，\n快来发送第一条吧!'}
       </Text>
     </View>
   );
