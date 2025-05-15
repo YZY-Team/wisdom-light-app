@@ -16,7 +16,7 @@ interface MessageRendererProps {
 }
 
 export const renderMessage = (props: MessageRendererProps) => {
-  const { currentMessage, previousMessage, nextMessage } = props;
+  const { currentMessage, previousMessage, nextMessage, user } = props;
   
   // 如果currentMessage不存在，则返回空视图而不是null
   if (!currentMessage) return <View />;
@@ -36,6 +36,9 @@ export const renderMessage = (props: MessageRendererProps) => {
   // 头像间距，连续消息的头像间距更小
   const marginBottom = nextMessage && nextMessage.user && 
     nextMessage.user._id === currentMessage.user?._id ? 2 : 10;
+  
+  // 判断是否是自己发送的消息
+  const isCurrentUser = user && currentMessage.user && user._id === currentMessage.user._id;
   
   // 自定义日期显示
   const renderDay = () => {
@@ -86,14 +89,15 @@ export const renderMessage = (props: MessageRendererProps) => {
     <View>
       {renderDay()}
       <View style={{ 
-        flexDirection: 'row',
+        flexDirection: isCurrentUser ? 'row-reverse' : 'row',
         marginBottom,
         paddingHorizontal: 8,
         alignItems: 'flex-end',
       }}>
         {/* 头像区域 */}
         <View style={{
-          marginRight: 8,
+          marginRight: isCurrentUser ? 0 : 8,
+          marginLeft: isCurrentUser ? 8 : 0,
           width: isSameThread ? 36 : 36,
           alignItems: 'center',
           opacity: isSameThread ? 0 : 1, // 连续消息不显示头像
@@ -114,6 +118,8 @@ export const renderMessage = (props: MessageRendererProps) => {
         <View style={{ 
           flex: 1,
           marginTop: isSameThread ? 2 : 10,
+          alignItems: isCurrentUser ? 'flex-end' : 'flex-start',
+          width: '100%', // 确保占据整行宽度
         }}>
           {/* 用户名和时间 */}
           {!isSameThread && currentMessage.user && (
@@ -144,12 +150,13 @@ export const renderMessage = (props: MessageRendererProps) => {
           
           {/* 消息气泡 */}
           <View style={{
-            backgroundColor: '#fff',
+            backgroundColor: isCurrentUser ? '#e3f2fd' : '#fff',
             borderRadius: 4,
             padding: 8,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
+            borderColor: isCurrentUser ? '#bbdefb' : '#e2e8f0',
             maxWidth: '95%',
+            alignSelf: isCurrentUser ? 'flex-end' : 'flex-start', // 确保气泡的对齐方式
           }}>
             {/* 文本消息 */}
             {currentMessage.text && !currentMessage?.audio && !currentMessage?.image && (
@@ -176,7 +183,7 @@ export const renderMessage = (props: MessageRendererProps) => {
             {(currentMessage as IAudioMessage).audio && (
               <AudioMessage 
                 currentMessage={currentMessage as IAudioMessage} 
-                position="left" 
+                position={isCurrentUser ? "right" : "left"} 
               />
             )}
           </View>
