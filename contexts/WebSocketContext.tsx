@@ -90,7 +90,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       await addMessage(event.data);
     },
     shouldReconnect: (closeEvent) => true,
-    reconnectInterval: 30000,
+    reconnectInterval: 3000,
     retryOnError: true,
     share: true,
   });

@@ -279,10 +279,10 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
             { value: '0', label: '课程学习' },
             { value: '0', label: '成就解锁' },
             {
-              value: `${averageCompletionRate?.data}%`,
+              value: `${averageCompletionRate?.data ?? 0}%`,
               label: '目标达成率',
               showProgress: true,
-              progress: averageCompletionRate?.data,
+              progress: averageCompletionRate?.data ?? 0,
             },
           ].map((item, index) => (
             <View

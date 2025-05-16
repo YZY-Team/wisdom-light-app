@@ -18,13 +18,21 @@ import jichuangIcon from '~/assets/images/ai/icons/jichuang.png';
 import jimengIcon from '~/assets/images/ai/icons/jimeng.png';
 import soulIcon from '~/assets/images/ai/icons/soul.png';
 import xunfeiIcon from '~/assets/images/ai/icons/xunfei.png';
+import doubaoIcon from '~/assets/images/ai/icons/doubao.png';
+import kimIcon from '~/assets/images/ai/icons/kimi.png';
 import { cssInterop } from 'nativewind';
 import { useRouter } from 'expo-router';
 
-
-
 // AI工具卡片组件
-const AiToolCard = ({ title, icon, websiteUrl }: { title: string; icon: any; websiteUrl: string }) => {
+const AiToolCard = ({
+  title,
+  icon,
+  websiteUrl,
+}: {
+  title: string;
+  icon: any;
+  websiteUrl: string;
+}) => {
   const handlePress = async () => {
     try {
       // 检查URL是否可以打开
@@ -40,12 +48,12 @@ const AiToolCard = ({ title, icon, websiteUrl }: { title: string; icon: any; web
   };
 
   return (
-    <View className="items-center w-[33%] mb-6">
+    <View className="mb-6 w-[33%] items-center">
       <Pressable onPress={handlePress}>
-        <View className="h-[72px] w-[72px] rounded-full bg-[#5264FF0D] items-center justify-center overflow-hidden self-center">
+        <View className="h-[72px] w-[72px] items-center justify-center self-center overflow-hidden rounded-full bg-[#5264FF0D]">
           <Image source={icon} className="h-12 w-12" contentFit="contain" />
         </View>
-        <Text className="mt-1 text-base text-center text-[#000]">{title}</Text>
+        <Text className="mt-1 text-center text-base text-[#000]">{title}</Text>
       </Pressable>
     </View>
   );
@@ -69,16 +77,8 @@ export default function AiIndex() {
       <View className="px-4">
         <Text className="mb-4 px-6 text-[16px] font-[6h00]">AI工具箱</Text>
         <View className="flex-row flex-wrap">
-          <AiToolCard
-            title="Open AI"
-            icon={openAiIcon}
-            websiteUrl="https://openai.com"
-          />
-          <AiToolCard
-            title="Deep Seek"
-            icon={deepSeekIcon}
-            websiteUrl="https://deepseek.com"
-          />
+          <AiToolCard title="Open AI" icon={openAiIcon} websiteUrl="https://openai.com" />
+          <AiToolCard title="Deep Seek" icon={deepSeekIcon} websiteUrl="https://deepseek.com" />
           <AiToolCard
             title="Midjourney"
             icon={midjourneyIcon}
@@ -89,41 +89,23 @@ export default function AiIndex() {
             icon={grammarlyIcon}
             websiteUrl="https://www.grammarly.com"
           />
-          <AiToolCard
-            title="Canva"
-            icon={canvaIcon}
-            websiteUrl="https://www.canva.com"
-          />
-          <AiToolCard
-            title="Hailuo"
-            icon={hailuoIcon}
-            websiteUrl="https://www.hailuo.ai"
-          />
-          <AiToolCard
-            title="可灵AI"
-            icon={kelingIcon}
-            websiteUrl="https://app.klingai.com/cn/"
-          />
+          <AiToolCard title="Canva" icon={canvaIcon} websiteUrl="https://www.canva.com" />
+          <AiToolCard title="Hailuo" icon={hailuoIcon} websiteUrl="https://www.hailuo.ai" />
+          <AiToolCard title="可灵AI" icon={kelingIcon} websiteUrl="https://app.klingai.com/cn/" />
           <AiToolCard
             title="即创AI"
             icon={jichuangIcon}
-            websiteUrl="https://jichuang.ai"
+            websiteUrl="https://aic.oceanengine.com/"
           />
-          <AiToolCard
-            title="即梦AI"
-            icon={jimengIcon}
-            websiteUrl="https://jimeng.jianying.com"
-          />
+          <AiToolCard title="即梦AI" icon={jimengIcon} websiteUrl="https://jimeng.jianying.com" />
           <AiToolCard
             title="Soul Machines"
             icon={soulIcon}
             websiteUrl="https://www.soulmachines.com"
           />
-          <AiToolCard
-            title="科大讯飞"
-            icon={xunfeiIcon}
-            websiteUrl="https://www.xfyun.cn"
-          />
+          <AiToolCard title="科大讯飞" icon={xunfeiIcon} websiteUrl="https://www.xfyun.cn" />
+          <AiToolCard title="豆包" icon={doubaoIcon} websiteUrl="https://www.doubao.com/chat" />
+          <AiToolCard title="金龙AI" icon={kimIcon} websiteUrl="https://kimi.moonshot.cn/" />
         </View>
       </View>
 
@@ -133,11 +115,15 @@ export default function AiIndex() {
         style={{
           bottom: 20,
         }}>
-        <View className='bg-[#1483fd]/5 rounded-[6px]'>
+        <View className="rounded-[6px] bg-[#1483fd]/5">
           <Link href="/tutor" asChild>
             <Pressable className="flex-row items-center rounded-xl p-4">
-              <View className="h-12 w-12 rounded-full bg-blue-500 items-center justify-center">
-                <Image source={require('~/assets/images/ai/logo.png')} className="h-12 w-12" contentFit="contain" />
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-500">
+                <Image
+                  source={require('~/assets/images/ai/logo.png')}
+                  className="h-12 w-12"
+                  contentFit="contain"
+                />
               </View>
               <Text className="ml-3 text-base font-medium">AI导师</Text>
               <Ionicons

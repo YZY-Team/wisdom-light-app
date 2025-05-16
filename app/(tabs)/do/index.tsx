@@ -59,6 +59,17 @@ export default function DoIndex() {
           </View>
         </View>
 
+        {/* 教师入口 */}
+        <Link href="/do/teacher-courses" asChild>
+          <Pressable className="mx-4 mb-3 flex-row items-center justify-between rounded-lg bg-blue-50 p-3">
+            <View className="flex-row items-center">
+              <Ionicons name="school-outline" size={24} color="#1687fd" />
+              <Text className="ml-2 text-base font-medium text-[#1687fd]">待开课列表</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#1687fd" />
+          </Pressable>
+        </Link>
+
         {/* 一级分类 */}
         <View className="mx-5 flex-row  justify-between rounded-[8px] bg-[#1687fd]/10 p-2">
           <PrimaryCategory

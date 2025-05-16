@@ -21,4 +21,15 @@ export const useBookedOnlineCourses = () => {
     queryKey: ['bookedOnlineCourses'],
     queryFn: () => onlineCoutseApi.getBookedOnlineCoutseList(),
   });
+};
+
+/**
+ * 获取教师待开课列表的查询钩子
+ * @returns 包含教师待开课列表数据、加载状态和错误信息的对象
+ */
+export const useTeacherUpcomingCourses = () => {
+  return useQuery({
+    queryKey: ['teacherUpcomingCourses'],
+    queryFn: () => onlineCoutseApi.getUpcomingCourseList(),
+  });
 }; 

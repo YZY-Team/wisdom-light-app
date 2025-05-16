@@ -18,6 +18,7 @@ enum SecondaryCategoryType {
   READING_CLUB = '正见读书会',
   YOUTH_CHINA_DREAM = '少年梦·中国梦',
   MOTHER_WAY = '娘道',
+  AWARENESS_ENGLISH = '"觉知"英语班',
   PRACTITIONER = '践行者',
   HEAVEN_WAY = '天道·言人事',
 }
@@ -134,6 +135,11 @@ export default function RelatedCourseCategory({
       [TabType.TEACHERS]: [],
       [TabType.COURSES]: [],
     },
+    [SecondaryCategoryType.AWARENESS_ENGLISH]: {
+      [TabType.ORIGIN]: { content: '', image: '' },
+      [TabType.TEACHERS]: [],
+      [TabType.COURSES]: [],
+    },
     [SecondaryCategoryType.PRACTITIONER]: {
       [TabType.ORIGIN]: { content: '', image: '' },
       [TabType.TEACHERS]: [],
@@ -209,7 +215,7 @@ export default function RelatedCourseCategory({
                       </View>
                     </View>
                   </View>
-                  <Pressable onPress={() => handleConsultPress(teacher)}>
+                  {/* <Pressable onPress={() => handleConsultPress(teacher)}>
                     <LinearGradient
                       colors={['#20B4F3', '#5762FF']}
                       start={{ x: 0, y: 0 }}
@@ -220,7 +226,7 @@ export default function RelatedCourseCategory({
                       }}>
                       <Text className="text-[16px] font-bold text-white">咨询</Text>
                     </LinearGradient>
-                  </Pressable>
+                  </Pressable> */}
                 </View>
 
                 <Text className="mt-2 text-[14px] text-black/40">{teacher.description}</Text>

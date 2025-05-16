@@ -7,6 +7,7 @@ import { applyCourseOnline } from '~/api/do/course';
 import * as ImagePicker from 'expo-image-picker';
 import { fileApi } from '~/api/who/file';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import TeacherUpcomingCourseList from '~/components/screens/tabs/do/TeacherUpcomingCourseList';
 
 export default function VideoMeetingApply() {
   const [activeTab, setActiveTab] = useState('apply'); // 'apply' or 'pending'
@@ -277,9 +278,8 @@ export default function VideoMeetingApply() {
         )}
 
         {activeTab === 'pending' && (
-          <View className="p-4 items-center justify-center">
-            <Text className="text-gray-500">待开课列表</Text>
-            {/* TODO: 实现待开课列表 */}
+          <View className=" items-center justify-center">
+            <TeacherUpcomingCourseList />
           </View>
         )}
       </ScrollView>

@@ -20,9 +20,20 @@ const joinCourseDialog = (courseId: string, userId: string) => {
   return request.post(`/wl/course-online/${courseId}/dialog/users/${userId}`);
 };
 
+// get /wl/course-online/teacher/upcoming 获取待开课列表
+const getUpcomingCourseList = () => {
+  return request.get('/wl/course-online/teacher/upcoming', {
+    params: {
+      page: 1,
+      pageSize: 10,
+    },
+  });
+};
+
 export const onlineCoutseApi = {
   joinCourseDialog,
   getOnlineCoutseList,
   getBookedOnlineCoutseList,
   reserveOnlineCoutse,
+  getUpcomingCourseList,
 };
