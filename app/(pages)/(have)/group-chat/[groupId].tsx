@@ -587,8 +587,7 @@ export default function GroupChat() {
   return (
     <AudioContext.Provider value={{ currentPlayingId, setCurrentPlayingId }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+       
         style={{ flex: 1 }}>
         <View className="flex-1 bg-[#f5f8fc]">
           {/* 头部导航栏 */}

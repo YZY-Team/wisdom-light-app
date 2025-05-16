@@ -471,7 +471,7 @@ export default function WhoIndex() {
             />
             <Text className="ml-4 flex-1">测试创建成就书</Text>
           </Pressable>
-          <Pressable
+          {/* <Pressable
             onPress={handleDeleteAllDailyDeclarations}
             className="flex-row items-center px-4 py-4">
             <Image
@@ -480,7 +480,7 @@ export default function WhoIndex() {
               contentFit="contain"
             />
             <Text className="ml-4 flex-1">删除全部日宣告</Text>
-          </Pressable>
+          </Pressable> */}
           {/* <Pressable
             onPress={() => onButtonClicked()}
             // disabled={true}

@@ -187,7 +187,7 @@ export default function RegistrationScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={'padding'} className="flex-1 bg-white">
+    <KeyboardAvoidingView  className="flex-1 bg-white">
       <SafeAreaView className="flex-1 bg-[#F5F8FC]">
         {/* 顶部导航栏 */}
         <View className="bg-white px-4 py-4">

@@ -34,19 +34,11 @@ export default function WeeklyDeclaration({ bookId, userInfo }: WeeklyDeclaratio
     );
   }
 
-  return (
-    <KeyboardAvoidingView
-      keyboardVerticalOffset={50}
-      className="flex-1"
-      behavior={'padding'}
-      style={{ flex: 1 }}>
-      {bookId ? (
-        <WeeklyDeclarationList bookId={bookId} />
-      ) : (
-        <View className="flex-1 items-center justify-center">
-          <Text>未找到活跃的成就书</Text>
-        </View>
-      )}
-    </KeyboardAvoidingView>
+  return bookId ? (
+    <WeeklyDeclarationList bookId={bookId} />
+  ) : (
+    <View className="flex-1 items-center justify-center">
+      <Text>未找到活跃的成就书</Text>
+    </View>
   );
 }

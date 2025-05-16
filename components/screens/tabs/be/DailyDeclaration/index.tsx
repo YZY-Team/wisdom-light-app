@@ -275,31 +275,21 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
     );
   }
 
-  return (
-    <KeyboardAvoidingView
-      keyboardVerticalOffset={50}
-      className="flex-1"
-      behavior={'padding'}
-      style={{ flex: 1 }}>
-      {isHistoryLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-500">加载中...</Text>
-        </View>
-      ) : (
-        <FlashList
-          data={historicalDailyData}
-          renderItem={({ item }) => (
-            <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          showsVerticalScrollIndicator={false}
-          estimatedItemSize={200}
-          contentContainerStyle={{
-            paddingBottom: 160,
-          }}
-        />
-      )}
-    </KeyboardAvoidingView>
+  return isHistoryLoading ? (
+    <View className="flex-1 items-center justify-center">
+      <Text className="text-gray-500">加载中...</Text>
+    </View>
+  ) : (
+    <FlashList
+      data={historicalDailyData}
+      renderItem={({ item }) => <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />}
+      keyExtractor={(item, index) => index.toString()}
+      showsVerticalScrollIndicator={false}
+      estimatedItemSize={200}
+      contentContainerStyle={{
+        paddingBottom: 160,
+      }}
+    />
   );
 }
 

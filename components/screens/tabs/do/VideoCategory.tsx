@@ -61,7 +61,7 @@ const CourseItem = memo(
     const router = useRouter(); // 引入 useRouter
     const videoList = videos?.data ?? [];
 
-    console.log('videoList', videoList);
+
 
     return (
       <Pressable

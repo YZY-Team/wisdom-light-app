@@ -49,7 +49,13 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
   if (!userInfo?.isMember) {
     return <NoMemberTip tipText="充值会员之后才能拥有成就书哦～" />;
   }
-
+  if (!achievementBook?.id) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text>未找到活跃的成就书</Text>
+      </View>
+    );
+  }
   useEffect(() => {
     const getGoalStatus = async () => {
       if (achievementBook) {

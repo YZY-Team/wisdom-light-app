@@ -397,7 +397,7 @@ export default function Achievement() {
   );
 
   return (
-    <KeyboardAvoidingView  behavior={'padding'} className="flex-1 bg-white">
+    <KeyboardAvoidingView   className="flex-1 bg-white">
       <View className="px-4 py-4">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>

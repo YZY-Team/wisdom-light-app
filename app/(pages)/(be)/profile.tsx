@@ -143,11 +143,7 @@ export default function Profile() {
   };
 
   return (
-    <KeyboardAvoidingView
-      keyboardVerticalOffset={50}
-      className="flex-1"
-      behavior={'padding'}
-      style={{ flex: 1, backgroundColor: '#fff' }}>
+    <KeyboardAvoidingView className="flex-1" style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* 固定的顶部导航 */}
       <View className="px-4 py-4">
         <View className="flex-row items-center justify-between">
@@ -160,9 +156,7 @@ export default function Profile() {
       </View>
 
       {/* 可滚动的内容区域 */}
-      <ScrollView
-        className="flex-1 px-4"
-        showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         <View className="flex-col gap-1 rounded-xl bg-white py-2">
           {formFields.map((field, index) => (
             <View key={field.key} className={` flex-row items-center `}>

@@ -174,7 +174,7 @@ export default function Login() {
   }, []);
 
   return (
-    <KeyboardAvoidingView className="flex-1" behavior={'padding'} style={{ flex: 1 }}>
+    <KeyboardAvoidingView className="flex-1"  style={{ flex: 1 }}>
       {(loading || isInitializing) && (
         <View className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
           <ActivityIndicator size="large" color="#1483FD" />

@@ -164,4 +164,18 @@ export const tutorApi = {
     );
     return response;
   },
+  // get /wl/tutor/student/available-tutors 分类查询导师
+  getAvailableTutors: async (params: {
+    current: string;
+    size: string;
+    tutorType: string;
+  }) => {
+    const response = await request.get('/wl/tutor/student/available-tutors', { params });
+    return response;
+  },
+  // /wl/tutor/student/bind-tutor/{tutorId} 绑定导师
+  bindTutor: async (tutorId: string) => {
+    const response = await request.post(`/wl/tutor/student/bind-tutor/${tutorId}`);
+    return response;
+  },
 };

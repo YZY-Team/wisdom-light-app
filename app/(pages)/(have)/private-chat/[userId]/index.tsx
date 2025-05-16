@@ -503,9 +503,7 @@ export default function PrivateChat() {
   return (
     <AudioContext.Provider value={{ currentPlayingId, setCurrentPlayingId }}>
       <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        className="flex-1">
         <View className="flex-1 bg-[#1483fd]/10 py-3">
           {/* 头部 */}
           <View className="flex-row items-center px-4 py-3" style={{ paddingTop: insets.top }}>

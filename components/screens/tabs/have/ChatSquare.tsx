@@ -27,7 +27,7 @@ const Message = ({ avatar, name, message, time, isMe = false }: MessageProps) =>
 
 export default function ChatSquare() {
   return (
-    <KeyboardAvoidingView behavior="padding" className="flex-1" keyboardVerticalOffset={90}>
+    <KeyboardAvoidingView className="flex-1">
       <View className="flex-1 rounded-[12px] bg-gray-100">
         <Text className="py-4 text-center text-gray-400">欢迎来到聊天广场，请文明发言</Text>
         <ScrollView className="flex-1 px-4">

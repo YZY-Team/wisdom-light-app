@@ -170,7 +170,7 @@ export default function TutorScreen() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1" behavior={'padding'} keyboardVerticalOffset={0}>
+    <KeyboardAvoidingView className="flex-1" >
       <LinearGradient
         colors={['#20B4F3', '#5762FF']}
         start={{ x: 0, y: 0 }}
