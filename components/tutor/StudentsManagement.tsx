@@ -102,6 +102,19 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
         try {
           // 获取姓名首字母（拼音首字母）
           let name = student.studentNickname;
+          
+          // 检查名字是否为空
+          if (!name) {
+            console.log('学生名称为空:', student);
+            // 将没有名字的学生归类到'#'分组
+            groupedStudents['#'].push({
+              id: student.studentId || '',
+              name: '未命名学员',
+              avatarUrl: student.studentAvatarUrl,
+            });
+            continue;
+          }
+          
           let firstLetter = '';
 
           // 检查是否是中文
@@ -110,7 +123,13 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
           if (isChinese) {
             // 使用pinyin-pro获取拼音首字母
             const pinyinStr = pinyin(name, { toneType: 'none' });
-            firstLetter = pinyinStr.charAt(0).toUpperCase();
+            // 检查拼音结果是否有效
+            if (pinyinStr && pinyinStr.length > 0) {
+              firstLetter = pinyinStr.charAt(0).toUpperCase();
+            } else {
+              // 如果拼音结果无效，使用#作为分组
+              firstLetter = '#';
+            }
           } else {
             // 非中文直接获取首字母
             firstLetter = name.charAt(0).toUpperCase();
@@ -134,6 +153,14 @@ const StudentsManagementWithFlashList = ({ onRefresh }: StudentsManagementProps)
           });
         } catch (err) {
           console.error('处理学生数据失败:', err);
+          // 将处理失败的学生放入'#'分组
+          if (student && student.studentId) {
+            groupedStudents['#'].push({
+              id: student.studentId || '',
+              name: '数据错误',
+              avatarUrl: student.studentAvatarUrl,
+            });
+          }
         }
       }
 

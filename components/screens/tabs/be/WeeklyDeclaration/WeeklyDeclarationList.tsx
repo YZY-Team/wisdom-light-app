@@ -1,13 +1,19 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView, ScrollViewProps } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import WeeklyDeclarationItem from './WeeklyDeclarationItem';
 import { useWeeklyDeclarationList, useCurrentWeeklyDeclaration } from '~/queries/weeklyDeclaration';
 import { useQueryClient } from '@tanstack/react-query';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { forwardRef } from 'react';
 
 interface WeeklyDeclarationListProps {
   bookId: string;
 }
+
+const RenderScrollComponent = forwardRef<ScrollView, ScrollViewProps>(
+  (props, ref) => <KeyboardAwareScrollView {...props} ref={ref} />,
+);
 
 export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListProps) {
   const {
@@ -83,6 +89,7 @@ export default function WeeklyDeclarationList({ bookId }: WeeklyDeclarationListP
         )}
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         showsVerticalScrollIndicator={false}
+        renderScrollComponent={RenderScrollComponent}
       />
     </View>
   );

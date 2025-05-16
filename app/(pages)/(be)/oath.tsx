@@ -1,4 +1,13 @@
-import { View, Text, ScrollView, TouchableOpacity, Pressable, TextInput, Modal, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Pressable,
+  TextInput,
+  Modal,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,15 +37,17 @@ export default function Oath() {
     },
   });
   console.log('tutors', tutors);
-  
+
   const { data: activeBook } = useQuery({
     queryKey: ['activeAchievementBook'],
     queryFn: () => achievementBookApi.getActiveAchievementBook(),
   });
 
+  console.log('activeBook', activeBook);
+
   useEffect(() => {
     if (tutors && tutors.length > 0) {
-      const newTutorList = tutors.map(tutor => ({
+      const newTutorList = tutors.map((tutor) => ({
         id: tutor.tutorId,
         name: tutor.tutorNickname,
         avatarUrl: tutor.tutorAvatarUrl || '',
@@ -47,12 +58,36 @@ export default function Oath() {
 
   useEffect(() => {
     if (activeBook?.data) {
+      console.log('activeBook.data:', JSON.stringify(activeBook.data));
       setOath(activeBook.data.oath || '');
+
+      // 检查是否有 coachIds
       if (activeBook.data.coachIds && activeBook.data.coachIds.length > 0) {
         const coachId = activeBook.data.coachIds[0];
-        const tutor = tutorList.find(t => t.id === coachId);
+        console.log('使用 coachIds 选择导师:', coachId);
+        const tutor = tutorList.find((t) => t.id === coachId);
         if (tutor) {
           setSelectedTutor(tutor);
+        }
+      }
+      // 检查是否有 tutorProfile 和 coachId - 使用类型断言
+      else if ((activeBook.data as any).tutorProfile && (activeBook.data as any).coachId) {
+        console.log('使用 tutorProfile 选择导师:', (activeBook.data as any).coachId);
+        // 如果有 tutorProfile，创建一个导师对象并设置为选中
+        const tutorProfile = (activeBook.data as any).tutorProfile;
+        console.log('tutorProfile:', JSON.stringify(tutorProfile));
+        const tutorFromProfile = {
+          id: (activeBook.data as any).coachId,
+          name: tutorProfile.realName || '',
+          // 只保存头像URL，默认头像会在渲染时处理
+          avatarUrl: tutorProfile.avatarUrl || '',
+        };
+        console.log('创建的导师对象:', tutorFromProfile);
+        setSelectedTutor(tutorFromProfile);
+
+        // 如果这个导师不在列表中，添加到列表中
+        if (!tutorList.some((t) => t.id === tutorFromProfile.id)) {
+          setTutorList((prev) => [...prev, tutorFromProfile]);
         }
       }
     }
@@ -61,21 +96,21 @@ export default function Oath() {
   const handleSave = async () => {
     if (!activeBook?.data?.id) return;
     console.log('selectedTutor', selectedTutor);
-    
+
     try {
       // 更新参数中添加 coachIds
       const updateData = {
         // ...activeBook.data,
         oath: oath,
       };
-      
+
       // 如果选择了导师，添加 coachIds
       if (selectedTutor) {
-        console.log('activeBook', activeBook.data.id, selectedTutor.id,selectedTutor);
-        
+        console.log('activeBook', activeBook.data.id, selectedTutor.id, selectedTutor);
+
         // @ts-ignore - 添加 coachIds
-       const res = await tutorApi.bindCoach(activeBook.data.id, [selectedTutor.id]);
-       console.log('bindCoach', res);
+        const res = await tutorApi.bindCoach(activeBook.data.id, [selectedTutor.id]);
+        console.log('bindCoach', res);
       }
 
       const res = await achievementBookApi.updateAchievementBook(activeBook.data.id, updateData);
@@ -84,10 +119,9 @@ export default function Oath() {
       await queryClient.invalidateQueries({ queryKey: ['activeAchievementBook'] });
       if (res.code === 200) {
         Alert.alert('保存成功');
-      }
-      else {
+      } else {
         // @ts-ignore
-        Alert.alert('保存失败'+res?.error );
+        Alert.alert('保存失败' + res?.error);
       }
     } catch (error) {
       console.error('更新成就书失败:', error);
@@ -125,28 +159,33 @@ export default function Oath() {
 
         <View className="flex-row items-center">
           <Text className="text-base font-[600] text-[#1483FD]">教练：</Text>
-          <TouchableOpacity 
-            className="ml-2 h-8 w-8 items-center justify-center rounded-lg bg-[#1483FD0D]"
-            onPress={() => setShowTutorModal(true)}
-          >
-            {selectedTutor ? (
-              <Image
-                source={{ uri: selectedTutor.avatarUrl }}
-                className="h-8 w-8 rounded-lg"
-              />
-            ) : (
-              <AntDesign name="plus" size={20} color="#1483FD" />
+          <TouchableOpacity
+            className="ml-2 flex flex-row items-center rounded-lg bg-[#1483FD0D] px-2 py-1"
+            onPress={() => setShowTutorModal(true)}>
+            <View className="h-8 w-8 items-center justify-center">
+              {selectedTutor ? (
+                <Image
+                  source={
+                    selectedTutor?.avatarUrl
+                      ? { uri: selectedTutor.avatarUrl }
+                      : require('~/assets/default-avatar.png')
+                  }
+                  className="h-8 w-8 rounded-lg"
+                />
+              ) : (
+                <AntDesign name="plus" size={20} color="#1483FD" />
+              )}
+            </View>
+            {selectedTutor && (
+              <Text className="ml-2 text-sm text-gray-600">{selectedTutor.name}</Text>
             )}
           </TouchableOpacity>
-          {selectedTutor && (
-            <Text className="ml-2 text-sm text-gray-600">{selectedTutor.name}</Text>
-          )}
         </View>
 
         <View className="mt-4 h-[200px] rounded-lg bg-[#1483FD0D] p-4">
-          <TextInput 
-            className="text-sm text-gray-600" 
-            placeholder="请输入..." 
+          <TextInput
+            className="text-sm text-gray-600"
+            placeholder="请输入..."
             multiline
             value={oath}
             onChangeText={setOath}
@@ -162,10 +201,7 @@ export default function Oath() {
             style={{
               boxShadow: '0px 6px 10px 0px rgba(20, 131, 253, 0.40)',
             }}>
-            <Pressable 
-              className="h-[44px] items-center justify-center"
-              onPress={handleSave}
-            >
+            <Pressable className="h-[44px] items-center justify-center" onPress={handleSave}>
               <Text
                 className="text-center text-[16px] text-white"
                 style={{
@@ -184,8 +220,7 @@ export default function Oath() {
         visible={showTutorModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowTutorModal(false)}
-      >
+        onRequestClose={() => setShowTutorModal(false)}>
         <View className="flex-1 bg-black/50 p-4">
           <View className="mt-[30%] rounded-xl bg-white p-4">
             <View className="flex-row items-center justify-between">
@@ -202,15 +237,23 @@ export default function Oath() {
                   onPress={() => {
                     setSelectedTutor(tutor);
                     setShowTutorModal(false);
-                  }}
-                >
-                  <Image
-                    source={{ uri: tutor.avatarUrl }}
-                    className="h-12 w-12 rounded-full"
+                  }}>
+                  <Image 
+                    source={
+                      tutor.avatarUrl 
+                        ? { uri: tutor.avatarUrl } 
+                        : require('~/assets/default-avatar.png')
+                    } 
+                    className="h-12 w-12 rounded-full" 
                   />
                   <Text className="ml-4 text-base">{tutor.name}</Text>
                   {selectedTutor?.id === tutor.id && (
-                    <AntDesign name="check" size={20} color="#1483FD" style={{ marginLeft: 'auto' }} />
+                    <AntDesign
+                      name="check"
+                      size={20}
+                      color="#1483FD"
+                      style={{ marginLeft: 'auto' }}
+                    />
                   )}
                 </TouchableOpacity>
               ))}

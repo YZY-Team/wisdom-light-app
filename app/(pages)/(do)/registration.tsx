@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { cssInterop } from 'nativewind';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 cssInterop(LinearGradient, { className: 'style' });
 
@@ -187,7 +187,7 @@ export default function RegistrationScreen() {
   };
 
   return (
-    <KeyboardAvoidingView  className="flex-1 bg-white">
+    <KeyboardAwareScrollView bottomOffset={50} className="flex-1 bg-white">
       <SafeAreaView className="flex-1 bg-[#F5F8FC]">
         {/* 顶部导航栏 */}
         <View className="bg-white px-4 py-4">
@@ -297,7 +297,7 @@ export default function RegistrationScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
 

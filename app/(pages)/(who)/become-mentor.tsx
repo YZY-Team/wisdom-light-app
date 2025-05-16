@@ -213,7 +213,10 @@ export default function ApplySettlementScreen() {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-white"
-      style={{ flex: 1 }}>
+      style={{ flex: 1 }}
+      behavior={"padding"}
+      keyboardVerticalOffset={20}
+      >
       <SafeAreaView className="flex-1 bg-[#F5F8FC]">
         {/* 顶部导航栏 */}
         <View className="bg-white px-4 py-4">

@@ -1,8 +1,8 @@
 // 导入必要的React Native组件和钩子
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, ScrollViewProps } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, forwardRef } from 'react';
 import MorningDeclaration from './MorningDeclaration';
 import EveningDeclaration from './EveningDeclaration';
 import DailyResult from './DailyResult';
@@ -12,7 +12,7 @@ import { BlurView } from 'expo-blur';
 import { useTodayDeclaration, useBookDeclarations } from '~/queries/dailyDeclaration';
 import NoMemberTip from '../NoMemberTip';
 import { UserInfo } from '~/store/userStore';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 // 启用nativewind的CSS类名支持
 cssInterop(Text, { className: 'style' });
@@ -196,6 +196,9 @@ type DailyDeclarationProps = {
   bookId: string;
   userInfo: UserInfo;
 };
+const RenderScrollComponent = forwardRef<ScrollView, ScrollViewProps>(
+  (props, ref) => <KeyboardAwareScrollView {...props} ref={ref} />,
+);
 
 // 主组件：每日宣告列表
 export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationProps) {
@@ -282,6 +285,7 @@ export default function DailyDeclaration({ bookId, userInfo }: DailyDeclarationP
   ) : (
     <FlashList
       data={historicalDailyData}
+      renderScrollComponent={RenderScrollComponent}
       renderItem={({ item }) => <DailyDeclarationItem item={item} onRefresh={fetchDeclarations} />}
       keyExtractor={(item, index) => index.toString()}
       showsVerticalScrollIndicator={false}

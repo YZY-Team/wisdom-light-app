@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { Alert } from 'react-native';
 import { useAchievementBook, useActiveAchievementBook } from '~/queries/achievement';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 type FormField = {
   key: string;
@@ -143,7 +144,7 @@ export default function Profile() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1" style={{ flex: 1, backgroundColor: '#fff' }}>
+    <KeyboardAwareScrollView className="flex-1" style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* 固定的顶部导航 */}
       <View className="px-4 py-4">
         <View className="flex-row items-center justify-between">
@@ -206,6 +207,6 @@ export default function Profile() {
           </LinearGradient>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }

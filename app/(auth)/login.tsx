@@ -9,7 +9,7 @@ import Checkbox from 'expo-checkbox';
 import { useWebSocketContext } from '~/contexts/WebSocketContext';
 import { userApi } from '~/api/who/user';
 import { useUserStore } from '~/store/userStore';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Keyboard, KeyboardEvent } from 'react-native';
 import { verificationApi } from '~/api/auth/verification';
 import { useDatabase } from '~/contexts/DatabaseContext';
@@ -174,7 +174,7 @@ export default function Login() {
   }, []);
 
   return (
-    <KeyboardAvoidingView className="flex-1"  style={{ flex: 1 }}>
+    <KeyboardAwareScrollView className="flex-1" style={{ flex: 1 }}>
       {(loading || isInitializing) && (
         <View className="absolute inset-0 z-50 flex items-center justify-center bg-black/30">
           <ActivityIndicator size="large" color="#1483FD" />
@@ -350,6 +350,6 @@ export default function Login() {
           </View>
         </LinearGradient>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }

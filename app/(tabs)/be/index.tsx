@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Platform } from 'react-native';
 import DailyDeclaration from '../../../components/screens/tabs/be/DailyDeclaration';
 import WeeklyDeclaration from '../../../components/screens/tabs/be/WeeklyDeclaration';
 import Achievements from '../../../components/screens/tabs/be/Achievements';
@@ -18,7 +18,7 @@ import { weeklyDeclarationApi } from '~/api/be/weeklyDeclaration';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { NewDailyDeclarationDTO, WeeklyDeclarationDTO } from '~/types/be/declarationType';
 import { useFocusEffect } from 'expo-router';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 cssInterop(LinearGradient, { className: 'style' });
 type TabProps = {
@@ -332,8 +332,7 @@ export default function BeIndex() {
   };
 
   return (
-    <KeyboardAvoidingView className="flex-1">
-      <View className="flex-1 bg-[#F5F8FC] px-4 pt-3">
+    <View className="flex-1 bg-[#F5F8FC] px-4 pt-3">
         {/* 导航栏 */}
         <View className="flex-row gap-[36px] rounded-[8px] bg-[#1687fd]/10 p-2">
           <Tab
@@ -358,6 +357,6 @@ export default function BeIndex() {
 
         {renderContent()}
       </View>
-    </KeyboardAvoidingView>
+    
   );
 }

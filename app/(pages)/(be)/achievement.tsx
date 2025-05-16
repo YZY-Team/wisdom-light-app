@@ -1,14 +1,18 @@
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ScrollViewProps } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { request } from '~/utils/request';
 import { useGoalsByBookId } from '~/queries/achievement';
 import { useLocalSearchParams } from 'expo-router';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { FlashList } from '@shopify/flash-list';
+
+const RenderScrollComponent = forwardRef<ScrollView, ScrollViewProps>(
+  (props, ref) => <KeyboardAwareScrollView {...props} ref={ref} />,
+);
 
 // 成就项组件
 const AchievementItem = ({
@@ -413,6 +417,7 @@ export default function Achievement() {
           renderItem={renderAchievementItem}
           estimatedItemSize={500}
           keyExtractor={(_, index) => index.toString()}
+          renderScrollComponent={RenderScrollComponent}
           ListFooterComponent={
             <>
               {/* 添加按钮 */}

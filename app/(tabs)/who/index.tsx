@@ -411,7 +411,7 @@ export default function WhoIndex() {
               <Ionicons name="create-outline" size={16} color="#1483FD" className="ml-1" />
             </Pressable>
             <Text className="text-sm text-black">
-              导师类型：{userInfo?.tutorType}
+              角色类型：{userInfo?.tutorType}
             </Text>
           </View>
         </View>

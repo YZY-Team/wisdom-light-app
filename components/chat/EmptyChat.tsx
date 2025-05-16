@@ -9,28 +9,28 @@ interface EmptyChatProps {
 
 export const renderChatEmpty = ({ loading, isGroupChat = false }: EmptyChatProps) => {
   return (
-    <View style={{ 
-      flex: 1, 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      padding: 20,
-      transform: [{ scaleY: -1 }, { scaleX: -1 }] // 确保文本不会被颠倒
-    }}>
-      <Ionicons name="chatbubble-ellipses-outline" size={60} color="#ccc" />
-      <Text style={{ 
-        fontSize: 16,
-        color: '#666', 
-        marginTop: 16,
-        textAlign: 'center'
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        transform: [{ scaleY: -1 }, { scaleX: -1 }], // 确保文本不会被颠倒
       }}>
-        {loading 
-          ? isGroupChat ? '正在加载群聊消息...' : '正在加入聊天广场...' 
-          : isGroupChat 
-            ? '群聊里还没有消息，\n快来发送第一条吧!' 
-            : '聊天广场里还没有消息，\n快来发送第一条吧!'}
+      <Ionicons name="chatbubble-ellipses-outline" size={60} color="#ccc" />
+      <Text
+        style={{
+          fontSize: 16,
+          color: '#666',
+          marginTop: 16,
+          textAlign: 'center',
+        }}>
+        {loading
+          ? '正在加载...'
+          : '还没有消息，\n快来发送第一条吧!'}
       </Text>
     </View>
   );
 };
 
-export default renderChatEmpty; 
+export default renderChatEmpty;
