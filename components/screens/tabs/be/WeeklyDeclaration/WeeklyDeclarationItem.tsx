@@ -393,7 +393,7 @@ export default function WeeklyDeclarationItem({
                 localDeclaration.dailyDeclarations[selectedDay].dailyGoals.length > 0 && (
                   <View className="mt-4">
                     <Text className="mb-3 text-[16px] font-bold">周目标完成情况</Text>
-                    {localDeclaration.dailyDeclarations[selectedDay].dailyGoals.map(
+                    {localDeclaration.weeklyGoals.map(
                       (goal, index) => (
                         <View
                           key={goal.goalId || index}
@@ -402,11 +402,11 @@ export default function WeeklyDeclarationItem({
                             <Text className="text-[14px] font-bold">{goal.title || ''}:</Text>
                             <View className="flex-row items-center">
                               <Text className="text-[14px]">
-                                {goal.completedQuantity || 0} / {goal.weeklyTargetQuantity || 0}{' '}
+                                {goal.completedQuantity || 0} / {goal.targetQuantity || 0}{' '}
                                 {goal.unit || ''}
                               </Text>
                               <Text className="ml-2 text-[14px] text-[#1483FD]">
-                                ({(goal.weeklyCompletionRate || 0).toFixed(1)}%)
+                                ({(goal.completionRate || 0).toFixed(1)}%)
                               </Text>
                             </View>
                           </View>
@@ -451,7 +451,7 @@ export default function WeeklyDeclarationItem({
                   />
                 </View>
                 <Text className="w-[16%] text-center text-[20px] font-bold text-[#FF9F21]">
-                  {Math.min(localDeclaration.averageCompletionRate, 100)}%
+                  {localDeclaration.averageCompletionRate}%
                 </Text>
               </View>
             </View>

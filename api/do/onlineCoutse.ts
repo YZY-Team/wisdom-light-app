@@ -15,7 +15,13 @@ const reserveOnlineCoutse = (courseId: string) => {
   return request.post(`/wl/course-online/${courseId}/reserve`);
 };
 
+// /wl/course-online/{courseId}/dialog/users/{userId} 加入课程群聊
+const joinCourseDialog = (courseId: string, userId: string) => {
+  return request.post(`/wl/course-online/${courseId}/dialog/users/${userId}`);
+};
+
 export const onlineCoutseApi = {
+  joinCourseDialog,
   getOnlineCoutseList,
   getBookedOnlineCoutseList,
   reserveOnlineCoutse,

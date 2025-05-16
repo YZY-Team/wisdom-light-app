@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { onlineCoutseApi } from '~/api/do/onlineCoutse';
+import { useUserStore } from '~/store/userStore';
 
 cssInterop(Image, { className: 'style' });
 cssInterop(LinearGradient, { className: 'style' });
@@ -41,7 +42,7 @@ const CourseCard = ({
 }: CourseCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [showModal, setShowModal] = useState(false);
-
+  const { userInfo } = useUserStore();
   const toggleExpand = () => {
     setExpanded(!expanded);
   };
@@ -51,13 +52,13 @@ const CourseCard = ({
   };
 
   const handlePayment = async (id: string) => {
-    
     const res = await onlineCoutseApi.reserveOnlineCoutse(id);
     if (res.code === 200) {
       Alert.alert('预约成功');
       onReserve();
-
     } else {
+      console.log('预约失败', res);
+
       // @ts-expect-error 类型错误
       Alert.alert(res.error);
     }
@@ -88,11 +89,7 @@ const CourseCard = ({
 
               {/* 图片部分 - 可以根据实际需求替换 */}
               <View className=" aspect-[120/90] w-[120px] overflow-hidden rounded-[6px] bg-[#D9D9D9]">
-                <Image
-                  source={coverUrl}
-                  className="h-full w-full"
-                  contentFit="cover"
-                />
+                <Image source={coverUrl} className="h-full w-full" contentFit="cover" />
               </View>
             </View>
 
@@ -188,11 +185,7 @@ const CourseCard = ({
             {/* 课程图片 */}
             <View className="items-center px-4">
               <View className="h-[130px] w-[272px] overflow-hidden rounded-[8px] bg-gray-200">
-                <Image
-                  source={coverUrl}
-                  className="h-full w-full"
-                  contentFit="cover"
-                />
+                <Image source={coverUrl} className="h-full w-full" contentFit="cover" />
               </View>
             </View>
 

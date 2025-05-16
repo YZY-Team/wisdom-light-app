@@ -1,9 +1,9 @@
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Href, Link } from 'expo-router';
+import { Href, Link, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { friendApi } from '~/api/have/friend';
 import { useFriendRequestStore } from '~/store/friendRequestStore';
 import addFriendIcon from '~/assets/images/have/tabs/addFriend.png';
@@ -11,6 +11,7 @@ import chatSquareIcon from '~/assets/images/have/tabs/chatSquare.png';
 import videoMeetingIcon from '~/assets/images/have/tabs/videoMeeting.png';
 import findSupportIcon from '~/assets/images/have/tabs/findSupport.png';
 import friendListIcon from '~/assets/images/have/tabs/friendList.png';
+import { usePendingRequests } from '~/queries/friend';
 
 cssInterop(Image, { className: 'style' });
 
@@ -43,31 +44,13 @@ const Tab = ({
 };
 
 export default function TabBar() {
-  const [pendingRequestCount, setPendingRequestCount] = useState(0);
-  const { shouldRefresh, setShouldRefresh } = useFriendRequestStore();
+  const { refetch: refetchPendingRequests, pendingRequests } = usePendingRequests();
 
-  const fetchPendingRequests = async () => {
-    try {
-      const response = await friendApi.getPendingRequests();
-      setPendingRequestCount(response.data.length);
-    } catch (error) {
-      console.log('获取待处理好友请求失败:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPendingRequests();
-    const interval = setInterval(fetchPendingRequests, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // 监听 shouldRefresh 状态变化
-  useEffect(() => {
-    if (shouldRefresh) {
-      fetchPendingRequests();
-      setShouldRefresh(false);
-    }
-  }, [shouldRefresh, setShouldRefresh]);
+  useFocusEffect(
+    useCallback(() => {
+      refetchPendingRequests();
+    }, [])
+  );
 
   return (
     <View
@@ -78,7 +61,12 @@ export default function TabBar() {
       }
       className="rounded-[8px] bg-white py-2">
       <View className="flex-row">
-        <Tab title="添加好友" href="/add-friend" badge={pendingRequestCount} icon={addFriendIcon} />
+        <Tab
+          title="添加好友"
+          href="/add-friend"
+          badge={pendingRequests?.length ?? 0}
+          icon={addFriendIcon}
+        />
         <Tab title="聊天广场" href="/chat-square" icon={chatSquareIcon} />
         <Tab title="视频会议" href="/video-meeting" icon={videoMeetingIcon} />
         <Tab title="寻找支持" href="/find-support" icon={findSupportIcon} />

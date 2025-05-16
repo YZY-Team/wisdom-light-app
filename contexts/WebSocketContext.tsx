@@ -4,6 +4,7 @@ import { useWebSocketStore } from '~/store/websocketStore';
 import { useFriendRequestStore } from '~/store/friendRequestStore';
 import { router } from 'expo-router';
 import { useUserStore } from '~/store/userStore';
+import { useQueryClient } from '@tanstack/react-query';
 
 type WebSocketContextType = {
   sendMessage: (message: string) => void;
@@ -17,9 +18,9 @@ const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
-  const { setShouldRefresh } = useFriendRequestStore();
   const { addMessage } = useWebSocketStore();
   const { userInfo } = useUserStore();
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (userInfo) {
       connect(userInfo.globalUserId);
@@ -41,7 +42,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       // 处理好友请求相关的系统消息
       if (data.type === 'SYSTEM' && data.title === '添加好友') {
-        setShouldRefresh(true);
+        queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
       }
 
       // 处理视频通话请求

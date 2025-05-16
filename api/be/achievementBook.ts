@@ -150,4 +150,11 @@ export const achievementBookApi = {
       params: { bookId: bookId },
     });
   },
+
+  // /api/wl/goal/average-completion-rate 获取目标平均完成率
+  getAverageCompletionRate: (bookId: string) => {
+    return request.get<BaseResponseLong>(`/wl/goal/average-completion-rate`, {
+      params: { bookId: bookId },
+    });
+  },
 };

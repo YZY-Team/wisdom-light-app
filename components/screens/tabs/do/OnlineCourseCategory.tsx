@@ -52,6 +52,8 @@ export default function OnlineCourseCategory({
   // 获取已预约的课程
   const { data: bookedCourses, isLoading: isLoadingBooked, refetch: refetchBookedCourses } = useBookedOnlineCourses();
 
+  console.log('upcomingCourses', upcomingCourses?.data?.records);
+
   // 处理预约事件
   const handleReserve = () => {
     console.log('用户点击了预约按钮');

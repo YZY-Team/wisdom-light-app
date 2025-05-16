@@ -2,13 +2,14 @@ import { View, Text, Pressable, ScrollView, TouchableOpacity } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { Ionicons } from '@expo/vector-icons';
-import { Link, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { achievementBookApi } from '~/api/be/achievementBook';
 import { Image } from 'expo-image';
 import NoMemberTip from './NoMemberTip';
 import { UserInfo } from '~/store/userStore';
 import { AchievementBookDTO } from '~/types/be/achievementBookType';
+import { useQuery } from '@tanstack/react-query';
 
 cssInterop(LinearGradient, { className: 'style' });
 cssInterop(Image, { className: 'style' });
@@ -20,13 +21,30 @@ type AchievementsProps = {
 };
 
 export default function Achievements({ achievementBook, userInfo }: AchievementsProps) {
-  const { bookId } = useLocalSearchParams<{ bookId: string }>();
   const [achievementStatus, setAchievementStatus] = useState({
     profile: '未完成',
     oath: '未完成',
     promise: '未完成',
     achievement: '未完成',
   });
+  console.log('achievementBook', !!achievementBook, achievementBook);
+
+  const { data: averageCompletionRate, refetch: refetchAverageCompletionRate } = useQuery({
+    queryKey: ['averageCompletionRate', achievementBook],
+    queryFn: () => achievementBookApi.getAverageCompletionRate(achievementBook?.id || ''),
+    enabled: !!achievementBook,
+  });
+  const { data: goals, refetch: refetchGoals } = useQuery({
+    queryKey: ['goals', achievementBook],
+    queryFn: () => achievementBookApi.getGoalsByBookId(achievementBook?.id || ''),
+    enabled: !!achievementBook,
+  });
+  useFocusEffect(
+    useCallback(() => {
+      refetchAverageCompletionRate();
+      refetchGoals();
+    }, [achievementBook])
+  );
 
   if (!userInfo?.isMember) {
     return <NoMemberTip tipText="充值会员之后才能拥有成就书哦～" />;
@@ -39,13 +57,7 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
         const profileStatus = checkProfileStatus(achievementBook);
         const oathStatus = checkOathStatus(achievementBook);
         const promiseStatus = checkPromiseStatus(achievementBook);
-        console.log('bookId', bookId);
-        const goalStatus = await achievementBookApi.getGoalsByBookId(achievementBook.id as string);
-
-        const achievementStatus = checkAchievementStatus(goalStatus.data);
-
-        console.log('profileStatus', profileStatus);
-
+        const achievementStatus = checkAchievementStatus(goals?.data);
         setAchievementStatus({
           profile: profileStatus,
           oath: oathStatus,
@@ -55,7 +67,7 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
       }
     };
     getGoalStatus();
-  }, [achievementBook]);
+  }, [goals]);
 
   // 检查个人资料完成状态
   const checkProfileStatus = (data: any) => {
@@ -255,27 +267,22 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
     const completionRate = Math.round((totalScore / maxScore) * 100);
     return completionRate;
   };
-
-  // 获取已完成项目总数
-  const getCompletedCount = () => {
-    return Object.values(achievementStatus).filter((status) => status === '已完成').length;
-  };
-
+  console.log('averageCompletionRate', averageCompletionRate);
   return (
-    <View className="flex-1 pt-4 px-4">
+    <View className="flex-1 px-4 pt-4">
       {/* 总数据 */}
       <View className="mb-4">
         <Text className="mb-2 text-base font-[800] ">总数据</Text>
         <View className="flex-row flex-wrap justify-between">
           {[
-            { value: getCompletedCount().toString(), label: '完成宣告' },
-            { value: '12', label: '课程学习' },
-            { value: '8', label: '成就解锁' },
+            { value: '0', label: '完成宣告' },
+            { value: '0', label: '课程学习' },
+            { value: '0', label: '成就解锁' },
             {
-              value: `${calculateCompletionRate()}%`,
+              value: `${averageCompletionRate?.data}%`,
               label: '目标达成率',
               showProgress: true,
-              progress: calculateCompletionRate(),
+              progress: averageCompletionRate?.data,
             },
           ].map((item, index) => (
             <View
@@ -376,11 +383,10 @@ export default function Achievements({ achievementBook, userInfo }: Achievements
               },
             },
           ].map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              asChild>
-              <TouchableOpacity activeOpacity={0.8} className="h-[72px] flex-row items-center gap-4 rounded-xl bg-white p-4">
+            <Link key={item.title} href={item.href} asChild>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                className="h-[72px] flex-row items-center gap-4 rounded-xl bg-white p-4">
                 <View className="flex-1 flex-row items-center gap-4">
                   <View
                     className="h-10 w-10 items-center justify-center rounded-full"

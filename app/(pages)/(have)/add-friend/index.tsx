@@ -1,9 +1,17 @@
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  Modal,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FindFriend } from '~/types/have/friendType';
 import { memo } from 'react';
@@ -23,7 +31,17 @@ export default function AddFriend() {
   const userInfo = useUserStore((state) => state.userInfo);
 
   // 使用React Query获取待处理的好友请求
-  const { pendingRequests, isLoading: isLoadingRequests } = usePendingRequests();
+  const {
+    pendingRequests,
+    isLoading: isLoadingRequests,
+    refetch: refetchPendingRequests,
+  } = usePendingRequests();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchPendingRequests();
+    }, [])
+  );
 
   // 使用React Query发送好友请求
   const { mutate: sendFriendRequest, isPending: isSendingRequest } = useSendFriendRequest();
@@ -214,10 +232,10 @@ export default function AddFriend() {
     <View className="flex-1 bg-white">
       <Modal visible={modalVisible} transparent animationType="slide">
         <View className="flex-1 items-center justify-center bg-black/50">
-          <View className="w-11/12 bg-white rounded-lg p-4">
-            <Text className="text-lg font-semibold mb-2">添加好友备注</Text>
+          <View className="w-11/12 rounded-lg bg-white p-4">
+            <Text className="mb-2 text-lg font-semibold">添加好友备注</Text>
             <TextInput
-              className="border border-gray-300 rounded px-2 py-1 mb-4"
+              className="mb-4 rounded border border-gray-300 px-2 py-1"
               placeholder="请输入备注"
               value={remarkText}
               onChangeText={setRemarkText}
@@ -235,10 +253,10 @@ export default function AddFriend() {
       </Modal>
       <Modal visible={acceptModalVisible} transparent animationType="slide">
         <View className="flex-1 items-center justify-center bg-black/50">
-          <View className="w-11/12 bg-white rounded-lg p-4">
-            <Text className="text-lg font-semibold mb-2">备注好友</Text>
+          <View className="w-11/12 rounded-lg bg-white p-4">
+            <Text className="mb-2 text-lg font-semibold">备注好友</Text>
             <TextInput
-              className="border border-gray-300 rounded px-2 py-1 mb-4"
+              className="mb-4 rounded border border-gray-300 px-2 py-1"
               placeholder="请输入备注"
               value={acceptRemarkText}
               onChangeText={setAcceptRemarkText}
